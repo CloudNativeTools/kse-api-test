@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, List
 from attrs import define, field
 from .models import (
     V1beta1WorkspaceTemplate,
@@ -14,8 +14,8 @@ from .models import (
     ErrorsError,
     V1NamespaceStatus,
     V1NamespaceSpec,
-    V1alpha2ResourceQuotaStatus,
     V1alpha2ResourceQuotaSpec,
+    V1alpha2ResourceQuotaStatus,
     V1alpha2ResourceQuota,
 )
 from aomaker.core.api_object import BaseAPIObject as BaseAPI
