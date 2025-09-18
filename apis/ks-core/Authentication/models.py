@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, List, Dict
 from attrs import define, field
 
 __ALL__ = [

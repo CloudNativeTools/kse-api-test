@@ -9,8 +9,8 @@ from .models import (
     ApiListResult,
     V2ImageConfig,
     OverviewMetricResults,
-    V1ObjectMeta,
     V1Secret,
+    V1ObjectMeta,
     V2RepositoryTags,
 )
 from aomaker.core.api_object import BaseAPIObject as BaseAPI

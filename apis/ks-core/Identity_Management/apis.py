@@ -3,8 +3,8 @@ from attrs import define, field
 from .models import (
     ApiListResult,
     V1beta1UserStatus,
-    V1beta1UserSpec,
     V1beta1User,
+    V1beta1UserSpec,
     V1ObjectMeta,
     ErrorsError,
 )
