@@ -1,4 +1,6 @@
 from typing import Optional
+
+from aomaker.core.base_model import ContentType
 from attrs import define, field
 from .models import (
     OauthProviderMetadata,
@@ -259,7 +261,7 @@ class OpenidTokenAPI(BaseAPI[OauthToken]):
         code: Optional[str] = field(default=None)
 
     request_body: RequestBodyModel
-
+    content_type: ContentType = field(default=ContentType.FORM)
     response: Optional[OauthToken] = field(default=OauthToken)
     endpoint_id: Optional[str] = field(default="openid-token")
 

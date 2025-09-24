@@ -151,5 +151,9 @@ database/
 reports/
 *.log
 
+# Hide config info
+conf/config.yaml
+run.py
+
 
 
