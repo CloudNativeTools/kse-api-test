@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from apis.ks_core.authentication.apis import OpenidUserinfoAPI
+from apis.ks_core.authentication.apis import OpenidUserinfoAPI, OpenidKeysAPI
 from utils.api_helpers import get_http_info
 
 
@@ -22,7 +22,7 @@ def invalid_token():
 @pytest.fixture
 def expired_token():
     # 模拟过期token
-    return "Bearer expired_token_example"
+    return "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8va3MtY29uc29sZS5rdWJlc3BoZXJlLXN5c3RlbS5zdmM6MzA4ODAiLCJzdWIiOiJhZG1pbiIsImV4cCI6MTc2MDE1NTcxNCwiaWF0IjoxNzYwMTQ4NTE0LCJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwidXNlcm5hbWUiOiJhZG1pbiJ9.qd2d1qxB4WE9sNN2hNvgI9QxFWJhQekYa7dMGw3Ekns"
 
 
 @pytest.mark.authentication
@@ -72,4 +72,17 @@ def test_get_userinfo_expired_token(expired_token):
 
     status, text = get_http_info(res)
     assert status == 401, f"expected 401, got {status}, body: {text}"
-    assert any(w in text.lower() for w in ["unauthorized", "failure"])
+    assert any(w in text.lower() for w in ["expired", "unauthorized", "failure"])
+
+
+@pytest.mark.test
+def test_get_oauth_keys_success():
+    """测试获取公钥列表（/oauth/keys）"""
+    api = OpenidKeysAPI(enable_schema_validation=False)
+    res = api.send()
+
+    key = res.response_model.keys[0]
+
+    assert key.use == "sig", "use 应为 'sig'"
+    assert key.kty == "RSA", "kty 应为 'RSA'"
+    assert key.alg == "RS256", "alg 应为 'RS256'"
