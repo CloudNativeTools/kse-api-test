@@ -7,6 +7,7 @@ from attrs import define, field
 __ALL__ = [
     "OauthProviderMetadata",
     "ErrorsError",
+    "GenerateTOTPAuthKey",
     "V1ManagedFieldsEntry",
     "V1OwnerReference",
     "V1ObjectMeta",
@@ -49,7 +50,12 @@ class OauthProviderMetadata:
 
 @define(kw_only=True)
 class ErrorsError:
-    message: str = field(metadata={"description": "error message"})
+    authKey: str = field(metadata={"description": "error message"})
+
+
+@define(kw_only=True)
+class GenerateTOTPAuthKey:
+    authKey: str = field()
 
 
 @define(kw_only=True)

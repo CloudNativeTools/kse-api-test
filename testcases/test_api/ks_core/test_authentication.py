@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from apis.ks_core.authentication.apis import OpenidUserinfoAPI, OpenidKeysAPI
+from apis.ks_core.authentication.apis import OpenidUserinfoAPI, OpenidKeysAPI, GenerateTOTPAuthKeyAPI, LogoutAPI
 from utils.api_helpers import get_http_info
 
 
@@ -75,7 +75,7 @@ def test_get_userinfo_expired_token(expired_token):
     assert any(w in text.lower() for w in ["expired", "unauthorized", "failure"])
 
 
-@pytest.mark.test
+@pytest.mark.authentication
 def test_get_oauth_keys_success():
     """测试获取公钥列表（/oauth/keys）"""
     api = OpenidKeysAPI(enable_schema_validation=False)
@@ -86,3 +86,93 @@ def test_get_oauth_keys_success():
     assert key.use == "sig", "use 应为 'sig'"
     assert key.kty == "RSA", "kty 应为 'RSA'"
     assert key.alg == "RS256", "alg 应为 'RS256'"
+
+
+@pytest.mark.authentication
+def test_get_user_authkey_success():
+    """测试获取指定用户 authkey (/kapis/iam.kubesphere.io/v1beta1/users/{user}/authkey)"""
+
+    # 假设 admin 是存在的用户
+    path_params = GenerateTOTPAuthKeyAPI.PathParams(user="admin")
+    api = GenerateTOTPAuthKeyAPI(path_params=path_params)
+
+    res = api.send()
+
+    auth_key = res.response_model.authKey
+
+    # 校验 authKey 格式
+    assert auth_key.startswith("otpauth://totp/"), f"authKey 格式不正确: {auth_key}"
+    assert "issuer=" in auth_key and "secret=" in auth_key, f"authKey 缺少必要参数: {auth_key}"
+
+
+@pytest.mark.todo
+@pytest.mark.authentication
+def test_post_user_authkey_todo():
+    """[TODO] 测试post用户 authkey 接口 (/kapis/iam.kubesphere.io/v1beta1/users/{user}/authkey)
+
+    说明：
+    - 涉及第三方依赖，目前暂不执行。
+    """
+    pytest.skip("接口依赖外部服务，后续补充实现")
+
+
+@pytest.mark.todo
+@pytest.mark.authentication
+def test_delete_user_authkey_todo():
+    """[TODO] 测试delete用户 authkey 接口 (/kapis/iam.kubesphere.io/v1beta1/users/{user}/authkey)
+
+    说明：
+    - 涉及第三方依赖，目前暂不执行。
+    """
+    pytest.skip("接口依赖外部服务，后续补充实现")
+
+
+@pytest.mark.todo
+@pytest.mark.authentication
+def test_get_authorize_todo():
+    """[TODO] 测试获取用户 authorize 接口 (/oauth/authorize)
+
+    说明：
+    - 涉及第三方依赖，目前暂不执行。
+    """
+    pytest.skip("接口依赖外部服务，后续补充实现")
+
+
+@pytest.mark.todo
+@pytest.mark.authentication
+def test_post_authorize_todo():
+    """[TODO] 测试post用户 authorize 接口 (/oauth/authorize)
+
+    说明：
+    - 涉及第三方依赖，目前暂不执行。
+    """
+    pytest.skip("接口依赖外部服务，后续补充实现")
+
+
+@pytest.mark.todo
+@pytest.mark.authentication
+def test_get_callback_todo():
+    """ 测试获取oauth callback 接口 (/oauth/callback/{callback})
+
+    说明：
+    - 涉及第三方依赖，目前暂不执行。
+    """
+    pytest.skip("接口依赖外部服务，后续补充实现")
+
+
+@pytest.mark.test
+def test_logout_success():
+    """测试退出登录成功 (/oauth/logout)"""
+
+    # 实例化接口对象
+    api = LogoutAPI()
+
+    res = api.send()
+    status, text = get_http_info(res)
+
+    # 基础断言
+    assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    data = json.loads(text)
+    assert data["message"] == "success", f"退出登录失败，返回内容: {data}"
+
