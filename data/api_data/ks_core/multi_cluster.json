@@ -1,0 +1,9 @@
+{
+  "test_labels": [
+    {
+      "key": "test-multi-cluster-group",
+      "value": "test-multi-cluster-value",
+      "description": "多集群模块测试标签"
+    }
+  ]
+}

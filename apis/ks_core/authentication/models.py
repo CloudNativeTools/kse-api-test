@@ -7,6 +7,7 @@ from attrs import define, field
 __ALL__ = [
     "OauthProviderMetadata",
     "ErrorsError",
+    "GenerateTOTPAuthKey",
     "V1ManagedFieldsEntry",
     "V1OwnerReference",
     "V1ObjectMeta",
@@ -49,7 +50,12 @@ class OauthProviderMetadata:
 
 @define(kw_only=True)
 class ErrorsError:
-    message: str = field(metadata={"description": "error message"})
+    authKey: str = field(metadata={"description": "error message"})
+
+
+@define(kw_only=True)
+class GenerateTOTPAuthKey:
+    authKey: str = field()
 
 
 @define(kw_only=True)
@@ -423,14 +429,15 @@ class X509Certificate:
 
 @define(kw_only=True)
 class JoseJSONWebKey:
-    Algorithm: str = field()
-    CertificateThumbprintSHA1: str = field()
-    CertificateThumbprintSHA256: str = field()
-    Certificates: List[X509Certificate] = field()
-    CertificatesURL: UrlURL = field()
-    Key: Any = field()
-    KeyID: str = field()
-    Use: str = field()
+    # 修改返回模型
+    use: Optional[str] = None
+    kty: Optional[str] = None
+    kid: Optional[str] = None
+    alg: Optional[str] = None
+    n: Optional[str] = None
+    e: Optional[str] = None
+    # 允许存在其他不在模型里的字段
+    __extra__: dict = field(factory=dict)
 
 
 @define(kw_only=True)

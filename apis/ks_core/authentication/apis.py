@@ -11,7 +11,7 @@ from .models import (
     OauthStatus,
     OauthToken,
     JoseJSONWebKeySet,
-    TokenClaims,
+    TokenClaims, GenerateTOTPAuthKey,
 )
 from aomaker.core.api_object import BaseAPIObject as BaseAPI
 from aomaker.core.router import router
@@ -57,7 +57,7 @@ class UnbindTOTPAuthKeyAPI(BaseAPI[ErrorsError]):
 
 @define(kw_only=True)
 @router.get("/kapis/iam.kubesphere.io/v1beta1/users/{user}/authkey")
-class GenerateTOTPAuthKeyAPI(BaseAPI[V1beta1User]):
+class GenerateTOTPAuthKeyAPI(BaseAPI[GenerateTOTPAuthKey]):
     """None"""
 
     @define
@@ -65,7 +65,7 @@ class GenerateTOTPAuthKeyAPI(BaseAPI[V1beta1User]):
         user: str = field(metadata={"description": "Username"})
 
     path_params: PathParams
-    response: Optional[V1beta1User] = field(default=V1beta1User)
+    response: Optional[GenerateTOTPAuthKey] = field(default=GenerateTOTPAuthKey)
     endpoint_id: Optional[str] = field(default="GenerateTOTPAuthKey")
 
 

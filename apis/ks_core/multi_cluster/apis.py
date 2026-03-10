@@ -94,12 +94,11 @@ class ListLabelGroupsAPI(BaseAPI):
 
 @define(kw_only=True)
 @router.post("/kapis/cluster.kubesphere.io/v1alpha1/labels")
-class CreateLabelsAPI(BaseAPI[ApiListResult]):
+class CreateLabelsAPI(BaseAPI):
     """None"""
 
     request_body: List[V1alpha1CreateLabelRequest] = field()
 
-    response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="createLabels")
 
 
