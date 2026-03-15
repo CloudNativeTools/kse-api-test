@@ -1,30 +1,15 @@
 # -*- coding:utf-8 -*-
-import json
 import pytest
 
 from apis.ks_core.multi_cluster.apis import ListLabelGroupsAPI, CreateLabelsAPI
 from apis.ks_core.multi_cluster.models import V1alpha1CreateLabelRequest
 from aomaker.storage import cache
+from utils.test_data_helper import load_test_data
 
 
-def _load_label_config():
-    """从数据文件加载测试标签配置"""
-    from pathlib import Path
-    
-    data_file = Path(__file__).parent.parent.parent / "data" / "api_data" / "ks_core" / "multi_cluster.json"
-    
-    try:
-        if data_file.exists():
-            data = json.loads(data_file.read_text(encoding="utf-8"))
-            labels = data.get("test_labels", [])
-            if labels:
-                return labels[0].get("key"), labels[0].get("value")
-    except Exception:
-        pass
-    return "test-auto-group", "test-auto-value"
-
-
-TEST_LABEL_KEY, TEST_LABEL_VALUE = _load_label_config()
+TEST_LABEL_CONFIG = load_test_data("ks_core", "multi_cluster", "test_labels")
+TEST_LABEL_KEY = TEST_LABEL_CONFIG[0].get("key", "test-auto-group") if TEST_LABEL_CONFIG else "test-auto-group"
+TEST_LABEL_VALUE = TEST_LABEL_CONFIG[0].get("value", "test-auto-value") if TEST_LABEL_CONFIG else "test-auto-value"
 
 
 def _ensure_test_label():
