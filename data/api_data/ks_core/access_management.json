@@ -1,0 +1,9 @@
+{
+  "invalid_members": [
+    {
+      "roleRef": "test",
+      "username": "abc",
+      "description": "无效角色测试"
+    }
+  ]
+}
