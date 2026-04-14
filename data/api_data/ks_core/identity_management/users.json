@@ -1,0 +1,33 @@
+{
+  "test_users": [
+    {
+      "username": "auto-test-user-{{random}}",
+      "email": "test-{{random}}@example.com",
+      "password": "Test@123456",
+      "role": "platform-regular"
+    }
+  ],
+  "invalid_users": [
+    {
+      "username": "",
+      "email": "test@example.com",
+      "password": "Test@123456",
+      "desc": "空用户名",
+      "expected_error": "username is required"
+    },
+    {
+      "username": "user with space",
+      "email": "test@example.com",
+      "password": "Test@123456",
+      "desc": "用户名包含空格",
+      "expected_error": "username format invalid"
+    },
+    {
+      "username": "testuser",
+      "email": "invalid-email",
+      "password": "Test@123456",
+      "desc": "无效邮箱格式",
+      "expected_error": "email format invalid"
+    }
+  ]
+}

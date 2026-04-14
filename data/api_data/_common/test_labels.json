@@ -1,0 +1,17 @@
+{
+  "workspace": {
+    "key": "kubesphere.io/test-env",
+    "value": "automated-test",
+    "description": "测试环境标识"
+  },
+  "project": {
+    "key": "kubesphere.io/managed",
+    "value": "true",
+    "description": "托管项目标识"
+  },
+  "multi_cluster": {
+    "key": "test-multi-cluster-group",
+    "value": "test-multi-cluster-value",
+    "description": "多集群测试标签"
+  }
+}

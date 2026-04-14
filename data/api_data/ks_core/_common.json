@@ -1,0 +1,16 @@
+{
+  "api_versions": {
+    "workspace_template": "iam.kubesphere.io/v1beta1",
+    "namespace": "v1",
+    "deployment": "apps/v1",
+    "service": "v1",
+    "configmap": "v1"
+  },
+  "kinds": {
+    "workspace_template": "WorkspaceTemplate",
+    "namespace": "Namespace",
+    "deployment": "Deployment",
+    "service": "Service",
+    "configmap": "ConfigMap"
+  }
+}

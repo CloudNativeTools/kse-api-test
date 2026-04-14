@@ -1,0 +1,37 @@
+{
+  "create_test_cases": [
+    {
+      "name": "valid_project",
+      "desc": "有效的项目",
+      "data": {
+        "apiVersion": "v1",
+        "kind": "Namespace",
+        "metadata": {
+          "name": "test-project-{{random}}",
+          "labels": {
+            "kubesphere.io/workspace": "{{workspaces.host.name}}",
+            "kubesphere.io/managed": "true"
+          },
+          "annotations": {
+            "kubesphere.io/creator": "{{admin_user}}"
+          }
+        }
+      },
+      "expected": {
+        "status_code": 201
+      }
+    }
+  ],
+  "invalid_projects": [
+    {
+      "name": "",
+      "desc": "空名称",
+      "expected_error": "name is required"
+    },
+    {
+      "name": "project with space",
+      "desc": "包含空格",
+      "expected_error": "name format invalid"
+    }
+  ]
+}

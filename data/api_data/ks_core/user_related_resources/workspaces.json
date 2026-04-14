@@ -1,0 +1,57 @@
+{
+  "create_test_cases": [
+    {
+      "name": "valid_workspace",
+      "desc": "有效的企业空间",
+      "data": {
+        "apiVersion": "iam.kubesphere.io/v1beta1",
+        "kind": "WorkspaceTemplate",
+        "metadata": {
+          "name": "test-ws-{{random}}",
+          "annotations": {
+            "kubesphere.io/creator": "{{admin_user}}"
+          }
+        },
+        "spec": {
+          "placement": {
+            "clusters": [
+              {
+                "name": "{{host_cluster}}"
+              }
+            ]
+          },
+          "template": {
+            "metadata": {
+              "annotations": {
+                "kubesphere.io/creator": "{{admin_user}}"
+              }
+            },
+            "spec": {
+              "manager": "{{admin_user}}"
+            }
+          }
+        }
+      },
+      "expected": {
+        "status_code": 201
+      }
+    }
+  ],
+  "invalid_workspaces": [
+    {
+      "name": "",
+      "desc": "空名称",
+      "expected_error": "name is required"
+    },
+    {
+      "name": "ws with space",
+      "desc": "包含空格",
+      "expected_error": "name format invalid"
+    },
+    {
+      "name": "ws@special!",
+      "desc": "包含特殊字符",
+      "expected_error": "name format invalid"
+    }
+  ]
+}
