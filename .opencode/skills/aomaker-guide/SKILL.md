@@ -321,12 +321,22 @@ response.process_stream(stream_mode="lines", callback=process_chunk)
 - **Host集群**：只有1个，必须存在
 - **Member集群**：可选，最多1个（测试环境）
 
-后端 swagger 提供的接口只有后缀，如：
-```
-/kapis/resources.kubesphere.io/v1alpha3/deployments?sortBy=updateTime&limit=10
-```
+### 接口分类：是否需要 `/clusters/xxx` 前缀
 
-实际使用需要传递集群名或企业空间：
+**不需要 `/clusters/xxx` 前缀的接口（集群管理类）：**
+- 集群列表查询：`/kapis/tenant.kubesphere.io/v1alpha3/clusters`
+- 集群标签管理：`/kapis/cluster.kubesphere.io/v1alpha1/labels`
+- 集群验证：`/kapis/cluster.kubesphere.io/v1alpha1/clusters/validation`
+- kubeconfig更新：`/kapis/cluster.kubesphere.io/v1alpha1/clusters/{cluster}/kubeconfig`
+- 企业空间管理：`/kapis/tenant.kubesphere.io/v1alpha3/workspaces`
+- 项目管理：`/kapis/tenant.kubesphere.io/v1alpha3/namespaces`
+- 用户相关：`/kapis/iam.kubesphere.io/v1beta1/users`
+- 权限管理：`/kapis/iam.kubesphere.io/v1beta1/clustermembers`
+
+**需要 `/clusters/xxx` 前缀的接口（资源类）：**
+- deployments、services、pods 等工作负载资源
+- `/kapis/resources.kubesphere.io/v1alpha3/deployments?sortBy=updateTime&limit=10`
+- 实际调用时需要加上集群前缀：
 
 **Host集群：**
 ```
@@ -339,106 +349,69 @@ response.process_stream(stream_mode="lines", callback=process_chunk)
 ```
 
 ### 公共方法：获取集群列表
-```python
-def get_clusters():
-    """
-    获取集群列表
-    返回: (host_cluster_name, member_cluster_name)
-    host_cluster_name: 必有，host集群名称
-    member_cluster_name: 可选，member集群名称（没有则为None）
-    """
-    api = ListClustersAPI()
-    api.query_params = api.QueryParams(limit=10, page=1, sortBy="createTime")
-    res = api.send()
-    
-    if res.cached_response.raw_response.status_code == 200:
-        data = res.cached_response.raw_response.json()
-        clusters = data.get("items", [])
-        
-        # 获取host集群（只有1个）
-        host_cluster = None
-        member_cluster = None
-        
-        for c in clusters:
-            labels = c.get("metadata", {}).get("labels", {})
-            if labels.get("cluster-role.kubesphere.io/host"):
-                host_cluster = c["metadata"]["name"]
-            else:
-                # member集群最多1个
-                if member_cluster is None:
-                    member_cluster = c["metadata"]["name"]
-        
-        return host_cluster, member_cluster
-    
-    return None, None
 
-# 使用
+使用 `utils.cluster_helpers.get_clusters()` 获取集群信息：
+
+```python
+from utils.cluster_helpers import get_clusters
+
 host_cluster, member_cluster = get_clusters()
-# host_cluster: 必有值
-# member_cluster: 可能为None
+# host_cluster: 必有值，host集群名称
+# member_cluster: 可选值，member集群名称（没有则为None）
 ```
 
-### 公共方法：创建测试企业空间和项目
+### 资源类接口自动添加集群前缀
+
+通过中间件自动为资源类接口添加 `/clusters/{cluster}` 前缀，无需修改 API 定义：
+
 ```python
-def setup_test_workspace_and_project():
-    """
-    创建测试企业空间和项目
-    Host集群：创建企业空间 ws-host-test 和项目 host-pro1-test
-    Member集群（如有）：创建企业空间 ws-member-test 和项目 mem-pro1-test
-    """
-    host_cluster, member_cluster = get_clusters()
-    
-    if not host_cluster:
-        return False, None, None
-    
-    # Host集群：创建企业空间和项目
-    # 创建企业空间
-    ws_api = CreateWorkspaceAPI(request_body={
-        "apiVersion": "tenant.kubesphere.io/v1alpha2",
-        "kind": "Workspace",
-        "metadata": {"name": "ws-host-test"}
-    })
-    ws_api.send()
-    
-    # 创建项目
-    ns_api = CreateNamespaceAPI(request_body={
-        "apiVersion": "v1",
-        "kind": "Namespace",
-        "metadata": {
-            "name": "host-pro1-test",
-            "labels": {"kubesphere.io/workspace": "ws-host-test"}
-        }
-    })
-    ns_api.send()
-    
-    # Member集群（如有）：创建企业空间和项目
-    if member_cluster:
-        # 创建企业空间
-        ws_api = CreateWorkspaceAPI(request_body={
-            "apiVersion": "tenant.kubesphere.io/v1alpha2",
-            "kind": "Workspace",
-            "metadata": {"name": "ws-member-test"}
-        })
-        ws_api.send()
-        
-        # 创建项目
-        ns_api = CreateNamespaceAPI(request_body={
-            "apiVersion": "v1",
-            "kind": "Namespace",
-            "metadata": {
-                "name": "mem-pro1-test",
-                "labels": {"kubesphere.io/workspace": "ws-member-test"}
-            }
-        })
-        ns_api.send()
-    
-    return True, host_cluster, member_cluster
+from utils.cluster_helpers import set_current_cluster, clear_current_cluster
+
+# 设置当前集群，后续资源类接口请求会自动添加 /clusters/{cluster} 前缀
+set_current_cluster(host_cluster)
+
+try:
+    # 这个请求会自动变成 /clusters/{host_cluster}/kapis/resources.kubesphere.io/v1alpha3/deployments
+    res = ListDeploymentsAPI().send()
+finally:
+    # 清除集群设置
+    clear_current_cluster()
+```
+
+**中间件工作原理：**
+- 自动识别需要添加前缀的接口（deployments、services、namespaces 等）
+- 从缓存读取当前集群名称，自动添加到请求路径
+- 集群管理类接口（clusters、workspaces、labels 等）不受影响
+
+### 公共方法：创建测试企业空间和项目
+
+如需创建测试企业空间和项目，使用 `utils.cluster_helpers.setup_test_workspace_and_project()`：
+
+```python
+from utils.cluster_helpers import setup_test_workspace_and_project
+
+success, host_cluster, member_cluster = setup_test_workspace_and_project()
+# Host集群：创建企业空间 ws-host-test 和项目 host-pro1-test
+# Member集群（如有）：创建企业空间 ws-member-test 和项目 mem-pro1-test
+```
+
+### 公共方法：清理测试企业空间和项目
+
+测试结束后清理资源，使用 `utils.cluster_helpers.cleanup_test_workspace_and_project()`：
+
+```python
+from utils.cluster_helpers import cleanup_test_workspace_and_project
+
+# 在测试结束时调用，删除测试创建的企业空间和项目
+cleanup_test_workspace_and_project()
 ```
 
 ### 企业空间接口调用示例
 ```python
-# Host企业空间
+# Host企业空间 - 默认用例，所有环境都执行
+@pytest.mark.resource
 def test_host_workspace():
+    """获取Host集群deployments列表"""
     host_cluster, _ = get_clusters()
     if not host_cluster:
         pytest.skip("无host集群")
@@ -453,8 +426,11 @@ def test_host_workspace():
     res = api.send()
     assert res.cached_response.raw_response.status_code == 200
 
-# Member企业空间
+# Member企业空间 - 多集群用例，只在多集群环境执行
+@pytest.mark.resource
+@pytest.mark.multi_cluster
 def test_member_workspace():
+    """获取Member集群deployments列表"""
     _, member_cluster = get_clusters()
     if not member_cluster:
         pytest.skip("无member集群")
@@ -468,6 +444,24 @@ def test_member_workspace():
     assert res.cached_response.raw_response.status_code == 200
 ```
 
+### 多集群标签使用规范
+
+**标签定义：**
+- `@pytest.mark.resource` - 资源类接口用例（Host集群，必执行）
+- `@pytest.mark.multi_cluster` - 多集群用例（Member集群，可选执行）
+
+**执行策略：**
+```bash
+# 单集群环境 - 只执行Host集群用例
+pytest -m resource test_deployments.py
+
+# 多集群环境 - 执行全部用例
+pytest -m "resource or multi_cluster" test_deployments.py
+
+# 只执行多集群用例
+pytest -m multi_cluster test_deployments.py
+```
+
 ## 注意事项
 
 1. **不要使用print** - 按框架风格，使用日志或直接assert
@@ -475,4 +469,10 @@ def test_member_workspace():
 3. **处理异常场景** - API返回非200时，可能需要关闭schema校验
 4. **测试数据放到JSON文件** - 放在 `data/api_data/` 目录下
 5. **必须实现 get_for_test()** - 每个接口存在依赖数据时，统一使用该函数准备数据
-6. **多集群接口需传递 cluster 参数** - 通过 get_clusters() 获取集群信息，构建带集群前缀的URL
+6. **区分接口类型**：
+   - 集群管理类接口（labels、clusters、workspaces等）**不需要** `/clusters/xxx` 前缀
+   - 资源类接口（deployments、services、pods等）**需要** `/clusters/xxx` 前缀
+7. **多集群测试规范**：
+   - Host集群用例：使用 `@pytest.mark.resource` 等模块标签
+   - Member集群用例：额外添加 `@pytest.mark.multi_cluster` 标签
+   - 通过 `get_clusters()` 获取集群信息，动态判断是否跳过member用例

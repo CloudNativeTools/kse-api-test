@@ -1,0 +1,23 @@
+{
+  "test_members": [
+    {
+      "username": "{{test_user}}",
+      "role": "viewer",
+      "description": "自动化测试添加的成员"
+    }
+  ],
+  "invalid_members": [
+    {
+      "username": "non-existent-user-{{random}}",
+      "role": "viewer",
+      "desc": "不存在的用户",
+      "expected_error": "user not found"
+    },
+    {
+      "username": "{{test_user}}",
+      "role": "invalid-role",
+      "desc": "无效的角色",
+      "expected_error": "role not found"
+    }
+  ]
+}

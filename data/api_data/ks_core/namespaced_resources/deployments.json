@@ -1,0 +1,27 @@
+{
+  "test_deployments": [
+    {
+      "name": "test-deployment-{{random}}",
+      "namespace": "{{projects.host.name}}",
+      "replicas": 1,
+      "image": "nginx:latest",
+      "labels": {
+        "app": "test-app"
+      }
+    }
+  ],
+  "invalid_deployments": [
+    {
+      "name": "",
+      "namespace": "{{projects.host.name}}",
+      "desc": "空名称",
+      "expected_error": "name is required"
+    },
+    {
+      "name": "test-deployment",
+      "namespace": "non-existent-ns",
+      "desc": "不存在的命名空间",
+      "expected_error": "namespace not found"
+    }
+  ]
+}

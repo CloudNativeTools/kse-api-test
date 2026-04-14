@@ -1,0 +1,26 @@
+{
+  "test_roles": [
+    {
+      "name": "test-role-{{random}}",
+      "alias": "测试角色",
+      "description": "自动化测试创建的角色"
+    }
+  ],
+  "invalid_roles": [
+    {
+      "name": "",
+      "desc": "空名称",
+      "expected_error": "name is required"
+    },
+    {
+      "name": "role with space",
+      "desc": "包含空格",
+      "expected_error": "name format invalid"
+    },
+    {
+      "name": "role@special",
+      "desc": "包含特殊字符",
+      "expected_error": "name format invalid"
+    }
+  ]
+}

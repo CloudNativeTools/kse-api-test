@@ -1,0 +1,45 @@
+{
+  "workspaces": {
+    "host": {
+      "name": "ws-host-test",
+      "alias": "Host测试企业空间",
+      "description": "Host集群自动化测试企业空间",
+      "cluster_type": "host",
+      "manager": "{{admin_user}}",
+      "creator": "{{admin_user}}"
+    },
+    "member": {
+      "name": "ws-member-test",
+      "alias": "Member测试企业空间",
+      "description": "Member集群自动化测试企业空间",
+      "cluster_type": "member",
+      "manager": "{{admin_user}}",
+      "creator": "{{admin_user}}"
+    }
+  },
+  "projects": {
+    "host": {
+      "name": "host-pro1-test",
+      "alias": "Host测试项目",
+      "description": "Host集群自动化测试项目",
+      "workspace": "{{workspaces.host.name}}",
+      "creator": "{{admin_user}}"
+    },
+    "member": {
+      "name": "mem-pro1-test",
+      "alias": "Member测试项目",
+      "description": "Member集群自动化测试项目",
+      "workspace": "{{workspaces.member.name}}",
+      "creator": "{{admin_user}}"
+    }
+  },
+  "annotations": {
+    "creator_key": "kubesphere.io/creator",
+    "creator_value": "{{admin_user}}"
+  },
+  "labels": {
+    "managed_key": "kubesphere.io/managed",
+    "managed_value": "true",
+    "workspace_key": "kubesphere.io/workspace"
+  }
+}
