@@ -18,7 +18,7 @@ from apis.ks_core.access_management.models import (
 from utils.test_data_helper import get_test_data_list
 
 
-INVALID_MEMBERS = get_test_data_list("ks_core", "access_management", "invalid_members")
+INVALID_MEMBERS = get_test_data_list("ks_core", "access_management/members", "invalid_members")
 
 
 @pytest.mark.access_management
