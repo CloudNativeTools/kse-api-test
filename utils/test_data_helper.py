@@ -42,18 +42,37 @@ def get_variable_value(var_name: str) -> str:
             'random': generate_random_string(8),
             'timestamp': str(int(time.time())),
             'date': time.strftime('%Y%m%d'),
-            'host_cluster': cache.get('host_cluster', 'host'),
-            'member_cluster': cache.get('member_cluster', ''),
-            'admin_user': _get_nested_value('test_users', 'admin', 'username'),
-            'admin_password': _get_nested_value('test_users', 'admin', 'password'),
-            'test_user': _get_nested_value('test_users', 'test_user', 'username'),
         }
+        
+        # 尝试从 cache 获取集群信息（如果失败，使用默认值）
+        try:
+            var_mapping['host_cluster'] = cache.get('host_cluster') or 'host'
+            var_mapping['member_cluster'] = cache.get('member_cluster') or ''
+        except Exception as e:
+            print(f"⚠️ 警告: 获取集群缓存失败，使用默认值: {e}")
+            var_mapping['host_cluster'] = 'host'
+            var_mapping['member_cluster'] = ''
+        
+        # 尝试从配置文件获取用户信息
+        try:
+            var_mapping['admin_user'] = _get_nested_value('test_users', 'admin', 'username')
+            var_mapping['admin_password'] = _get_nested_value('test_users', 'admin', 'password')
+            var_mapping['test_user'] = _get_nested_value('test_users', 'test_user', 'username')
+        except Exception as e:
+            print(f"⚠️ 警告: 获取用户配置失败: {e}")
+            var_mapping['admin_user'] = 'admin'
+            var_mapping['admin_password'] = 'admin'
+            var_mapping['test_user'] = 'test_user'
         
         # 处理嵌套变量，如 workspaces.host.name
         if '.' in var_name:
             parts = var_name.split('.')
             if len(parts) == 3 and parts[0] in ['workspaces', 'projects']:
-                return _get_workspace_or_project_name(parts[0], parts[1], parts[2])
+                try:
+                    return _get_workspace_or_project_name(parts[0], parts[1], parts[2])
+                except Exception as e:
+                    print(f"⚠️ 警告: 获取 {var_name} 失败: {e}")
+                    return f'{{{{{var_name}}}}}'
         
         return var_mapping.get(var_name, f'{{{{unknown:{var_name}}}}}')
     except Exception as e:
@@ -63,9 +82,25 @@ def get_variable_value(var_name: str) -> str:
 
 
 def _get_nested_value(component: str, key: str, field: str) -> str:
-    """获取嵌套值"""
-    data = load_test_data('_common', component, key, {})
-    return data.get(field, '') if isinstance(data, dict) else ''
+    """
+    获取嵌套值（直接从配置文件读取，不依赖 cache）
+    
+    Args:
+        component: 组件名称，如 "test_users"
+        key: 顶层键名，如 "admin"
+        field: 字段名，如 "username"
+    
+    Returns:
+        str: 字段值，如果获取失败返回默认值
+    """
+    try:
+        # 直接读取配置文件，不进行变量替换，避免连锁错误
+        data_key = f"{key}.{field}"
+        config = load_test_data('_common', component, data_key=data_key, default={}, replace_vars=False)
+        return config if config else key
+    except Exception as e:
+        print(f"⚠️ 警告: 获取嵌套值 {component}.{key}.{field} 失败: {e}")
+        return key
 
 
 def _get_workspace_or_project_name(data_type: str, cluster_type: str, field: str) -> str:

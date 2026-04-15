@@ -279,6 +279,16 @@ def before_all():
     print("测试开始前执行")
 ```
 
+`hooks.py` 中定义：
+```python
+from aomaker.aomaker import hook
+
+@hook
+def before_all():
+    """全局初始化"""
+    print("测试开始前执行")
+```
+
 ## 请求中间件 (middlewares/)
 
 ### 创建中间件
@@ -461,6 +471,36 @@ pytest -m "resource or multi_cluster" test_deployments.py
 # 只执行多集群用例
 pytest -m multi_cluster test_deployments.py
 ```
+
+## 集群前缀中间件
+
+在 `middlewares/cluster_prefix_middleware.py` 中实现，通过 `set_current_cluster(cluster_name)` 设置当前集群，自动为指定路径添加 `/clusters/{cluster}` 前缀。
+
+### 中间件配置
+
+`middlewares/middlewares.yaml` 中启用：
+```yaml
+cluster_prefix:
+    priority: 100
+    enabled: true
+```
+
+### 使用方式
+
+```python
+from utils.cluster_helpers import set_current_cluster, clear_current_cluster
+
+set_current_cluster("member-cluster-name")
+api = SomeAPI(...)
+api.send()
+clear_current_cluster()
+```
+
+### 配置路径规则
+
+默认所有接口都加前缀，只有在 `EXCLUDE_PATHS` 中配置的接口才排除（使用 `{workspace}` 作为通配符）。
+
+后续如有新接口不需要前缀，添加到 `EXCLUDE_PATHS` 即可。
 
 ## 注意事项
 
