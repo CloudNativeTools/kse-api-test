@@ -108,7 +108,10 @@ def clear_current_cluster():
     Example:
         clear_current_cluster()  # 清除后不再自动添加集群前缀
     """
-    cache.del_by_condition(table='cache', condition='var_name=?', params=("current_cluster",))
+    try:
+        cache.del_by_condition(where={'var_name': 'current_cluster'})
+    except Exception:
+        pass  # 忽略删除失败
 
 
 def setup_test_environment():
