@@ -48,20 +48,37 @@ def get_clusters():
         # 从配置中获取 host 集群标签
         cluster_config = load_test_data('_common', 'cluster_config', default={})
         host_label = cluster_config.get('host_cluster_label', 'cluster-role.kubesphere.io/host')
+        
+        # 调试日志
+        if not clusters:
+            print("⚠️ 警告: 集群列表为空")
 
         for c in clusters:
+            cluster_name = c.get("metadata", {}).get("name", "unknown")
             labels = c.get("metadata", {}).get("labels", {})
-            if labels.get(host_label):
-                host_cluster = c["metadata"]["name"]
+            
+            # 检查是否有 host 标签（允许空字符串值）
+            has_host_label = host_label in labels
+            
+            if has_host_label:
+                host_cluster = cluster_name
+                print(f"✓ 找到 Host 集群: {cluster_name}")
             else:
                 if member_cluster is None:
-                    member_cluster = c["metadata"]["name"]
+                    member_cluster = cluster_name
+                    print(f"✓ 找到 Member 集群: {cluster_name}")
 
-        # 缓存集群信息
+        # 缓存集群信息（使用 try-except 避免 UNIQUE constraint 冲突）
         if host_cluster:
-            cache.set('host_cluster', host_cluster)
+            try:
+                cache.set('host_cluster', host_cluster)
+            except Exception:
+                pass  # 如果已存在就忽略
         if member_cluster:
-            cache.set('member_cluster', member_cluster)
+            try:
+                cache.set('member_cluster', member_cluster)
+            except Exception:
+                pass  # 如果已存在就忽略
 
         return host_cluster, member_cluster
 
@@ -91,7 +108,7 @@ def clear_current_cluster():
     Example:
         clear_current_cluster()  # 清除后不再自动添加集群前缀
     """
-    cache.delete("current_cluster")
+    cache.del_by_condition(table='cache', condition='var_name=?', params=("current_cluster",))
 
 
 def setup_test_environment():
@@ -116,6 +133,7 @@ def setup_test_environment():
     config = load_test_data('ks_core', 'test_environment', default={})
     if not config:
         print("⚠️ 警告: 无法加载测试环境配置")
+        print(f"  尝试的文件路径: data/api_data/ks_core/test_environment.json")
         return False, {}
 
     host_cluster, member_cluster = get_clusters()

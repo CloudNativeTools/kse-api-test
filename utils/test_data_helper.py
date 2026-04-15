@@ -37,24 +37,29 @@ def get_variable_value(var_name: str) -> str:
     - {{projects.host.name}}: Host 项目名称
     - {{projects.member.name}}: Member 项目名称
     """
-    var_mapping = {
-        'random': generate_random_string(8),
-        'timestamp': str(int(time.time())),
-        'date': time.strftime('%Y%m%d'),
-        'host_cluster': cache.get('host_cluster', 'host'),
-        'member_cluster': cache.get('member_cluster', ''),
-        'admin_user': _get_nested_value('test_users', 'admin', 'username'),
-        'admin_password': _get_nested_value('test_users', 'admin', 'password'),
-        'test_user': _get_nested_value('test_users', 'test_user', 'username'),
-    }
-    
-    # 处理嵌套变量，如 workspaces.host.name
-    if '.' in var_name:
-        parts = var_name.split('.')
-        if len(parts) == 3 and parts[0] in ['workspaces', 'projects']:
-            return _get_workspace_or_project_name(parts[0], parts[1], parts[2])
-    
-    return var_mapping.get(var_name, f'{{{{unknown:{var_name}}}}}')
+    try:
+        var_mapping = {
+            'random': generate_random_string(8),
+            'timestamp': str(int(time.time())),
+            'date': time.strftime('%Y%m%d'),
+            'host_cluster': cache.get('host_cluster', 'host'),
+            'member_cluster': cache.get('member_cluster', ''),
+            'admin_user': _get_nested_value('test_users', 'admin', 'username'),
+            'admin_password': _get_nested_value('test_users', 'admin', 'password'),
+            'test_user': _get_nested_value('test_users', 'test_user', 'username'),
+        }
+        
+        # 处理嵌套变量，如 workspaces.host.name
+        if '.' in var_name:
+            parts = var_name.split('.')
+            if len(parts) == 3 and parts[0] in ['workspaces', 'projects']:
+                return _get_workspace_or_project_name(parts[0], parts[1], parts[2])
+        
+        return var_mapping.get(var_name, f'{{{{unknown:{var_name}}}}}')
+    except Exception as e:
+        # 如果获取变量失败，返回原始占位符
+        print(f"⚠️ 警告: 获取变量 {var_name} 失败: {e}")
+        return f'{{{{{var_name}}}}}'
 
 
 def _get_nested_value(component: str, key: str, field: str) -> str:
@@ -133,9 +138,14 @@ def load_test_data(
     else:
         # 处理 module 可能包含子目录的情况，如 "access_management/roles"
         module_path = Path(module)
-        if module_path.suffix == '':
-            module_path = module_path / f"{data_key.split('.')[0] if data_key else 'data'}.json"
-        data_file = Path(__file__).parent.parent / "data" / "api_data" / component / module_path
+        # 如果 module 是文件名（没有后缀），且 data_key 为 None，直接使用 {module}.json
+        # 如果 module 是目录，且 data_key 为 None，使用 {data_key}.json
+        if module_path.suffix == '' and data_key is None:
+            # 直接使用 module.json
+            data_file = Path(__file__).parent.parent / "data" / "api_data" / component / f"{module}.json"
+        else:
+            # module 包含子目录或需要 data_key
+            data_file = Path(__file__).parent.parent / "data" / "api_data" / component / module_path
     
     try:
         if data_file.exists():

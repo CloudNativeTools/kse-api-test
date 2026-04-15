@@ -6,6 +6,7 @@
 
 注意：这些钩子运行在主进程/线程中，在 pytest 之前/之后执行
 """
+import time
 from aomaker.aomaker import hook
 from utils.cluster_helpers import (
     setup_test_environment,
@@ -45,7 +46,10 @@ def before_all():
         print(f"  - Host集群: {host_cluster}")
         print(f"  - Member集群: {member_cluster or '无'}")
 
-        # 2. 创建测试环境（从配置文件加载数据）
+        # 2. 等待缓存操作完成（避免 UNIQUE constraint 冲突）
+        time.sleep(0.5)
+
+        # 3. 创建测试环境（从配置文件加载数据）
         success, config = setup_test_environment()
 
         if success:
@@ -91,6 +95,9 @@ def after_all():
     print("=" * 60)
 
     try:
+        # 等待缓存操作完成（避免并发冲突）
+        time.sleep(0.5)
+        
         # 清理测试数据（从配置文件加载数据）
         success, config = cleanup_test_environment()
 
