@@ -47,7 +47,7 @@ pip install aomaker
 
 ```yaml
 test:
-  base_url: "http://139.198.112.87:20885"
+  base_url: "http://{{host_ip}}:{{apiserver_nodeport}}"
   account:
     user: "admin"
     pwd: "P@88w0rd"
@@ -62,8 +62,6 @@ arun
 # 按模块运行
 arun -e test -m access_management
 
-# 按模块运行（指定环境）
-arun -e test -m identity_management
 ```
 
 ## 开发规范
@@ -172,16 +170,5 @@ arun -e test -m access_management
 - 资源存在则复用，不存在则创建
 - 支持重试机制处理数据库锁定
 
-## 常见问题
 
-**Q: 变量替换不生效，`{{admin_user}}` 显示为原文**
 
-A: 检查 `data/api_data/_common/test_users.json` 中是否正确配置了 `admin.username` 字段。
-
-**Q: Allure 报告生成失败**
-
-A: 确保已安装 Allure Commandline：[安装指南](https://allurereport.org/)
-
-**Q: 数据库锁定错误**
-
-A: 框架已内置重试机制，如仍频繁出现，可增加重试次数或等待时间。
