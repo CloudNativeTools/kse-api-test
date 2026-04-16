@@ -1,0 +1,531 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+from attrs import define, field
+
+__ALL__ = [
+    "V2beta1Alert",
+    "ApiListResultV2beta1Alert",
+    "V1ManagedFieldsEntry",
+    "V1OwnerReference",
+    "V1ObjectMeta",
+    "IntstrIntOrString",
+    "ApisV2beta1NodeExprBuilder",
+    "ApisV2beta1ClusterRuleExprBuilder",
+    "ApisV2beta1ClusterRule",
+    "ApisV2beta1ClusterRuleGroupSpec",
+    "V2beta1RulesStats",
+    "V2beta1RuleStatus",
+    "V2beta1RuleGroupStatus",
+    "V2beta1ClusterRuleGroup",
+    "ApiListResultV2beta1ClusterRuleGroup",
+    "ErrorsError",
+    "ApisV2beta1WorkloadExprBuilder",
+    "ApisV2beta1NamespaceRuleExprBuilder",
+    "ApisV2beta1NamespaceRule",
+    "ApisV2beta1RuleGroupSpec",
+    "V2beta1RuleGroup",
+    "ApiListResultV2beta1RuleGroup",
+    "ApisV2beta1Matcher",
+    "ApisV2beta1MetricLabelSelector",
+    "ApisV2beta1ScopedNodeExprBuilder",
+    "ApisV2beta1ScopedWorkloadExprBuilder",
+    "ApisV2beta1GlobalRuleExprBuilder",
+    "ApisV2beta1GlobalRule",
+    "ApisV2beta1GlobalRuleGroupSpec",
+    "V2beta1GlobalRuleGroup",
+    "ApiListResultV2beta1GlobalRuleGroup",
+]
+
+
+@define(kw_only=True)
+class V2beta1Alert:
+    activeAt: Optional[datetime] = field(
+        default=None, metadata={"description": "time when this alert became active"}
+    )
+    annotations: Optional[Dict] = field(
+        default=None, metadata={"description": "annotations"}
+    )
+    labels: Optional[Dict] = field(default=None, metadata={"description": "labels"})
+    state: Optional[str] = field(default=None, metadata={"description": "state"})
+    value: Optional[str] = field(
+        default=None,
+        metadata={"description": "the value from the last expression evaluation"},
+    )
+
+
+@define(kw_only=True)
+class ApiListResultV2beta1Alert:
+    items: List[V2beta1Alert] = field()
+    totalItems: int = field()
+
+
+@define(kw_only=True)
+class V1ManagedFieldsEntry:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": 'APIVersion defines the version of this resource that this field set applies to. The format is "group/version" just like the top-level APIVersion field. It is necessary to track the version of a field set because it cannot be automatically converted.'
+        },
+    )
+    fieldsType: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": 'FieldsType is the discriminator for the different fields format and version. There is currently only one possible value: "FieldsV1"'
+        },
+    )
+    fieldsV1: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": 'FieldsV1 holds the first JSON version format as described in the "FieldsV1" type.'
+        },
+    )
+    manager: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Manager is an identifier of the workflow managing these fields."
+        },
+    )
+    operation: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Operation is the type of operation which lead to this ManagedFieldsEntry being created. The only valid values for this field are 'Apply' and 'Update'."
+        },
+    )
+    subresource: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource."
+        },
+    )
+    time: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": "Time is the timestamp of when the ManagedFields entry was added. The timestamp will also be updated if a field is added, the manager changes any of the owned fields value or removes a field. The timestamp does not update when a field is removed from the entry because another manager took it over."
+        },
+    )
+
+
+@define(kw_only=True)
+class V1OwnerReference:
+    apiVersion: str = field(metadata={"description": "API version of the referent."})
+    kind: str = field(
+        metadata={
+            "description": "Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        }
+    )
+    name: str = field(
+        metadata={
+            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names"
+        }
+    )
+    uid: str = field(
+        metadata={
+            "description": "UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#uids"
+        }
+    )
+    blockOwnerDeletion: Optional[bool] = field(
+        default=None,
+        metadata={
+            "description": 'If true, AND if the owner has the "foregroundDeletion" finalizer, then the owner cannot be deleted from the key-value store until this reference is removed. See https://kubernetes.io/docs/concepts/architecture/garbage-collection/#foreground-deletion for how the garbage collector interacts with this field and enforces the foreground deletion. Defaults to false. To set this field, a user needs "delete" permission of the owner, otherwise 422 (Unprocessable Entity) will be returned.'
+        },
+    )
+    controller: Optional[bool] = field(
+        default=None,
+        metadata={
+            "description": "If true, this reference points to the managing controller."
+        },
+    )
+
+
+@define(kw_only=True)
+class V1ObjectMeta:
+    annotations: Optional[Dict] = field(
+        default=None,
+        metadata={
+            "description": "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations"
+        },
+    )
+    creationTimestamp: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": """\
+CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
+
+Populated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+"""
+        },
+    )
+    deletionGracePeriodSeconds: Optional[int] = field(
+        default=None,
+        metadata={
+            "description": "Number of seconds allowed for this object to gracefully terminate before it will be removed from the system. Only set when deletionTimestamp is also set. May only be shortened. Read-only."
+        },
+    )
+    deletionTimestamp: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": """\
+DeletionTimestamp is RFC 3339 date and time at which this resource will be deleted. This field is set by the server when a graceful deletion is requested by the user, and is not directly settable by a client. The resource is expected to be deleted (no longer visible from resource lists, and not reachable by name) after the time in this field, once the finalizers list is empty. As long as the finalizers list contains items, deletion is blocked. Once the deletionTimestamp is set, this value may not be unset or be set further into the future, although it may be shortened or the resource may be deleted prior to this time. For example, a user may request that a pod is deleted in 30 seconds. The Kubelet will react by sending a graceful termination signal to the containers in the pod. After that 30 seconds, the Kubelet will send a hard termination signal (SIGKILL) to the container and after cleanup, remove the pod from the API. In the presence of network partitions, this object may still exist after this timestamp, until an administrator or automated process can determine the resource is fully terminated. If not set, graceful deletion of the object has not been requested.
+
+Populated by the system when a graceful deletion is requested. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+"""
+        },
+    )
+    finalizers: Optional[List[str]] = field(
+        default=None,
+        metadata={
+            "description": "Must be empty before the object is deleted from the registry. Each entry is an identifier for the responsible component that will remove the entry from the list. If the deletionTimestamp of the object is non-nil, entries in this list can only be removed. Finalizers may be processed and removed in any order.  Order is NOT enforced because it introduces significant risk of stuck finalizers. finalizers is a shared field, any actor with permission can reorder it. If the finalizer list is processed in order, then this can lead to a situation in which the component responsible for the first finalizer in the list is waiting for a signal (field value, external system, or other) produced by a component responsible for a finalizer later in the list, resulting in a deadlock. Without enforced ordering finalizers are free to order amongst themselves and are not vulnerable to ordering changes in the list."
+        },
+    )
+    generateName: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": """\
+GenerateName is an optional prefix, used by the server, to generate a unique name ONLY IF the Name field has not been provided. If this field is used, the name returned to the client will be different than the name passed. This value will also be combined with a unique suffix. The provided value has the same validation rules as the Name field, and may be truncated by the length of the suffix required to make the value unique on the server.
+
+If this field is specified and the generated name exists, the server will return a 409.
+
+Applied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency
+"""
+        },
+    )
+    generation: Optional[int] = field(
+        default=None,
+        metadata={
+            "description": "A sequence number representing a specific generation of the desired state. Populated by the system. Read-only."
+        },
+    )
+    labels: Optional[Dict] = field(
+        default=None,
+        metadata={
+            "description": "Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels"
+        },
+    )
+    managedFields: Optional[List[V1ManagedFieldsEntry]] = field(
+        default=None,
+        metadata={
+            "description": "ManagedFields maps workflow-id and version to the set of fields that are managed by that workflow. This is mostly for internal housekeeping, and users typically shouldn't need to set or understand this field. A workflow can be the user's name, a controller's name, or the name of a specific apply path like \"ci-cd\". The set of fields is always in the version that the workflow used when modifying the object."
+        },
+    )
+    name: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Name must be unique within a namespace. Is required when creating resources, although some resources may allow a client to request the generation of an appropriate name automatically. Name is primarily intended for creation idempotence and configuration definition. Cannot be updated. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names"
+        },
+    )
+    namespace: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": """\
+Namespace defines the space within which each name must be unique. An empty namespace is equivalent to the \"default\" namespace, but \"default\" is the canonical representation. Not all objects are required to be scoped to a namespace - the value of this field for those objects will be empty.
+
+Must be a DNS_LABEL. Cannot be updated. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
+"""
+        },
+    )
+    ownerReferences: Optional[List[V1OwnerReference]] = field(
+        default=None,
+        metadata={
+            "description": "List of objects depended by this object. If ALL objects in the list have been deleted, this object will be garbage collected. If this object is managed by a controller, then an entry in this list will point to this controller, with the controller field set to true. There cannot be more than one managing controller."
+        },
+    )
+    resourceVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": """\
+An opaque value that represents the internal version of this object that can be used by clients to determine when objects have changed. May be used for optimistic concurrency, change detection, and the watch operation on a resource or set of resources. Clients must treat these values as opaque and passed unmodified back to the server. They may only be valid for a particular resource or set of resources.
+
+Populated by the system. Read-only. Value must be treated as opaque by clients and . More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+"""
+        },
+    )
+    selfLink: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Deprecated: selfLink is a legacy read-only field that is no longer populated by the system."
+        },
+    )
+    uid: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": """\
+UID is the unique in time and space value for this object. It is typically generated by the server on successful creation of a resource and is not allowed to change on PUT operations.
+
+Populated by the system. Read-only. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#uids
+"""
+        },
+    )
+
+
+@define(kw_only=True)
+class IntstrIntOrString:
+    IntVal: int = field()
+    StrVal: str = field()
+    Type: int = field()
+
+
+@define(kw_only=True)
+class ApisV2beta1NodeExprBuilder:
+    comparator: str = field()
+    metricThreshold: Any = field()
+    names: List[Any] = field()
+
+
+@define(kw_only=True)
+class ApisV2beta1ClusterRuleExprBuilder:
+    node: Optional[ApisV2beta1NodeExprBuilder] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1ClusterRule:
+    alert: str = field()
+    annotations: Optional[Dict] = field(default=None)
+    disable: Optional[bool] = field(default=None)
+    expr: Optional[IntstrIntOrString] = field(default=None)
+    exprBuilder: Optional[ApisV2beta1ClusterRuleExprBuilder] = field(default=None)
+    for_: Optional[str] = field(default=None, metadata={"original_name": "for"})
+    id: Optional[str] = field(default=None)
+    labels: Optional[Dict] = field(default=None)
+    severity: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1ClusterRuleGroupSpec:
+    rules: List[ApisV2beta1ClusterRule] = field()
+    interval: Optional[str] = field(default=None)
+    partial_response_strategy: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2beta1RulesStats:
+    disabled: int = field(metadata={"description": "count of disabled rules"})
+    firing: int = field(metadata={"description": "count of rules in the firing state"})
+    inactive: int = field(
+        metadata={"description": "count of rules in the inactive state"}
+    )
+    pending: int = field(
+        metadata={"description": "count of rules in the pending state"}
+    )
+
+
+@define(kw_only=True)
+class V2beta1RuleStatus:
+    activeAt: Optional[datetime] = field(
+        default=None, metadata={"description": "time when this rule became active"}
+    )
+    alerts: Optional[List[V2beta1Alert]] = field(
+        default=None, metadata={"description": "alerts"}
+    )
+    evaluationTime: Optional[float] = field(
+        default=None,
+        metadata={"description": "time spent on the expression evaluation in seconds"},
+    )
+    expr: Optional[str] = field(
+        default=None,
+        metadata={"description": "expression evaluated, for global rules only"},
+    )
+    health: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "health state of a rule, one of ok, err, unknown depending on the last execution result"
+        },
+    )
+    lastError: Optional[str] = field(
+        default=None, metadata={"description": "error of the last evaluation"}
+    )
+    lastEvaluation: Optional[datetime] = field(
+        default=None, metadata={"description": "time of last evaluation"}
+    )
+    state: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "state of a rule, one of firing, pending, inactive or disabled depending on the rule and its alerts"
+        },
+    )
+
+
+@define(kw_only=True)
+class V2beta1RuleGroupStatus:
+    evaluationTime: Optional[float] = field(
+        default=None,
+        metadata={"description": "time spent on rule group evaluation in seconds"},
+    )
+    lastEvaluation: Optional[datetime] = field(
+        default=None, metadata={"description": "time of last evaluation"}
+    )
+    rulesStats: Optional[V2beta1RulesStats] = field(
+        default=None, metadata={"description": "statistics of rules in one RuleGroup"}
+    )
+    rulesStatus: Optional[List[V2beta1RuleStatus]] = field(
+        default=None, metadata={"description": "status of rules in one RuleGroup"}
+    )
+
+
+@define(kw_only=True)
+class V2beta1ClusterRuleGroup:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[ApisV2beta1ClusterRuleGroupSpec] = field(default=None)
+    status: Optional[V2beta1RuleGroupStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class ApiListResultV2beta1ClusterRuleGroup:
+    items: List[V2beta1ClusterRuleGroup] = field()
+    totalItems: int = field()
+
+
+@define(kw_only=True)
+class ErrorsError:
+    message: str = field(metadata={"description": "error message"})
+
+
+@define(kw_only=True)
+class ApisV2beta1WorkloadExprBuilder:
+    comparator: str = field()
+    kind: str = field()
+    names: List[Any] = field()
+    metricThreshold: Optional[Any] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1NamespaceRuleExprBuilder:
+    workload: Optional[ApisV2beta1WorkloadExprBuilder] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1NamespaceRule:
+    alert: str = field()
+    annotations: Optional[Dict] = field(default=None)
+    disable: Optional[bool] = field(default=None)
+    expr: Optional[IntstrIntOrString] = field(default=None)
+    exprBuilder: Optional[ApisV2beta1NamespaceRuleExprBuilder] = field(default=None)
+    for_: Optional[str] = field(default=None, metadata={"original_name": "for"})
+    id: Optional[str] = field(default=None)
+    labels: Optional[Dict] = field(default=None)
+    severity: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1RuleGroupSpec:
+    rules: List[ApisV2beta1NamespaceRule] = field()
+    interval: Optional[str] = field(default=None)
+    partial_response_strategy: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2beta1RuleGroup:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[ApisV2beta1RuleGroupSpec] = field(default=None)
+    status: Optional[V2beta1RuleGroupStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class ApiListResultV2beta1RuleGroup:
+    items: List[V2beta1RuleGroup] = field()
+    totalItems: int = field()
+
+
+@define(kw_only=True)
+class ApisV2beta1Matcher:
+    type: str = field()
+    value: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1MetricLabelSelector:
+    inValues: Optional[List[str]] = field(default=None)
+    matcher: Optional[ApisV2beta1Matcher] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1ScopedNodeExprBuilder:
+    comparator: str = field()
+    names: List[Any] = field()
+    metricThreshold: Optional[Any] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1ScopedWorkloadExprBuilder:
+    comparator: str = field()
+    kind: str = field()
+    names: List[Any] = field()
+    metricThreshold: Optional[Any] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1GlobalRuleExprBuilder:
+    node: Optional[ApisV2beta1ScopedNodeExprBuilder] = field(default=None)
+    workload: Optional[ApisV2beta1ScopedWorkloadExprBuilder] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1GlobalRule:
+    alert: str = field()
+    annotations: Optional[Dict] = field(default=None)
+    clusterSelector: Optional[ApisV2beta1MetricLabelSelector] = field(default=None)
+    disable: Optional[bool] = field(default=None)
+    expr: Optional[IntstrIntOrString] = field(default=None)
+    exprBuilder: Optional[ApisV2beta1GlobalRuleExprBuilder] = field(default=None)
+    for_: Optional[str] = field(default=None, metadata={"original_name": "for"})
+    id: Optional[str] = field(default=None)
+    labels: Optional[Dict] = field(default=None)
+    namespaceSelector: Optional[ApisV2beta1MetricLabelSelector] = field(default=None)
+    severity: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class ApisV2beta1GlobalRuleGroupSpec:
+    rules: List[ApisV2beta1GlobalRule] = field()
+    interval: Optional[str] = field(default=None)
+    partial_response_strategy: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2beta1GlobalRuleGroup:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[ApisV2beta1GlobalRuleGroupSpec] = field(default=None)
+    status: Optional[V2beta1RuleGroupStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class ApiListResultV2beta1GlobalRuleGroup:
+    items: List[V2beta1GlobalRuleGroup] = field()
+    totalItems: int = field()
