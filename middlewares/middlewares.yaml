@@ -1,3 +1,7 @@
 logging_middleware:
     priority: 1000
     enabled: true
+
+cluster_prefix:
+    priority: 100
+    enabled: true

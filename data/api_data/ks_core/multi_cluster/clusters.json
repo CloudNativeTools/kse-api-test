@@ -1,0 +1,13 @@
+{
+  "cluster_labels": {
+    "host": "cluster-role.kubesphere.io/host",
+    "member": "cluster-role.kubesphere.io/member"
+  },
+  "test_labels": [
+    {
+      "key": "test-multi-cluster-group",
+      "value": "test-multi-cluster-value-{{random}}",
+      "description": "多集群测试标签"
+    }
+  ]
+}

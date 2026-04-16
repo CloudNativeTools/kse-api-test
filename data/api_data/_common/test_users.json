@@ -1,0 +1,26 @@
+{
+  "admin": {
+    "username": "admin",
+    "password": "P@88w0rd",
+    "role": "platform-admin",
+    "email": "admin@kubesphere.io"
+  },
+  "test_user": {
+    "username": "test-user",
+    "password": "Test@123456",
+    "role": "platform-regular",
+    "email": "test-user@kubesphere.io"
+  },
+  "ws_manager": {
+    "username": "ws-manager",
+    "password": "Test@123456",
+    "role": "workspaces-manager",
+    "email": "ws-manager@kubesphere.io"
+  },
+  "project_manager": {
+    "username": "project-manager",
+    "password": "Test@123456",
+    "role": "users-manager",
+    "email": "project-manager@kubesphere.io"
+  }
+}

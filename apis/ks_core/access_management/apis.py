@@ -49,12 +49,11 @@ class ListClusterMembersAPI(BaseAPI[ApiListResult]):
 
 @define(kw_only=True)
 @router.post("/kapis/iam.kubesphere.io/v1beta1/clustermembers")
-class CreateClusterMembersAPI(BaseAPI[V1beta1Member]):
+class CreateClusterMembersAPI(BaseAPI):
     """None"""
 
     request_body: List[V1beta1Member] = field()
 
-    response: Optional[V1beta1Member] = field(default=V1beta1Member)
     endpoint_id: Optional[str] = field(default="CreateClusterMembers")
 
 
@@ -93,7 +92,6 @@ class UpdateClusterMemberAPI(BaseAPI[ErrorsError]):
     request_body: RequestBodyModel
 
     path_params: PathParams
-    response: Optional[ErrorsError] = field(default=ErrorsError)
     endpoint_id: Optional[str] = field(default="UpdateClusterMember")
 
 

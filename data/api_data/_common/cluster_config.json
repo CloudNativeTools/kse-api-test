@@ -1,0 +1,8 @@
+{
+  "host_cluster_label": "cluster-role.kubesphere.io/host",
+  "managed_label": "kubesphere.io/managed",
+  "creator_annotation": "kubesphere.io/creator",
+  "workspace_label": "kubesphere.io/workspace",
+  "default_creator": "admin",
+  "default_manager": "admin"
+}

@@ -1,0 +1,20 @@
+{
+  "valid_credentials": {
+    "username": "{{admin_user}}",
+    "password": "{{admin_password}}"
+  },
+  "invalid_credentials": [
+    {
+      "username": "{{admin_user}}",
+      "password": "wrong-password",
+      "desc": "错误密码",
+      "expected_status": 401
+    },
+    {
+      "username": "non-existent-user",
+      "password": "any-password",
+      "desc": "不存在的用户",
+      "expected_status": 401
+    }
+  ]
+}
