@@ -1,0 +1,24 @@
+{
+  "test_cluster_rule_group": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "ClusterRuleGroup",
+    "metadata": {
+      "name": "test-cluster-rule-group"
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "TestClusterAlert",
+          "expr": "up == 1",
+          "for": "1m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "Test cluster alert summary"
+          }
+        }
+      ]
+    }
+  }
+}

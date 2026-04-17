@@ -1,0 +1,64 @@
+{
+  "test_global_rule_group": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "test-global-rule-group"
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "TestGlobalAlert",
+          "expr": "up == 1",
+          "for": "1m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "Test global alert summary",
+            "message": "Test global alert message"
+          }
+        }
+      ]
+    }
+  },
+  "updated_global_rule_group": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "test-global-rule-group"
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "TestGlobalAlertUpdated",
+          "expr": "up == 0",
+          "for": "5m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "Updated global alert summary"
+          }
+        }
+      ]
+    }
+  },
+  "patched_global_rule_group": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "test-global-rule-group"
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "TestGlobalAlert",
+          "expr": "up == 1",
+          "for": "1m",
+          "disabled": true
+        }
+      ]
+    }
+  }
+}

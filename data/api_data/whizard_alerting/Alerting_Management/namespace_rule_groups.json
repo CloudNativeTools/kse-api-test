@@ -1,0 +1,46 @@
+{
+  "test_namespace_rule_group": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "RuleGroup",
+    "metadata": {
+      "name": "test-namespace-rule-group"
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "TestNamespaceAlert",
+          "expr": "up == 1",
+          "for": "1m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "Test namespace alert summary"
+          }
+        }
+      ]
+    }
+  },
+  "updated_namespace_rule_group": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "RuleGroup",
+    "metadata": {
+      "name": "test-namespace-rule-group"
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "TestNamespaceAlertUpdated",
+          "expr": "up == 0",
+          "for": "5m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "Updated namespace alert summary"
+          }
+        }
+      ]
+    }
+  }
+}
