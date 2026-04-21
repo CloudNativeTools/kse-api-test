@@ -5,7 +5,7 @@ whizard-alerting 单接口测试基类
 """
 import time
 import logging
-from typing import Optional
+from typing import Optional, Callable, List, Tuple
 
 from apis.whizard_alerting.Alerting_Management.apis import (
     HandleListGlobalRuleGroupsAPI,
@@ -273,3 +273,116 @@ def build_patch_body_for_alias_desc(current_data: dict, alias_name: str, descrip
     metadata["annotations"]["kubesphere.io/description"] = description
     
     return body
+
+
+# ==================== 告警查询公共方法 ====================
+
+def wait_for_alerts(
+    query_func: Callable[[], Optional[List[dict]]],
+    max_attempts: int = 48,
+    sleep_interval: int = 5,
+    validate_func: Callable[[List[dict]], None] = None
+) -> Tuple[bool, List[dict]]:
+    """
+    等待告警触发（轮询查询）
+
+    适用于 cluster、namespace、global 各级别告警测试
+
+    Args:
+        query_func: 发送告警查询的可调用对象，返回告警 items 列表（查询失败返回 None）
+        max_attempts: 最大尝试次数，默认 48 次（约 240 秒）
+        sleep_interval: 每次间隔秒数，默认 5 秒
+        validate_func: 对每个告警 item 做额外验证的可选函数
+
+    Returns:
+        (found_alert: bool, items: list)
+    """
+    found_alert = False
+    items = []
+
+    for attempt in range(max_attempts):
+        items = query_func()
+
+        if items is not None and len(items) >= 1:
+            found_alert = True
+            # 执行额外验证
+            if validate_func:
+                validate_func(items)
+            logger.info(f"找到告警，状态: {[item.get('state') for item in items]}")
+            break
+
+        if attempt < max_attempts - 1:
+            time.sleep(sleep_interval)
+
+    if not found_alert:
+        logger.warning("告警未触发，可能测试环境无监控数据")
+
+    return found_alert, items
+
+
+def query_cluster_alerts(cluster: str, rule_group_name: str = None, state: str = None) -> Optional[List[dict]]:
+    """
+    查询集群告警列表，返回 items 列表（查询失败返回 None）
+
+    Args:
+        cluster: 集群名称
+        rule_group_name: 规则组名称过滤（可选）
+        state: 告警状态过滤 firing/pending（可选）
+
+    Returns:
+        告警 items 列表，或 None（查询失败）
+    """
+    from apis.whizard_alerting.Alerting_Management.apis import HandleListClusterAlertsAPI
+
+    set_current_cluster(cluster)
+    try:
+        api = HandleListClusterAlertsAPI(
+            path_params=HandleListClusterAlertsAPI.PathParams(cluster=cluster),
+            enable_schema_validation=False
+        )
+        api.query_params.page = "1"
+        api.query_params.limit = "10"
+        api.query_params.sortBy = "createTime"
+        api.query_params.builtin = "false"
+        if rule_group_name:
+            api.query_params.label_filters = f"rule_group={rule_group_name}"
+        if state:
+            api.query_params.state = state
+
+        res = api.send()
+        if res.cached_response.raw_response.status_code == 200:
+            data = res.cached_response.raw_response.json()
+            return data.get("items") or []
+        return None
+    finally:
+        clear_current_cluster()
+
+
+def query_global_alerts(rule_group_name: str = None, state: str = None) -> Optional[List[dict]]:
+    """
+    查询全局告警列表，返回 items 列表（查询失败返回 None）
+
+    Args:
+        rule_group_name: 规则组名称过滤（可选）
+        state: 告警状态过滤 firing/pending（可选）
+
+    Returns:
+        告警 items 列表，或 None（查询失败）
+    """
+    from apis.whizard_alerting.Alerting_Management.apis import HandleListGlobalAlertsAPI
+
+    api = HandleListGlobalAlertsAPI(enable_schema_validation=False)
+    api.query_params.page = "1"
+    api.query_params.limit = "10"
+    api.query_params.ascending = None
+    api.query_params.builtin = "false"
+    if rule_group_name:
+        api.query_params.label_filters = f"rule_group={rule_group_name}"
+    if state:
+        api.query_params.state = state
+
+    res = api.send()
+    if res.cached_response.raw_response.status_code == 200:
+        data = res.cached_response.raw_response.json()
+        return data.get("items") or []
+    return None

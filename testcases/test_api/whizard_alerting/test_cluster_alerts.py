@@ -12,6 +12,8 @@ from testcases.conftest import host_cluster
 from testcases.test_api.whizard_alerting.base import (
     get_for_test_cluster_rule_group,
     cleanup_cluster_rule_group,
+    wait_for_alerts,
+    query_cluster_alerts,
 )
 from utils.cluster_helpers import set_current_cluster, clear_current_cluster
 
@@ -19,12 +21,6 @@ logger = logging.getLogger(__name__)
 
 # 标准规则组名称（用于测试告警关联）
 STANDARD_RULE_GROUP = "cluster-alert-standard"
-
-# 各测试使用不同的规则组名称，避免相互干扰
-KEYWORD_FILTER_RULE_GROUP = "cluster-alert-keyword"
-RULE_GROUP_DETAIL_RULE_GROUP = "cluster-alert-detail"
-MEMBER_RULE_GROUP = "member-cluster-alert"
-
 
 @pytest.mark.alerting_management
 class TestListClusterAlerts:
@@ -44,34 +40,14 @@ class TestListClusterAlerts:
 
         # 2. 等待告警触发
         logger.info(f"等待告警触发，规则组: {STANDARD_RULE_GROUP}")
-        max_attempts = 48
-        found_alert = False
-
-        for attempt in range(max_attempts):
-            set_current_cluster(host_cluster)
-            try:
-                api = HandleListClusterAlertsAPI(
-                    path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster),
-                    enable_schema_validation=False
-                )
-                api.query_params.page = "1"
-                api.query_params.limit = "10"
-                api.query_params.ascending = None
-                api.query_params.label_filters = f"rule_group={STANDARD_RULE_GROUP}"
-                api.query_params.builtin = "false"
-
-                res = api.send()
-                if res.cached_response.raw_response.status_code == 200:
-                    data = res.cached_response.raw_response.json()
-                    if data.get("totalItems", 0) >= 1:
-                        found_alert = True
-                        logger.info(f"告警已触发，共 {data.get('totalItems')} 条")
-                        break
-            finally:
-                clear_current_cluster()
-
-            if attempt < max_attempts - 1:
-                time.sleep(5)
+        found_alert, _ = wait_for_alerts(
+            query_func=lambda: query_cluster_alerts(
+                cluster=host_cluster,
+                rule_group_name=STANDARD_RULE_GROUP
+            ),
+            max_attempts=48,
+            sleep_interval=5
+        )
 
         if not found_alert:
             logger.warning("告警未触发，但继续执行测试")
@@ -87,12 +63,12 @@ class TestListClusterAlerts:
         set_current_cluster(host_cluster)
         try:
             api = HandleListClusterAlertsAPI(
-                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster),
-                enable_schema_validation=False
+                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster)
             )
             api.query_params.page = "1"
             api.query_params.limit = "10"
-            api.query_params.ascending = None  # 修复默认值问题
+            api.query_params.builtin = "false"
+            api.query_params.sortBy = "createTime"
 
             res = api.send()
             assert res.cached_response.raw_response.status_code == 200
@@ -108,8 +84,7 @@ class TestListClusterAlerts:
         set_current_cluster(host_cluster)
         try:
             api = HandleListClusterAlertsAPI(
-                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster),
-                enable_schema_validation=False
+                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster)
             )
             api.query_params.state = "firing"
             api.query_params.page = "1"
@@ -126,8 +101,7 @@ class TestListClusterAlerts:
         set_current_cluster(host_cluster)
         try:
             api = HandleListClusterAlertsAPI(
-                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster),
-                enable_schema_validation=False
+                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster)
             )
             api.query_params.state = "pending"
             api.query_params.page = "1"
@@ -135,7 +109,6 @@ class TestListClusterAlerts:
             api.query_params.sortBy = "createTime"
 
             res = api.send()
-            # 可能返回 200 或 204（无告警时）
             assert res.cached_response.raw_response.status_code == 200
         finally:
             clear_current_cluster()
@@ -149,8 +122,7 @@ class TestListClusterAlerts:
         set_current_cluster(host_cluster)
         try:
             api = HandleListClusterAlertsAPI(
-                    path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster),
-                    enable_schema_validation=False
+                    path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster)
                 )
             # 使用 summary 作为关键词（从 cluster_rule_group_custom 模板中获取）
             api.query_params.keyword = "custom alert"
@@ -182,8 +154,7 @@ class TestListClusterAlerts:
         set_current_cluster(host_cluster)
         try:
             api = HandleListClusterAlertsAPI(
-                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster),
-                enable_schema_validation=False
+                path_params=HandleListClusterAlertsAPI.PathParams(cluster=host_cluster)
             )
             api.query_params.page = "1"
             api.query_params.limit = "10"
@@ -228,41 +199,22 @@ class TestListClusterAlertsMember:
             pytest.skip("无法在 member 集群创建测试规则组")
 
         try:
-            # 等待告警触发（延长至240秒）
-            max_attempts = 48
-            found_alert = False
+            # 等待告警触发，并验证 cluster 标签
+            def validate_cluster_label(items):
+                for item in items:
+                    cluster_label = item.get("labels", {}).get("cluster")
+                    assert cluster_label == member_cluster, \
+                        f"告警 cluster 标签不匹配: {cluster_label} != {member_cluster}"
 
-            for attempt in range(max_attempts):
-                set_current_cluster(member_cluster)
-                try:
-                    api = HandleListClusterAlertsAPI(
-                        path_params=HandleListClusterAlertsAPI.PathParams(cluster=member_cluster),
-                        enable_schema_validation=False
-                    )
-                    api.query_params.page = "1"
-                    api.query_params.limit = "10"
-                    api.query_params.sortBy = "createTime"
-                    api.query_params.builtin = "false"
-
-                    res = api.send()
-                    if res.cached_response.raw_response.status_code == 200:
-                        data = res.cached_response.raw_response.json()
-                        items = data.get("items") or []
-
-                        if len(items) >= 1:
-                            found_alert = True
-                            # 验证返回的告警 cluster 标签等于 member_cluster
-                            for item in items:
-                                cluster_label = item.get("labels", {}).get("cluster")
-                                assert cluster_label == member_cluster, \
-                                    f"告警 cluster 标签不匹配: {cluster_label} != {member_cluster}"
-                            logger.info(f"找到告警，状态: {[item.get('state') for item in items]}")
-                            break
-                finally:
-                    clear_current_cluster()
-
-                if attempt < max_attempts - 1:
-                    time.sleep(5)
+            found_alert, _ = wait_for_alerts(
+                query_func=lambda: query_cluster_alerts(
+                    cluster=member_cluster,
+                    rule_group_name=MEMBER_STANDARD_RULE_GROUP
+                ),
+                max_attempts=48,
+                sleep_interval=5,
+                validate_func=validate_cluster_label
+            )
 
             if found_alert:
                 logger.info(f"Member 集群告警触发成功，规则组: {MEMBER_STANDARD_RULE_GROUP}")

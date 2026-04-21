@@ -146,6 +146,9 @@ cython_debug/
 *.ipr
 modules.xml
 
+# VSCode
+.vscode/
+
 # aomaker reports and logs
 database/
 reports/

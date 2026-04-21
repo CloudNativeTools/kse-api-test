@@ -76,10 +76,6 @@ class TestCreateClusterRuleGroup:
     def test_create_template_rule_group(self, host_cluster, cleanup_created_groups):
         """
         创建集群模板规则组（使用 exprBuilder）
-        验证点：
-        1. 创建成功（200/201）
-        2. 返回的 metadata.name 正确
-        3. 返回的 spec.rules 结构正确
         """
         group_name = generate_test_name("cluster-alert")
 
@@ -469,8 +465,7 @@ class TestDeleteClusterRuleGroup:
                 path_params=HandleDeleteClusterRuleGroupAPI.PathParams(
                     cluster=host_cluster,
                     name=STANDARD_RULE_GROUP
-                ),
-                enable_schema_validation=False
+                )
             )
             res = api.send()
 
@@ -583,8 +578,7 @@ class TestClusterRuleGroupsMember:
                 path_params=HandleDeleteClusterRuleGroupAPI.PathParams(
                     cluster=member_cluster,
                     name=MEMBER_STANDARD_RULE_GROUP
-                ),
-                enable_schema_validation=False
+                )
             )
             res = api.send()
 
