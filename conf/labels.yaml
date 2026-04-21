@@ -1,0 +1,57 @@
+# -*- coding:utf-8 -*-
+# 测试模块标签配置
+#
+# 运行策略:
+#   单集群: arun -e dev -m "not multi_cluster"   # 排除多集群用例，其他全跑
+#   多集群: arun -e dev                          # 全部跑
+#
+# 运行单个模块:
+#   单集群: arun -e dev -m "alerting_management and not multi_cluster"
+#   多集群: arun -e dev -m alerting_management
+
+modules:
+  # ===== whizard-alerting 可观测平台 =====
+  alerting_management:
+    description: "whizard-alerting 告警管理模块"
+
+  whizard_monitoring:
+    description: "whizard-monitoring 监控管理模块"
+
+  whizard_logging:
+    description: "whizard-logging 日志管理模块"
+
+  notification:
+    description: "通知管理模块"
+
+  # ===== ks-core 核心模块 =====
+  ks_core:
+    description: "ks-core 通用模块"
+
+  access_management:
+    description: "访问管理（成员、角色等）"
+
+  authentication:
+    description: "认证管理"
+
+  # ===== 其他模块 =====
+  workspace:
+    description: "企业空间管理"
+
+  project:
+    description: "项目管理"
+
+  workload:
+    description: "工作负载（Deployment、StatefulSet 等）"
+
+  service:
+    description: "服务管理（Service、Ingress 等）"
+
+  storage:
+    description: "存储管理"
+
+  network:
+    description: "网络管理（NetworkPolicy 等）"
+
+markers:
+  multi_cluster: "多集群用例 - Member 集群验证"
+  scenario: "场景测试 - 业务流验证"

@@ -1,22 +1,88 @@
 {
-  "test_cluster_rule_group": {
+  "cluster_rule_group_template": {
     "apiVersion": "alerting.kubesphere.io/v2beta1",
     "kind": "ClusterRuleGroup",
     "metadata": {
-      "name": "test-cluster-rule-group"
+      "name": "cluster-alert",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
     },
     "spec": {
       "rules": [
         {
-          "alert": "TestClusterAlert",
-          "expr": "up == 1",
-          "for": "1m",
-          "labels": {
-            "severity": "warning"
-          },
+          "alert": "node-memory",
           "annotations": {
-            "summary": "Test cluster alert summary"
-          }
+            "summary": "node memory over 15%",
+            "message": ""
+          },
+          "exprBuilder": {
+            "node": {
+              "names": ["node3", "node2", "node1"],
+              "metricThreshold": {
+                "memory": {
+                  "utilization": 0.15
+                }
+              },
+              "comparator": ">"
+            }
+          },
+          "disable": false,
+          "for": "1m",
+          "severity": "critical"
+        }
+      ]
+    }
+  },
+  "cluster_rule_group_custom": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "ClusterRuleGroup",
+    "metadata": {
+      "name": "cluster-custom-alert",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "custom-prom",
+          "annotations": {
+            "summary": "custom alert info",
+            "message": ""
+          },
+          "for": "",
+          "expr": "vector(1)",
+          "severity": "info",
+          "disable": false
+        }
+      ]
+    }
+  },
+  "cluster_rule_group_updated": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "ClusterRuleGroup",
+    "metadata": {
+      "name": "cluster-custom-alert"
+    },
+    "spec": {
+      "rules": [
+        {
+          "alert": "custom-prom-modify",
+          "annotations": {
+            "summary": "custom alert info",
+            "message": ""
+          },
+          "for": "",
+          "expr": "vector(1)",
+          "severity": "info",
+          "disable": false
         }
       ]
     }

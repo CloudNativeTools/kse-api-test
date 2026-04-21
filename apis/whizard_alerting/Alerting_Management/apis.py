@@ -54,10 +54,10 @@ class HandleListClusterAlertsAPI(BaseAPI[ApiListResultV2beta1Alert]):
 
     @define
     class QueryParams:
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -93,9 +93,7 @@ class HandleListClusterAlertsAPI(BaseAPI[ApiListResultV2beta1Alert]):
 
     path_params: PathParams
     query_params: QueryParams = field(factory=QueryParams)
-    response: Optional[ApiListResultV2beta1Alert] = field(
-        default=ApiListResultV2beta1Alert
-    )
+    response: Optional[type] = field(default=None)
     endpoint_id: Optional[str] = field(default="handleListClusterAlerts")
 
 
@@ -113,10 +111,10 @@ class HandleListClusterRuleGroupsAPI(BaseAPI[ApiListResultV2beta1ClusterRuleGrou
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -138,9 +136,7 @@ class HandleListClusterRuleGroupsAPI(BaseAPI[ApiListResultV2beta1ClusterRuleGrou
 
     path_params: PathParams
     query_params: QueryParams = field(factory=QueryParams)
-    response: Optional[ApiListResultV2beta1ClusterRuleGroup] = field(
-        default=ApiListResultV2beta1ClusterRuleGroup
-    )
+    response: Optional[type] = field(default=None)
     endpoint_id: Optional[str] = field(default="handleListClusterRuleGroups")
 
 
