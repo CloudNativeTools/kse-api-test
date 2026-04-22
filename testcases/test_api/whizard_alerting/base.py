@@ -173,8 +173,13 @@ def get_for_test_namespace_rule_group(cluster: str, namespace: str, group_name: 
 
         try:
             # 1. 查询现有数据
-            list_api = HandleListRuleGroupsAPI()
-            list_api.path_params = HandleListRuleGroupsAPI.PathParams(cluster=cluster, namespace=namespace)
+            list_api = HandleListRuleGroupsAPI(
+                path_params=HandleListRuleGroupsAPI.PathParams(cluster=cluster, namespace=namespace),
+                enable_schema_validation=False,
+                response=None
+            )
+            list_api.query_params.limit = 10
+            list_api.query_params.sortBy = "createTime"
             res = list_api.send()
 
             if res.cached_response.raw_response.status_code != 200:
@@ -188,18 +193,24 @@ def get_for_test_namespace_rule_group(cluster: str, namespace: str, group_name: 
                     return True
 
             # 3. 测试数据不存在，创建它
-            request_body = load_test_data("whizard_alerting", "Alerting_Management/namespace_rule_groups", "test_namespace_rule_group")
+            request_body = load_test_data("whizard_alerting", "Alerting_Management/namespace_rule_groups", "namespace_rule_group_custom")
             request_body["metadata"]["name"] = group_name
+            request_body["metadata"]["namespace"] = namespace
+            request_body["spec"]["rules"][0]["alert"] = f"{group_name}-custom"
+            request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
 
             create_api = HandleCreateRuleGroupAPI(
                 path_params=HandleCreateRuleGroupAPI.PathParams(cluster=cluster, namespace=namespace),
                 request_body=request_body,
-                enable_schema_validation=False
+                enable_schema_validation=False,
+                response=None
             )
             create_res = create_api.send()
 
             if create_res.cached_response.raw_response.status_code in (200, 201):
+                print(f"✅ 创建成功: {group_name}")
                 return True
+            print(f"❌ 创建失败 {group_name}，状态码: {create_res.cached_response.raw_response.status_code}, 响应: {create_res.cached_response.raw_response.text[:200]}")
             return False
         finally:
             clear_current_cluster()
@@ -223,11 +234,15 @@ def cleanup_namespace_rule_group(cluster: str, namespace: str, group_name: str) 
                 enable_schema_validation=False
             )
             res = api.send()
-            return res.cached_response.raw_response.status_code in (200, 204)
+            if res.cached_response.raw_response.status_code in (200, 204):
+                print(f"🧹 清理成功: {group_name}")
+                return True
+            print(f"⚠️ 清理失败 {group_name}，状态码: {res.cached_response.raw_response.status_code}")
+            return False
         finally:
             clear_current_cluster()
     except Exception as e:
-        logger.warning(f"cleanup_namespace_rule_group failed: {e}")
+        print(f"⚠️ 清理异常 {group_name}: {e}")
         return False
 
 
@@ -241,37 +256,100 @@ def generate_test_name(prefix: str = "test") -> str:
 def build_patch_body_for_alias_desc(current_data: dict, alias_name: str, description: str) -> dict:
     """
     构建用于编辑别名和描述的 Patch 请求体
-    
-    从 GET 返回的完整数据中移除不需要的字段，然后修改别名和描述
+
+    从 GET 返回的完整数据中移除不需要的字段，然后修改 metadata.annotations
     适用于 ClusterRuleGroup、GlobalRuleGroup、RuleGroup 等资源的 Patch 操作
-    
+
     Args:
         current_data: GET 接口返回的完整数据
         alias_name: 新的别名
         description: 新的描述
-    
+
     Returns:
         处理后的 Patch 请求体
     """
+    return build_rule_group_body(
+        current_data=current_data,
+        target="metadata",
+        alias_name=alias_name,
+        description=description,
+        remove_resource_version=True
+    )
+
+
+def build_update_body_for_rules_annotations(current_data: dict, summary: str, message: str) -> dict:
+    """
+    构建用于修改规则注解的 PUT 请求体
+
+    从 GET 返回的完整数据中移除不需要的字段，然后修改 spec.rules[].annotations
+    保留 resourceVersion 用于并发控制
+
+    Args:
+        current_data: GET 接口返回的完整数据
+        summary: 新的 summary
+        message: 新的 message
+
+    Returns:
+        处理后的 PUT 请求体
+    """
+    return build_rule_group_body(
+        current_data=current_data,
+        target="spec_rules",
+        summary=summary,
+        message=message,
+        remove_resource_version=False
+    )
+
+
+def build_rule_group_body(
+    current_data: dict,
+    target: str,
+    alias_name: str = None,
+    description: str = None,
+    summary: str = None,
+    message: str = None,
+    remove_resource_version: bool = True
+) -> dict:
+    """
+    构建规则组更新请求体
+
+    Args:
+        current_data: GET 接口返回的完整数据
+        target: 修改目标 - "metadata" 或 "spec_rules"
+        alias_name: metadata annotations 的别名 (target="metadata" 时使用)
+        description: metadata annotations 的描述 (target="metadata" 时使用)
+        summary: spec rules annotations 的 summary (target="spec_rules" 时使用)
+        message: spec rules annotations 的 message (target="spec_rules" 时使用)
+        remove_resource_version: 是否移除 resourceVersion (PATCH 为 True, PUT 为 False)
+
+    Returns:
+        处理后的请求体
+    """
     import copy
-    
-    # 深拷贝，避免修改原始数据
+
     body = copy.deepcopy(current_data)
-    
-    # 移除不需要的字段
+
     metadata = body.get("metadata", {})
     metadata.pop("uid", None)
-    metadata.pop("resourceVersion", None)
     metadata.pop("generation", None)
     metadata.pop("managedFields", None)
+    if remove_resource_version:
+        metadata.pop("resourceVersion", None)
     body.pop("status", None)
-    
-    # 更新 annotations
-    if "annotations" not in metadata:
-        metadata["annotations"] = {}
-    metadata["annotations"]["kubesphere.io/alias-name"] = alias_name
-    metadata["annotations"]["kubesphere.io/description"] = description
-    
+
+    if target == "metadata":
+        if "annotations" not in metadata:
+            metadata["annotations"] = {}
+        metadata["annotations"]["kubesphere.io/alias-name"] = alias_name
+        metadata["annotations"]["kubesphere.io/description"] = description
+    elif target == "spec_rules":
+        rules = body.get("spec", {}).get("rules", [])
+        if rules:
+            rules[0]["annotations"] = {
+                "summary": summary,
+                "message": message
+            }
+
     return body
 
 
@@ -357,6 +435,44 @@ def query_cluster_alerts(cluster: str, rule_group_name: str = None, state: str =
     finally:
         clear_current_cluster()
 
+def query_namespace_alerts(cluster: str, namespace: str, rule_group_name: str = None, state: str = None) -> Optional[List[dict]]:
+    """
+    查询命名空间告警列表，返回 items 列表（查询失败返回 None）
+
+    Args:
+        cluster: 集群名称
+        namespace: 命名空间名称
+        rule_group_name: 规则组名称过滤（可选）
+        state: 告警状态过滤 firing/pending（可选）
+
+    Returns:
+        告警 items 列表，或 None（查询失败）
+    """
+    from apis.whizard_alerting.Alerting_Management.apis import HandleListAlertsAPI
+
+    set_current_cluster(cluster)
+    try:
+        api = HandleListAlertsAPI(
+            path_params=HandleListAlertsAPI.PathParams(cluster=cluster, namespace=namespace),
+            enable_schema_validation=False,
+            response=None
+        )
+        api.query_params.page = "1"
+        api.query_params.limit = "10"
+        api.query_params.sortBy = "createTime"
+        if rule_group_name:
+            api.query_params.label_filters = f"rule_group={rule_group_name}"
+        if state:
+            api.query_params.state = state
+
+        res = api.send()
+        if res.cached_response.raw_response.status_code == 200:
+            data = res.cached_response.raw_response.json()
+            return data.get("items") or []
+        return None
+    finally:
+        clear_current_cluster()
+
 
 def query_global_alerts(rule_group_name: str = None, state: str = None) -> Optional[List[dict]]:
     """
@@ -375,7 +491,6 @@ def query_global_alerts(rule_group_name: str = None, state: str = None) -> Optio
     api.query_params.page = "1"
     api.query_params.limit = "10"
     api.query_params.ascending = None
-    api.query_params.builtin = "false"
     if rule_group_name:
         api.query_params.label_filters = f"rule_group={rule_group_name}"
     if state:

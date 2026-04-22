@@ -197,6 +197,25 @@ api = SomeAPI(enable_schema_validation=False)
 res = api.send()
 ```
 
+### 1.1 enable_schema_validation 与 response 的区别
+
+- `enable_schema_validation=False` - 关闭 JSON Schema 校验，但 attrs 仍会尝试将响应解析为定义的 response model 类型
+- `response=None` - 完全不解析响应体，直接返回原始 raw_response
+
+**使用场景：**
+- 当 List 接口返回空数据如 `{'items': None, 'totalItems': 0}` 时，attrs 解析可能失败
+- 需要同时使用：`enable_schema_validation=False, response=None`
+
+```python
+# 完整关闭校验和解析
+list_api = HandleListRuleGroupsAPI(
+    path_params=HandleListRuleGroupsAPI.PathParams(cluster=cluster, namespace=namespace),
+    enable_schema_validation=False,
+    response=None  # 必须，否则 attrs 解析可能失败
+)
+res = list_api.send()
+```
+
 ### 2. 响应Body非JSON格式处理
 当接口返回404或错误响应体不是JSON格式时，需要禁用响应解析：
 ```python
