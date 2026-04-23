@@ -66,9 +66,7 @@ class TestCreateClusterRuleGroup:
         logger.info(f"开始清理创建的资源: {created_groups}")
         for group_name in created_groups:
             try:
-                set_current_cluster(host_cluster)
                 cleanup_cluster_rule_group(host_cluster, group_name)
-                clear_current_cluster()
                 logger.info(f"已清理: {group_name}")
             except Exception as e:
                 logger.warning(f"清理失败 {group_name}: {e}")
@@ -81,7 +79,6 @@ class TestCreateClusterRuleGroup:
 
         set_current_cluster(host_cluster)
         try:
-            # 1. 创建规则组
             request_body = load_test_data(
                 "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_template"
             )
@@ -94,11 +91,9 @@ class TestCreateClusterRuleGroup:
             )
             res = api.send()
 
-            # 2. 验证响应状态码
             assert res.cached_response.raw_response.status_code in (200, 201), \
                 f"创建失败，状态码: {res.cached_response.raw_response.status_code}"
 
-            # 3. 验证返回数据
             data = res.cached_response.raw_response.json()
             assert data.get("metadata", {}).get("name") == group_name, \
                 f"返回的 name 不匹配: {data.get('metadata', {}).get('name')} != {group_name}"
@@ -107,9 +102,11 @@ class TestCreateClusterRuleGroup:
             assert len(data["spec"]["rules"]) > 0, \
                 "规则列表为空"
 
-            # 4. 记录创建的资源名，供 fixture 清理
             cleanup_created_groups.append(group_name)
             logger.info(f"模板规则组创建成功: {group_name}")
+        except Exception as e:
+            cleanup_cluster_rule_group(host_cluster, group_name)
+            raise
         finally:
             clear_current_cluster()
 
@@ -125,7 +122,6 @@ class TestCreateClusterRuleGroup:
 
         set_current_cluster(host_cluster)
         try:
-            # 1. 创建规则组
             request_body = load_test_data(
                 "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom"
             )
@@ -138,26 +134,25 @@ class TestCreateClusterRuleGroup:
             )
             res = api.send()
 
-            # 2. 验证响应状态码
             assert res.cached_response.raw_response.status_code in (200, 201), \
                 f"创建失败，状态码: {res.cached_response.raw_response.status_code}"
 
-            # 3. 验证返回数据
             data = res.cached_response.raw_response.json()
             assert data.get("metadata", {}).get("name") == group_name, \
                 f"返回的 name 不匹配: {data.get('metadata', {}).get('name')} != {group_name}"
             assert "spec" in data and "rules" in data["spec"], \
                 "返回数据缺少 spec.rules"
             
-            # 验证 expr 是 vector(1)（自定义规则组的特征）
             rules = data["spec"]["rules"]
             assert len(rules) > 0, "规则列表为空"
             assert rules[0].get("expr") == "vector(1)", \
                 f"自定义规则组的 expr 不正确: {rules[0].get('expr')}"
 
-            # 4. 记录创建的资源名，供 fixture 清理
             cleanup_created_groups.append(group_name)
             logger.info(f"自定义规则组创建成功: {group_name}")
+        except Exception as e:
+            cleanup_cluster_rule_group(host_cluster, group_name)
+            raise
         finally:
             clear_current_cluster()
 

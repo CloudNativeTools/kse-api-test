@@ -54,4 +54,4 @@ modules:
 
 markers:
   multi_cluster: "多集群用例 - Member 集群验证"
-  scenario: "场景测试 - 业务流验证"
+  alerting_scene: "告警场景测试"

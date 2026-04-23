@@ -77,10 +77,12 @@ def cleanup_global_rule_group(group_name: str) -> bool:
     try:
         api = HandleDeleteGlobalRuleGroupAPI(
             path_params=HandleDeleteGlobalRuleGroupAPI.PathParams(name=group_name),
-            enable_schema_validation=False
+            enable_schema_validation=False,
+            response=None
         )
         res = api.send()
-        return res.cached_response.raw_response.status_code in (200, 204)
+        status = res.cached_response.raw_response.status_code
+        return status in (200, 204) or status == 404
     except Exception as e:
         print(f"cleanup_global_rule_group failed: {e}")
         return False
@@ -152,10 +154,12 @@ def cleanup_cluster_rule_group(cluster: str, group_name: str) -> bool:
                     cluster=cluster,
                     name=group_name
                 ),
-                enable_schema_validation=False
+                enable_schema_validation=False,
+                response=None
             )
             res = api.send()
-            return res.cached_response.raw_response.status_code in (200, 204)
+            status = res.cached_response.raw_response.status_code
+            return status in (200, 204) or status == 404
         finally:
             clear_current_cluster()
     except Exception as e:
@@ -233,13 +237,15 @@ def cleanup_namespace_rule_group(cluster: str, namespace: str, group_name: str) 
                     namespace=namespace,
                     name=group_name
                 ),
-                enable_schema_validation=False
+                enable_schema_validation=False,
+                response=None
             )
             res = api.send()
-            if res.cached_response.raw_response.status_code in (200, 204):
+            status = res.cached_response.raw_response.status_code
+            if status in (200, 204) or status == 404:
                 print(f"🧹 清理成功: {group_name}")
                 return True
-            print(f"⚠️ 清理失败 {group_name}，状态码: {res.cached_response.raw_response.status_code}")
+            print(f"⚠️ 清理失败 {group_name}，状态码: {status}")
             return False
         finally:
             clear_current_cluster()

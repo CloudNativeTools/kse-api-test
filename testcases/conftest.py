@@ -3,9 +3,19 @@
 全局测试配置 - 公共 fixtures
 供所有测试用例复用
 """
+import logging
 import pytest
 from utils.cluster_helpers import get_clusters
 from utils.test_data_helper import load_test_data
+
+
+def pytest_configure(config):
+    """配置 logging，让 logger 输出到控制台"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%H:%M:%S'
+    )
 
 
 @pytest.fixture(scope="session")
