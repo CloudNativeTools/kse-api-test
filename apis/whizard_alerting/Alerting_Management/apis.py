@@ -541,10 +541,10 @@ class HandleListGlobalAlertsAPI(BaseAPI[ApiListResultV2beta1Alert]):
 
     @define
     class QueryParams:
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -595,10 +595,10 @@ class HandleListGlobalRuleGroupsAPI(BaseAPI[ApiListResultV2beta1GlobalRuleGroup]
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(

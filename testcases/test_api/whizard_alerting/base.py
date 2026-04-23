@@ -4,7 +4,6 @@ whizard-alerting 单接口测试基类
 提供 get_for_test 函数和公共工具
 """
 import time
-import logging
 from typing import Optional, Callable, List, Tuple
 
 from apis.whizard_alerting.Alerting_Management.apis import (
@@ -21,11 +20,6 @@ from apis.whizard_alerting.Alerting_Management.apis import (
 from utils.test_data_helper import load_test_data
 from utils.cluster_helpers import set_current_cluster, clear_current_cluster
 
-logger = logging.getLogger(__name__)
-
-# 测试数据路径
-TEST_DATA_PATH = "whizard_alerting/Alerting_Management"
-
 
 # ==================== Global Rule Group ====================
 
@@ -38,7 +32,14 @@ def get_for_test_global_rule_group(group_name: str) -> bool:
     """
     try:
         # 1. 查询现有数据
-        list_api = HandleListGlobalRuleGroupsAPI()
+        list_api = HandleListGlobalRuleGroupsAPI(
+            enable_schema_validation=False,
+            response=None
+        )
+        list_api.query_params.limit = 10
+        list_api.query_params.builtin = "false"
+        list_api.query_params.sortBy = "createTime"
+
         res = list_api.send()
 
         if res.cached_response.raw_response.status_code != 200:
@@ -52,8 +53,9 @@ def get_for_test_global_rule_group(group_name: str) -> bool:
                 return True
 
         # 3. 测试数据不存在，创建它
-        request_body = load_test_data("whizard_alerting", "Alerting_Management/global_rule_groups", "test_global_rule_group")
+        request_body = load_test_data("whizard_alerting", "Alerting_Management/global_rule_groups", "global_rule_group_custom")
         request_body["metadata"]["name"] = group_name
+        request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
 
         create_api = HandleCreateGlobalRuleGroupAPI(
             request_body=request_body,
@@ -66,7 +68,7 @@ def get_for_test_global_rule_group(group_name: str) -> bool:
         return False
 
     except Exception as e:
-        logger.warning(f"get_for_test_global_rule_group failed: {e}")
+        print(f"get_for_test_global_rule_group failed: {e}")
         return False
 
 
@@ -80,7 +82,7 @@ def cleanup_global_rule_group(group_name: str) -> bool:
         res = api.send()
         return res.cached_response.raw_response.status_code in (200, 204)
     except Exception as e:
-        logger.warning(f"cleanup_global_rule_group failed: {e}")
+        print(f"cleanup_global_rule_group failed: {e}")
         return False
 
 
@@ -105,7 +107,7 @@ def get_for_test_cluster_rule_group(cluster: str, group_name: str) -> bool:
             res = list_api.send()
 
             if res.cached_response.raw_response.status_code != 200:
-                logger.warning(f"查询规则组列表失败: {res.cached_response.raw_response.status_code}")
+                print(f"查询规则组列表失败: {res.cached_response.raw_response.status_code}")
                 return False
 
             data = res.cached_response.raw_response.json()
@@ -113,7 +115,7 @@ def get_for_test_cluster_rule_group(cluster: str, group_name: str) -> bool:
             # 2. 检查测试数据是否已存在
             for item in (data.get("items") or []):
                 if item.get("metadata", {}).get("name") == group_name:
-                    logger.info(f"规则组 {group_name} 已存在")
+                    print(f"规则组 {group_name} 已存在")
                     return True
 
             # 3. 测试数据不存在，创建它（使用自定义规则组模板，expr: vector(1) 无需查询节点）
@@ -126,17 +128,17 @@ def get_for_test_cluster_rule_group(cluster: str, group_name: str) -> bool:
                 enable_schema_validation=False
             )
             create_res = create_api.send()
-            logger.info(f"创建规则组 {group_name} 响应: {create_res.cached_response.raw_response.status_code}")
+            print(f"创建规则组 {group_name} 响应: {create_res.cached_response.raw_response.status_code}")
 
             if create_res.cached_response.raw_response.status_code in (200, 201):
                 return True
-            logger.warning(f"创建规则组失败: {create_res.cached_response.raw_response.text[:200]}")
+            print(f"创建规则组失败: {create_res.cached_response.raw_response.text[:200]}")
             return False
         finally:
             clear_current_cluster()
 
     except Exception as e:
-        logger.warning(f"get_for_test_cluster_rule_group failed: {e}")
+        print(f"get_for_test_cluster_rule_group failed: {e}")
         return False
 
 
@@ -157,7 +159,7 @@ def cleanup_cluster_rule_group(cluster: str, group_name: str) -> bool:
         finally:
             clear_current_cluster()
     except Exception as e:
-        logger.warning(f"cleanup_cluster_rule_group failed: {e}")
+        print(f"cleanup_cluster_rule_group failed: {e}")
         return False
 
 
@@ -216,7 +218,7 @@ def get_for_test_namespace_rule_group(cluster: str, namespace: str, group_name: 
             clear_current_cluster()
 
     except Exception as e:
-        logger.warning(f"get_for_test_namespace_rule_group failed: {e}")
+        print(f"get_for_test_namespace_rule_group failed: {e}")
         return False
 
 
@@ -386,14 +388,14 @@ def wait_for_alerts(
             # 执行额外验证
             if validate_func:
                 validate_func(items)
-            logger.info(f"找到告警，状态: {[item.get('state') for item in items]}")
+            print(f"找到告警，状态: {[item.get('state') for item in items]}")
             break
 
         if attempt < max_attempts - 1:
             time.sleep(sleep_interval)
 
     if not found_alert:
-        logger.warning("告警未触发，可能测试环境无监控数据")
+        print("告警未触发，可能测试环境无监控数据")
 
     return found_alert, items
 
@@ -416,7 +418,8 @@ def query_cluster_alerts(cluster: str, rule_group_name: str = None, state: str =
     try:
         api = HandleListClusterAlertsAPI(
             path_params=HandleListClusterAlertsAPI.PathParams(cluster=cluster),
-            enable_schema_validation=False
+            enable_schema_validation=False,
+            response=None
         )
         api.query_params.page = "1"
         api.query_params.limit = "10"
@@ -487,7 +490,10 @@ def query_global_alerts(rule_group_name: str = None, state: str = None) -> Optio
     """
     from apis.whizard_alerting.Alerting_Management.apis import HandleListGlobalAlertsAPI
 
-    api = HandleListGlobalAlertsAPI(enable_schema_validation=False)
+    api = HandleListGlobalAlertsAPI(
+            enable_schema_validation=False,
+            response=None
+        )
     api.query_params.page = "1"
     api.query_params.limit = "10"
     api.query_params.ascending = None

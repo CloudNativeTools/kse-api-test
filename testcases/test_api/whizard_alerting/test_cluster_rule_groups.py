@@ -75,7 +75,7 @@ class TestCreateClusterRuleGroup:
 
     def test_create_template_rule_group(self, host_cluster, cleanup_created_groups):
         """
-        创建集群模板规则组（使用 exprBuilder）
+        创建集群模板规则组（使用 exprBuilder） // TODO: 需补充查询当前节点前置条件
         """
         group_name = generate_test_name("cluster-alert")
 

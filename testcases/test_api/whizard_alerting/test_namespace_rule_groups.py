@@ -68,7 +68,7 @@ class TestCreateNamespaceRuleGroup:
 
     def test_create_template_rule_group(self, host_cluster, test_namespace, cleanup_created_groups):
         """
-        创建项目模板规则组（使用 exprBuilder - workload）
+        创建项目模板规则组（使用 exprBuilder - workload） //TODO: 需补充前置条件workload数据准备
         验证点：
         1. 创建成功（200/201）
         2. 返回的 metadata.name 正确
