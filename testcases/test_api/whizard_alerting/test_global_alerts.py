@@ -12,7 +12,7 @@ API: HandleListGlobalAlertsAPI
 import pytest
 import logging
 
-from apis.whizard_alerting.Alerting_Management.apis import HandleListGlobalAlertsAPI
+from apis.whizard_alerting.alerting_management.apis import HandleListGlobalAlertsAPI
 from testcases.test_api.whizard_alerting.base import (
     get_for_test_global_rule_group,
     cleanup_global_rule_group,

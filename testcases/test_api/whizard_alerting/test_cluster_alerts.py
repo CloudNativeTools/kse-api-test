@@ -7,7 +7,7 @@ import pytest
 import time
 import logging
 
-from apis.whizard_alerting.Alerting_Management.apis import HandleListClusterAlertsAPI
+from apis.whizard_alerting.alerting_management.apis import HandleListClusterAlertsAPI
 from testcases.conftest import host_cluster
 from testcases.test_api.whizard_alerting.base import (
     get_for_test_cluster_rule_group,

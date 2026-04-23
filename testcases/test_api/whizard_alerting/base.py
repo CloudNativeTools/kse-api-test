@@ -6,7 +6,7 @@ whizard-alerting 单接口测试基类
 import time
 from typing import Optional, Callable, List, Tuple
 
-from apis.whizard_alerting.Alerting_Management.apis import (
+from apis.whizard_alerting.alerting_management.apis import (
     HandleListGlobalRuleGroupsAPI,
     HandleCreateGlobalRuleGroupAPI,
     HandleDeleteGlobalRuleGroupAPI,
@@ -53,7 +53,7 @@ def get_for_test_global_rule_group(group_name: str) -> bool:
                 return True
 
         # 3. 测试数据不存在，创建它
-        request_body = load_test_data("whizard_alerting", "Alerting_Management/global_rule_groups", "global_rule_group_custom")
+        request_body = load_test_data("whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_custom")
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
 
@@ -119,7 +119,7 @@ def get_for_test_cluster_rule_group(cluster: str, group_name: str) -> bool:
                     return True
 
             # 3. 测试数据不存在，创建它（使用自定义规则组模板，expr: vector(1) 无需查询节点）
-            request_body = load_test_data("whizard_alerting", "Alerting_Management/cluster_rule_groups", "cluster_rule_group_custom")
+            request_body = load_test_data("whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom")
             request_body["metadata"]["name"] = group_name
 
             create_api = HandleCreateClusterRuleGroupAPI(
@@ -195,7 +195,7 @@ def get_for_test_namespace_rule_group(cluster: str, namespace: str, group_name: 
                     return True
 
             # 3. 测试数据不存在，创建它
-            request_body = load_test_data("whizard_alerting", "Alerting_Management/namespace_rule_groups", "namespace_rule_group_custom")
+            request_body = load_test_data("whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_custom")
             request_body["metadata"]["name"] = group_name
             request_body["metadata"]["namespace"] = namespace
             request_body["spec"]["rules"][0]["alert"] = f"{group_name}-custom"
@@ -412,7 +412,7 @@ def query_cluster_alerts(cluster: str, rule_group_name: str = None, state: str =
     Returns:
         告警 items 列表，或 None（查询失败）
     """
-    from apis.whizard_alerting.Alerting_Management.apis import HandleListClusterAlertsAPI
+    from apis.whizard_alerting.alerting_management.apis import HandleListClusterAlertsAPI
 
     set_current_cluster(cluster)
     try:
@@ -451,7 +451,7 @@ def query_namespace_alerts(cluster: str, namespace: str, rule_group_name: str = 
     Returns:
         告警 items 列表，或 None（查询失败）
     """
-    from apis.whizard_alerting.Alerting_Management.apis import HandleListAlertsAPI
+    from apis.whizard_alerting.alerting_management.apis import HandleListAlertsAPI
 
     set_current_cluster(cluster)
     try:
@@ -488,7 +488,7 @@ def query_global_alerts(rule_group_name: str = None, state: str = None) -> Optio
     Returns:
         告警 items 列表，或 None（查询失败）
     """
-    from apis.whizard_alerting.Alerting_Management.apis import HandleListGlobalAlertsAPI
+    from apis.whizard_alerting.alerting_management.apis import HandleListGlobalAlertsAPI
 
     api = HandleListGlobalAlertsAPI(
             enable_schema_validation=False,

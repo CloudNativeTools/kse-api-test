@@ -12,7 +12,7 @@ API: HandleList/Create/Get/Update/Delete/PatchGlobalRuleGroupAPI
 """
 import pytest
 
-from apis.whizard_alerting.Alerting_Management.apis import (
+from apis.whizard_alerting.alerting_management.apis import (
     HandleListGlobalRuleGroupsAPI,
     HandleCreateGlobalRuleGroupAPI,
     HandleGetGlobalRuleGroupAPI,
@@ -80,7 +80,7 @@ class TestCreateGlobalRuleGroup:
         group_name = generate_test_name("global-node-single")
 
         request_body = load_test_data(
-            "whizard_alerting", "Alerting_Management/global_rule_groups", "global_rule_group_template_node_single"
+            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_node_single"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name
@@ -114,7 +114,7 @@ class TestCreateGlobalRuleGroup:
         group_name = generate_test_name("global-node-multi")
 
         request_body = load_test_data(
-            "whizard_alerting", "Alerting_Management/global_rule_groups", "global_rule_group_template_node_multi"
+            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_node_multi"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name
@@ -144,7 +144,7 @@ class TestCreateGlobalRuleGroup:
         group_name = generate_test_name("global-workload-single")
 
         request_body = load_test_data(
-            "whizard_alerting", "Alerting_Management/global_rule_groups", "global_rule_group_template_workload_single"
+            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_workload_single"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name
@@ -178,7 +178,7 @@ class TestCreateGlobalRuleGroup:
         group_name = generate_test_name("global-workload-multi")
 
         request_body = load_test_data(
-            "whizard_alerting", "Alerting_Management/global_rule_groups", "global_rule_group_template_workload_multi"
+            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_workload_multi"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name
@@ -211,7 +211,7 @@ class TestCreateGlobalRuleGroup:
         group_name = generate_test_name("global-custom")
 
         request_body = load_test_data(
-            "whizard_alerting", "Alerting_Management/global_rule_groups", "global_rule_group_custom"
+            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_custom"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"

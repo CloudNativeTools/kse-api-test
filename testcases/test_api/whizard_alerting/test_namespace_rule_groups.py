@@ -13,7 +13,7 @@ import pytest
 import time
 import logging
 
-from apis.whizard_alerting.Alerting_Management.apis import (
+from apis.whizard_alerting.alerting_management.apis import (
     HandleListRuleGroupsAPI,
     HandleCreateRuleGroupAPI,
     HandleGetRuleGroupAPI,
@@ -80,7 +80,7 @@ class TestCreateNamespaceRuleGroup:
         try:
             # 1. 从数据文件加载模板并替换占位符
             request_body = load_test_data(
-                "whizard_alerting", "Alerting_Management/namespace_rule_groups", "namespace_rule_group_template"
+                "whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_template"
             )
             request_body["metadata"]["name"] = group_name
             request_body["metadata"]["namespace"] = test_namespace
@@ -124,7 +124,7 @@ class TestCreateNamespaceRuleGroup:
         try:
             # 1. 从数据文件加载模板并替换占位符
             request_body = load_test_data(
-                "whizard_alerting", "Alerting_Management/namespace_rule_groups", "namespace_rule_group_custom"
+                "whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_custom"
             )
             request_body["metadata"]["name"] = group_name
             request_body["metadata"]["namespace"] = test_namespace
@@ -457,7 +457,7 @@ class TestNamespaceRuleGroupsMember:
         try:
             # 从数据文件加载模板并替换占位符
             request_body = load_test_data(
-                "whizard_alerting", "Alerting_Management/namespace_rule_groups", "namespace_rule_group_custom"
+                "whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_custom"
             )
             request_body["metadata"]["name"] = MEMBER_STANDARD_RULE_GROUP
             request_body["metadata"]["namespace"] = test_namespace_member

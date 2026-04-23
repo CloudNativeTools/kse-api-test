@@ -6,7 +6,7 @@ API: HandleListAlertsAPI
 import pytest
 import logging
 
-from apis.whizard_alerting.Alerting_Management.apis import HandleListAlertsAPI
+from apis.whizard_alerting.alerting_management.apis import HandleListAlertsAPI
 from testcases.test_api.whizard_alerting.base import (
     get_for_test_namespace_rule_group,
     cleanup_namespace_rule_group,

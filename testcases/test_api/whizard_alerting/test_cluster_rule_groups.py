@@ -12,7 +12,7 @@ API: HandleList/Create/Get/Update/Delete/PatchClusterRuleGroupAPI
 import pytest
 import logging
 
-from apis.whizard_alerting.Alerting_Management.apis import (
+from apis.whizard_alerting.alerting_management.apis import (
     HandleListClusterRuleGroupsAPI,
     HandleCreateClusterRuleGroupAPI,
     HandleGetClusterRuleGroupAPI,
@@ -29,7 +29,7 @@ from testcases.test_api.whizard_alerting.base import (
 from utils.test_data_helper import load_test_data
 from utils.cluster_helpers import set_current_cluster, clear_current_cluster
 
-TEST_DATA_PATH = "whizard_alerting/Alerting_Management"
+TEST_DATA_PATH = "whizard_alerting/alerting_management"
 logger = logging.getLogger(__name__)
 
 # 标准资源名称（固定，不带时间戳）
@@ -83,7 +83,7 @@ class TestCreateClusterRuleGroup:
         try:
             # 1. 创建规则组
             request_body = load_test_data(
-                "whizard_alerting", "Alerting_Management/cluster_rule_groups", "cluster_rule_group_template"
+                "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_template"
             )
             request_body["metadata"]["name"] = group_name
 
@@ -127,7 +127,7 @@ class TestCreateClusterRuleGroup:
         try:
             # 1. 创建规则组
             request_body = load_test_data(
-                "whizard_alerting", "Alerting_Management/cluster_rule_groups", "cluster_rule_group_custom"
+                "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom"
             )
             request_body["metadata"]["name"] = group_name
 
@@ -329,7 +329,7 @@ class TestUpdateClusterRuleGroup:
         set_current_cluster(host_cluster)
         try:
             request_body = load_test_data(
-                "whizard_alerting", "Alerting_Management/cluster_rule_groups", "cluster_rule_group_updated"
+                "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_updated"
             )
             request_body["metadata"]["name"] = "nonexistent-group"
 
@@ -520,7 +520,7 @@ class TestClusterRuleGroupsMember:
         set_current_cluster(member_cluster)
         try:
             request_body = load_test_data(
-                "whizard_alerting", "Alerting_Management/cluster_rule_groups", "cluster_rule_group_custom"
+                "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom"
             )
             request_body["metadata"]["name"] = MEMBER_STANDARD_RULE_GROUP
 
