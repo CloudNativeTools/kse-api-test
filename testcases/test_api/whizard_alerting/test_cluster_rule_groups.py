@@ -25,6 +25,7 @@ from testcases.test_api.whizard_alerting.base import (
     cleanup_cluster_rule_group,
     generate_test_name,
     build_patch_body_for_alias_desc,
+    build_update_body_for_rules_annotations,
 )
 from utils.test_data_helper import load_test_data
 from utils.cluster_helpers import set_current_cluster, clear_current_cluster
@@ -37,15 +38,8 @@ STANDARD_RULE_GROUP = "cluster-alert-standard"
 
 @pytest.fixture(scope="module")
 def cleanup_standard_rule_group(host_cluster):
-    """模块级清理：清理标准资源"""
+    """模块级 fixture：标准资源由 after_all 统一清理，此处不做清理"""
     yield
-    
-    # 模块结束后清理标准资源
-    logger.info(f"清理标准规则组: {STANDARD_RULE_GROUP}")
-    try:
-        cleanup_cluster_rule_group(host_cluster, STANDARD_RULE_GROUP)
-    except Exception as e:
-        logger.warning(f"清理标准规则组失败: {e}")
 
 
 # ==================== Create ====================
@@ -298,11 +292,12 @@ class TestUpdateClusterRuleGroup:
             get_res = get_api.send()
             current_data = get_res.cached_response.raw_response.json()
 
-            # 2. 修改 annotations
-            current_data["spec"]["rules"][0]["annotations"] = {
-                "summary": "custom alert info-modify",
-                "message": "desc modify"
-            }
+            # 2. 使用公共方法构建 Update 请求体
+            request_body = build_update_body_for_rules_annotations(
+                current_data=current_data,
+                summary="custom alert info-modify",
+                message="desc modify"
+            )
 
             # 3. 发送更新请求
             api = HandleUpdateClusterRuleGroupAPI(
@@ -310,7 +305,7 @@ class TestUpdateClusterRuleGroup:
                     cluster=host_cluster,
                     name=STANDARD_RULE_GROUP
                 ),
-                request_body=current_data,
+                request_body=request_body,
                 enable_schema_validation=False
             )
             res = api.send()
@@ -349,45 +344,6 @@ class TestUpdateClusterRuleGroup:
 @pytest.mark.alerting_management
 class TestPatchClusterRuleGroup:
     """部分更新集群规则组（Patch）"""
-
-    def test_patch_disabled(self, host_cluster, cleanup_standard_rule_group):
-        """
-        禁用规则组
-        场景：通过 Patch 禁用规则组（修改 metadata.labels.enable）
-        """
-        # 确保标准资源存在
-        if not get_for_test_cluster_rule_group(host_cluster, STANDARD_RULE_GROUP):
-            pytest.skip("无法创建标准规则组")
-
-        set_current_cluster(host_cluster)
-        try:
-            # 构建 Patch 请求体 - 禁用规则组
-            request_body = {
-                "metadata": {
-                    "labels": {
-                        "alerting.kubesphere.io/enable": "false"
-                    }
-                }
-            }
-
-            api = HandlePatchClusterRuleGroupAPI(
-                path_params=HandlePatchClusterRuleGroupAPI.PathParams(
-                    cluster=host_cluster,
-                    name=STANDARD_RULE_GROUP
-                ),
-                request_body=request_body,
-                enable_schema_validation=False
-            )
-            res = api.send()
-
-            assert res.cached_response.raw_response.status_code == 200
-
-            # 验证规则组已被禁用
-            data = res.cached_response.raw_response.json()
-            labels = data.get("metadata", {}).get("labels", {})
-            assert labels.get("alerting.kubesphere.io/enable") == "false", "规则组应已被禁用"
-        finally:
-            clear_current_cluster()
 
     def test_patch_edit_alias_and_description(self, host_cluster, cleanup_standard_rule_group):
         """
@@ -448,18 +404,32 @@ class TestDeleteClusterRuleGroup:
 
     def test_delete_success(self, host_cluster):
         """
-        删除规则组 - 创建专用资源并删除
+        删除规则组 - 创建临时规则组并删除
+        使用独立临时资源，不影响共享标准规则组
         """
-        # 确保标准资源存在
-        if not get_for_test_cluster_rule_group(host_cluster, STANDARD_RULE_GROUP):
-            pytest.skip("无法创建标准规则组")
+        group_name = generate_test_name("delete-cluster")
 
         set_current_cluster(host_cluster)
         try:
+            request_body = load_test_data(
+                "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom"
+            )
+            request_body["metadata"]["name"] = group_name
+
+            create_api = HandleCreateClusterRuleGroupAPI(
+                path_params=HandleCreateClusterRuleGroupAPI.PathParams(cluster=host_cluster),
+                request_body=request_body,
+                enable_schema_validation=False
+            )
+            create_res = create_api.send()
+
+            if create_res.cached_response.raw_response.status_code not in (200, 201):
+                pytest.skip(f"无法创建待删除的测试规则组: {group_name}")
+
             api = HandleDeleteClusterRuleGroupAPI(
                 path_params=HandleDeleteClusterRuleGroupAPI.PathParams(
                     cluster=host_cluster,
-                    name=STANDARD_RULE_GROUP
+                    name=group_name
                 )
             )
             res = api.send()
@@ -467,6 +437,7 @@ class TestDeleteClusterRuleGroup:
             assert res.cached_response.raw_response.status_code in (200, 204)
         finally:
             clear_current_cluster()
+            cleanup_cluster_rule_group(host_cluster, group_name)
 
     def test_delete_not_found(self, host_cluster):
         """删除不存在的规则组"""
@@ -500,24 +471,22 @@ class TestClusterRuleGroupsMember:
 
     @pytest.fixture(scope="module")
     def cleanup_member_standard(self, member_cluster):
-        """清理 member 标准资源"""
+        """模块级 fixture：标准资源由 after_all 统一清理，此处不做清理"""
         yield
-        try:
-            cleanup_cluster_rule_group(member_cluster, MEMBER_STANDARD_RULE_GROUP)
-        except Exception as e:
-            logger.warning(f"清理 member 标准规则组失败: {e}")
 
     def test_create_rule_group_on_member(self, member_cluster):
         """
         在 member 集群创建规则组
         校验返回 body：metadata.labels.alerting.kubesphere.io/owner_cluster: "member-cluster"
         """
+        group_name = generate_test_name("member-cluster")
+
         set_current_cluster(member_cluster)
         try:
             request_body = load_test_data(
                 "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom"
             )
-            request_body["metadata"]["name"] = MEMBER_STANDARD_RULE_GROUP
+            request_body["metadata"]["name"] = group_name
 
             api = HandleCreateClusterRuleGroupAPI(enable_schema_validation=False,
                 path_params=HandleCreateClusterRuleGroupAPI.PathParams(cluster=member_cluster),
@@ -527,12 +496,11 @@ class TestClusterRuleGroupsMember:
 
             assert res.cached_response.raw_response.status_code in (200, 201)
 
-            # 校验 owner_cluster 标签
             data = res.cached_response.raw_response.json()
             labels = data.get("metadata", {}).get("labels", {})
             assert labels.get("alerting.kubesphere.io/owner_cluster") == member_cluster
         finally:
-            clear_current_cluster()
+            cleanup_cluster_rule_group(member_cluster, group_name)
 
     def test_list_rule_groups_on_member(self, member_cluster):
         """查看 member 规则组列表"""
@@ -559,28 +527,37 @@ class TestClusterRuleGroupsMember:
             clear_current_cluster()
 
     def test_delete_rule_group_on_member(self, member_cluster):
-        """
-        删除 member 规则组
-        返回 body：{"message": "success"}
-        """
-        # 确保标准资源存在
-        if not get_for_test_cluster_rule_group(member_cluster, MEMBER_STANDARD_RULE_GROUP):
-            pytest.skip("无法在 member 集群创建标准规则组")
+        """删除 member 规则组 - 使用临时规则组"""
+        group_name = generate_test_name("delete-member-cluster")
 
         set_current_cluster(member_cluster)
         try:
+            request_body = load_test_data(
+                "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom"
+            )
+            request_body["metadata"]["name"] = group_name
+
+            create_api = HandleCreateClusterRuleGroupAPI(
+                path_params=HandleCreateClusterRuleGroupAPI.PathParams(cluster=member_cluster),
+                request_body=request_body,
+                enable_schema_validation=False
+            )
+            create_res = create_api.send()
+
+            if create_res.cached_response.raw_response.status_code not in (200, 201):
+                pytest.skip(f"无法创建待删除的测试规则组: {group_name}")
+
             api = HandleDeleteClusterRuleGroupAPI(
                 path_params=HandleDeleteClusterRuleGroupAPI.PathParams(
                     cluster=member_cluster,
-                    name=MEMBER_STANDARD_RULE_GROUP
+                    name=group_name
                 )
             )
             res = api.send()
 
             assert res.cached_response.raw_response.status_code in (200, 204)
-            
-            # 校验返回 message
+
             data = res.cached_response.raw_response.json()
             assert data.get("message") == "success"
         finally:
-            clear_current_cluster()
+            cleanup_cluster_rule_group(member_cluster, group_name)

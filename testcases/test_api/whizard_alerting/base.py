@@ -3,8 +3,11 @@
 whizard-alerting 单接口测试基类
 提供 get_for_test 函数和公共工具
 """
+import json
 import time
 from typing import Optional, Callable, List, Tuple
+from loguru import logger
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from apis.whizard_alerting.alerting_management.apis import (
     HandleListGlobalRuleGroupsAPI,
@@ -17,9 +20,297 @@ from apis.whizard_alerting.alerting_management.apis import (
     HandleCreateRuleGroupAPI,
     HandleDeleteRuleGroupAPI,
 )
+from aomaker.storage import cache
 from utils.test_data_helper import load_test_data
 from utils.cluster_helpers import set_current_cluster, clear_current_cluster
 
+# ==================== Session 级别预热缓存 ====================
+# key: "prewarm:{type}:{cluster}:{namespace}:{name}", value: True
+# 防止重复创建
+_PREWARM_CACHE = set()
+
+# 预热规则组列表，供 before_all / after_all 使用
+PREWARM_GLOBAL_GROUPS = ["global-alert-standard", "global-alert-multi"]
+PREWARM_HOST_CLUSTER_GROUP = "cluster-alert-standard"
+PREWARM_HOST_NS_GROUP = "ns-alert-standard"
+PREWARM_MEMBER_CLUSTER_GROUP = "member-cluster-alert-standard"
+PREWARM_MEMBER_NS_GROUP = "member-ns-alert-standard"
+
+
+def prewarm_all_rule_groups(host_cluster, test_namespace, member_cluster=None, test_namespace_member=None):
+    """
+    在 before_all 中调用，并发创建所有标准规则组并等待告警触发。
+    session 级别只执行一次，后续调用直接返回。
+    """
+    tasks = []
+
+    for group_name in PREWARM_GLOBAL_GROUPS:
+        tasks.append(("global", None, None, group_name))
+
+    tasks.append(("cluster", host_cluster, None, PREWARM_HOST_CLUSTER_GROUP))
+    tasks.append(("namespace", host_cluster, test_namespace, PREWARM_HOST_NS_GROUP))
+
+    if member_cluster:
+        tasks.append(("cluster", member_cluster, None, PREWARM_MEMBER_CLUSTER_GROUP))
+        tasks.append(("namespace", member_cluster, test_namespace_member, PREWARM_MEMBER_NS_GROUP))
+
+    results = {}
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        futures = {executor.submit(_do_prewarm_one, *t): t for t in tasks}
+        for future in as_completed(futures):
+            task = futures[future]
+            rule_type, cluster, namespace, group_name = task
+            success, found_alert = future.result()
+            results[f"{rule_type}:{cluster}:{namespace}:{group_name}"] = (success, found_alert)
+
+            status = "✓" if success else "✗"
+            alert_status = "告警已触发" if found_alert else "告警未触发"
+            logger.info(f"  {status} 预热完成: {rule_type}/{group_name} ({alert_status})")
+
+    return results
+
+
+def cleanup_all_prewarmed_rule_groups(host_cluster, test_namespace, member_cluster=None, test_namespace_member=None):
+    """
+    在 after_all 中调用，并发清理所有预热规则组。
+    """
+    tasks = []
+
+    for group_name in PREWARM_GLOBAL_GROUPS:
+        tasks.append(("global", None, None, group_name))
+
+    tasks.append(("cluster", host_cluster, None, PREWARM_HOST_CLUSTER_GROUP))
+    tasks.append(("namespace", host_cluster, test_namespace, PREWARM_HOST_NS_GROUP))
+
+    if member_cluster:
+        tasks.append(("cluster", member_cluster, None, PREWARM_MEMBER_CLUSTER_GROUP))
+        tasks.append(("namespace", member_cluster, test_namespace_member, PREWARM_MEMBER_NS_GROUP))
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        futures = {executor.submit(_do_cleanup_one, *t): t for t in tasks}
+        for future in as_completed(futures):
+            task = futures[future]
+            rule_type, cluster, namespace, group_name = task
+            try:
+                future.result()
+                logger.info(f"  ✓ 清理完成: {rule_type}/{group_name}")
+            except Exception as e:
+                logger.warning(f"  ⚠ 清理失败: {rule_type}/{group_name} - {e}")
+
+
+def _do_prewarm_one(rule_type, cluster, namespace, group_name):
+    """执行单个规则组的预热：创建 + 等待告警"""
+    cache_key = f"prewarm:{rule_type}:{cluster}:{namespace}:{group_name}"
+
+    if cache_key in _PREWARM_CACHE:
+        full_cache_key = f"alert_ready:{cache_key}"
+        sql = f"SELECT value FROM {cache.table} WHERE var_name = ? LIMIT 1"
+        result = cache.query(sql, (full_cache_key,))
+        cached = json.loads(result[0]["value"]) if result else False
+        return True, cached
+
+    _PREWARM_CACHE.add(cache_key)
+
+    if rule_type == "global":
+        success = _ensure_global_rule_group(group_name)
+    elif rule_type == "cluster":
+        success = _ensure_cluster_rule_group(cluster, group_name)
+    else:
+        success = _ensure_namespace_rule_group(cluster, namespace, group_name)
+
+    if not success:
+        return False, False
+
+    found_alert = _wait_alert_triggered(rule_type, cluster, namespace, group_name)
+    cache.set(f"alert_ready:{cache_key}", found_alert)
+
+    return True, found_alert
+
+
+def _do_cleanup_one(rule_type, cluster, namespace, group_name):
+    """执行单个规则组的清理（使用直接HTTP请求，避免线程安全问题）"""
+    try:
+        import requests
+        from aomaker.storage import cache, config
+
+        session = requests.Session()
+        headers = cache.get("headers") or {}
+        base_url = config.get("base_url") or ""
+
+        if rule_type == "global":
+            url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/globalrulegroups/{group_name}"
+        elif rule_type == "cluster":
+            url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/clusterrulegroups/{group_name}"
+        else:
+            url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/namespaces/{namespace}/rulegroups/{group_name}"
+
+        resp = session.delete(url, headers=headers, timeout=30)
+        status = resp.status_code
+        if status in (200, 204) or status == 404:
+            return
+        logger.warning(f"_do_cleanup_one failed: {rule_type}/{group_name}, status={status}")
+    except Exception as e:
+        logger.warning(f"_do_cleanup_one failed: {rule_type}/{group_name} - {e}")
+
+
+def _ensure_global_rule_group(group_name):
+    """确保全局规则组存在（不存在则创建）"""
+    try:
+        list_api = HandleListGlobalRuleGroupsAPI(enable_schema_validation=False, response=None)
+        list_api.query_params.limit = 50
+        list_api.query_params.builtin = "false"
+        res = list_api.send()
+        if res.cached_response.raw_response.status_code != 200:
+            return False
+        data = res.cached_response.raw_response.json()
+        for item in (data.get("items") or []):
+            if item.get("metadata", {}).get("name") == group_name:
+                return True
+
+        request_body = load_test_data(
+            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_custom"
+        )
+        request_body["metadata"]["name"] = group_name
+        request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
+        request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
+
+        create_api = HandleCreateGlobalRuleGroupAPI(request_body=request_body, enable_schema_validation=False)
+        create_res = create_api.send()
+        return create_res.cached_response.raw_response.status_code in (200, 201)
+    except Exception as e:
+        logger.warning(f"_ensure_global_rule_group failed: {e}")
+        return False
+
+
+def _ensure_cluster_rule_group(cluster, group_name):
+    """确保集群规则组存在（使用直接HTTP请求，避免线程安全问题）"""
+    import traceback
+    try:
+        import requests
+        from aomaker.storage import cache, config
+
+        session = requests.Session()
+        headers = cache.get("headers") or {}
+        base_url = config.get("base_url") or ""
+
+        list_url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/clusterrulegroups?limit=50&page=&ascending="
+        resp = session.get(list_url, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            logger.warning(f"_ensure_cluster_rule_group list failed: {resp.status_code}")
+            return False
+
+        data = resp.json()
+        for item in (data.get("items") or []):
+            if item.get("metadata", {}).get("name") == group_name:
+                return True
+
+        request_body = load_test_data(
+            "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_custom"
+        )
+        if not isinstance(request_body, dict):
+            logger.warning(f"_ensure_cluster_rule_group: request_body is not dict, type={type(request_body)}, value={str(request_body)[:200]}")
+            return False
+        request_body["metadata"]["name"] = group_name
+
+        create_url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/clusterrulegroups"
+        create_resp = session.post(create_url, json=request_body, headers=headers, timeout=30)
+        if create_resp.status_code not in (200, 201):
+            logger.warning(f"_ensure_cluster_rule_group create failed: {create_resp.status_code} - {create_resp.text[:500]}")
+        return create_resp.status_code in (200, 201)
+    except Exception as e:
+        logger.warning(f"_ensure_cluster_rule_group failed: {e}\n{traceback.format_exc()}")
+        return False
+
+
+def _ensure_namespace_rule_group(cluster, namespace, group_name):
+    """确保命名空间规则组存在（使用直接HTTP请求，避免线程安全问题）"""
+    import traceback
+    try:
+        import requests
+        from aomaker.storage import cache, config
+
+        session = requests.Session()
+        headers = cache.get("headers") or {}
+        base_url = config.get("base_url") or ""
+
+        list_url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/namespaces/{namespace}/rulegroups?limit=50"
+        resp = session.get(list_url, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            logger.warning(f"_ensure_namespace_rule_group list failed: {resp.status_code}")
+            return False
+
+        data = resp.json()
+        for item in (data.get("items") or []):
+            if item.get("metadata", {}).get("name") == group_name:
+                return True
+
+        request_body = load_test_data(
+            "whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_custom"
+        )
+        if not isinstance(request_body, dict):
+            logger.warning(f"_ensure_namespace_rule_group: request_body is not dict, type={type(request_body)}, value={str(request_body)[:200]}")
+            return False
+        request_body["metadata"]["name"] = group_name
+        request_body["metadata"]["namespace"] = namespace
+        request_body["spec"]["rules"][0]["alert"] = f"{group_name}-custom"
+        request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
+
+        create_url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/namespaces/{namespace}/rulegroups"
+        create_resp = session.post(create_url, json=request_body, headers=headers, timeout=30)
+        if create_resp.status_code not in (200, 201):
+            logger.warning(f"_ensure_namespace_rule_group create failed: {create_resp.status_code} - {create_resp.text[:500]}")
+        return create_resp.status_code in (200, 201)
+    except Exception as e:
+        logger.warning(f"_ensure_namespace_rule_group failed: {e}\n{traceback.format_exc()}")
+        return False
+
+
+def _wait_alert_triggered(rule_type, cluster, namespace, group_name):
+    """等待告警触发（使用直接HTTP请求，避免线程安全问题）"""
+    try:
+        import requests
+        from aomaker.storage import cache, config
+
+        session = requests.Session()
+        headers = cache.get("headers") or {}
+        base_url = config.get("base_url") or ""
+
+        params = {"page": "1", "limit": "10", "sortBy": "createTime", "builtin": "false"}
+        if group_name:
+            params["label_filters"] = f"rule_group={group_name}"
+
+        if rule_type == "global":
+            url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/globalalerts"
+        elif rule_type == "cluster":
+            url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/clusteralerts"
+        else:
+            url = f"{base_url}/proxy/alerting.kubesphere.io/v2beta1/clusters/{cluster}/namespaces/{namespace}/alerts"
+
+        def query_func():
+            try:
+                resp = session.get(url, headers=headers, params=params, timeout=30)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    return data.get("items") or []
+                return None
+            except Exception:
+                return None
+
+        found_alert, _ = wait_for_alerts(query_func, max_attempts=48, sleep_interval=5)
+        return found_alert
+    except Exception as e:
+        logger.warning(f"_wait_alert_triggered failed: {e}")
+        return False
+
+
+def is_alert_prewarmed(rule_type, cluster=None, namespace=None, group_name=None):
+    """检查告警是否已预热（已触发）"""
+    cache_key = f"alert_ready:prewarm:{rule_type}:{cluster}:{namespace}:{group_name}"
+    sql = f"SELECT value FROM {cache.table} WHERE var_name = ? LIMIT 1"
+    result = cache.query(sql, (cache_key,))
+    if result:
+        return json.loads(result[0]["value"])
+    return False
 
 # ==================== Global Rule Group ====================
 
@@ -68,7 +359,7 @@ def get_for_test_global_rule_group(group_name: str) -> bool:
         return False
 
     except Exception as e:
-        print(f"get_for_test_global_rule_group failed: {e}")
+        logger.warning(f"get_for_test_global_rule_group failed: {e}")
         return False
 
 
@@ -84,7 +375,7 @@ def cleanup_global_rule_group(group_name: str) -> bool:
         status = res.cached_response.raw_response.status_code
         return status in (200, 204) or status == 404
     except Exception as e:
-        print(f"cleanup_global_rule_group failed: {e}")
+        logger.warning(f"cleanup_global_rule_group failed: {e}")
         return False
 
 
@@ -109,7 +400,7 @@ def get_for_test_cluster_rule_group(cluster: str, group_name: str) -> bool:
             res = list_api.send()
 
             if res.cached_response.raw_response.status_code != 200:
-                print(f"查询规则组列表失败: {res.cached_response.raw_response.status_code}")
+                logger.warning(f"查询规则组列表失败: {res.cached_response.raw_response.status_code}")
                 return False
 
             data = res.cached_response.raw_response.json()
@@ -117,7 +408,7 @@ def get_for_test_cluster_rule_group(cluster: str, group_name: str) -> bool:
             # 2. 检查测试数据是否已存在
             for item in (data.get("items") or []):
                 if item.get("metadata", {}).get("name") == group_name:
-                    print(f"规则组 {group_name} 已存在")
+                    logger.info(f"规则组 {group_name} 已存在")
                     return True
 
             # 3. 测试数据不存在，创建它（使用自定义规则组模板，expr: vector(1) 无需查询节点）
@@ -130,17 +421,17 @@ def get_for_test_cluster_rule_group(cluster: str, group_name: str) -> bool:
                 enable_schema_validation=False
             )
             create_res = create_api.send()
-            print(f"创建规则组 {group_name} 响应: {create_res.cached_response.raw_response.status_code}")
+            logger.info(f"创建规则组 {group_name} 响应: {create_res.cached_response.raw_response.status_code}")
 
             if create_res.cached_response.raw_response.status_code in (200, 201):
                 return True
-            print(f"创建规则组失败: {create_res.cached_response.raw_response.text[:200]}")
+            logger.warning(f"创建规则组失败: {create_res.cached_response.raw_response.text[:200]}")
             return False
         finally:
             clear_current_cluster()
 
     except Exception as e:
-        print(f"get_for_test_cluster_rule_group failed: {e}")
+        logger.warning(f"get_for_test_cluster_rule_group failed: {e}")
         return False
 
 
@@ -163,7 +454,7 @@ def cleanup_cluster_rule_group(cluster: str, group_name: str) -> bool:
         finally:
             clear_current_cluster()
     except Exception as e:
-        print(f"cleanup_cluster_rule_group failed: {e}")
+        logger.warning(f"cleanup_cluster_rule_group failed: {e}")
         return False
 
 
@@ -214,15 +505,15 @@ def get_for_test_namespace_rule_group(cluster: str, namespace: str, group_name: 
             create_res = create_api.send()
 
             if create_res.cached_response.raw_response.status_code in (200, 201):
-                print(f"✅ 创建成功: {group_name}")
+                logger.info(f"创建成功: {group_name}")
                 return True
-            print(f"❌ 创建失败 {group_name}，状态码: {create_res.cached_response.raw_response.status_code}, 响应: {create_res.cached_response.raw_response.text[:200]}")
+            logger.warning(f"创建失败 {group_name}，状态码: {create_res.cached_response.raw_response.status_code}, 响应: {create_res.cached_response.raw_response.text[:200]}")
             return False
         finally:
             clear_current_cluster()
 
     except Exception as e:
-        print(f"get_for_test_namespace_rule_group failed: {e}")
+        logger.warning(f"get_for_test_namespace_rule_group failed: {e}")
         return False
 
 
@@ -243,14 +534,14 @@ def cleanup_namespace_rule_group(cluster: str, namespace: str, group_name: str) 
             res = api.send()
             status = res.cached_response.raw_response.status_code
             if status in (200, 204) or status == 404:
-                print(f"🧹 清理成功: {group_name}")
+                logger.info(f"清理成功: {group_name}")
                 return True
-            print(f"⚠️ 清理失败 {group_name}，状态码: {status}")
+            logger.warning(f"清理失败 {group_name}，状态码: {status}")
             return False
         finally:
             clear_current_cluster()
     except Exception as e:
-        print(f"⚠️ 清理异常 {group_name}: {e}")
+        logger.warning(f"清理异常 {group_name}: {e}")
         return False
 
 
@@ -394,14 +685,14 @@ def wait_for_alerts(
             # 执行额外验证
             if validate_func:
                 validate_func(items)
-            print(f"找到告警，状态: {[item.get('state') for item in items]}")
+            logger.info(f"找到告警，状态: {[item.get('state') for item in items]}")
             break
 
         if attempt < max_attempts - 1:
             time.sleep(sleep_interval)
 
     if not found_alert:
-        print("告警未触发，可能测试环境无监控数据")
+        logger.warning("告警未触发，可能测试环境无监控数据")
 
     return found_alert, items
 

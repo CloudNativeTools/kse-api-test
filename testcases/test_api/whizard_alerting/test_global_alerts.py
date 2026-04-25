@@ -2,25 +2,12 @@
 """
 全局告警列表单接口测试
 API: HandleListGlobalAlertsAPI
-
-测试策略：
-1. 全局告警是Global级别，不区分多集群
-2. 告警需要等待触发，使用fixture准备规则组数据
-3. 验证告警状态（pending/firing）
-4. 支持规则组过滤查询
 """
 import pytest
-import logging
+from loguru import logger
 
 from apis.whizard_alerting.alerting_management.apis import HandleListGlobalAlertsAPI
-from testcases.test_api.whizard_alerting.base import (
-    get_for_test_global_rule_group,
-    cleanup_global_rule_group,
-    wait_for_alerts,
-    query_global_alerts,
-)
-
-logger = logging.getLogger(__name__)
+from testcases.test_api.whizard_alerting.base import is_alert_prewarmed
 
 # 标准规则组名称（用于测试告警关联）
 STANDARD_RULE_GROUP = "global-alert-standard"
@@ -30,36 +17,15 @@ STANDARD_RULE_GROUP = "global-alert-standard"
 class TestListGlobalAlerts:
     """查询全局告警列表"""
 
-    @pytest.fixture(scope="class", autouse=True)
+    @pytest.fixture(scope="session", autouse=True)
     def prepare_alert_data(self):
         """
-        类级别 fixture：统一准备告警数据
-        1. 创建规则组（使用自定义 expr: vector(1)，更容易触发告警）
-        2. 等待告警触发（最多240秒）
-        3. 所有测试执行完毕后清理
+        session 级别 fixture：复用 before_all 预热的告警数据
+        不再创建规则组和等待告警，由 after_all 统一清理
         """
-        # 1. 创建规则组
-        if not get_for_test_global_rule_group(STANDARD_RULE_GROUP):
-            pytest.skip("无法创建测试规则组，跳过所有告警测试")
-
-        # 2. 等待告警触发
-        logger.info(f"⏳ 等待告警触发，规则组: {STANDARD_RULE_GROUP}")
-        found_alert, _ = wait_for_alerts(
-            query_func=lambda: query_global_alerts(
-                rule_group_name=STANDARD_RULE_GROUP
-            ),
-            max_attempts=48,
-            sleep_interval=5
-        )
-
-        if not found_alert:
-            logger.warning("⚠️ 告警未触发，但继续执行测试")
-
+        if not is_alert_prewarmed("global", group_name=STANDARD_RULE_GROUP):
+            logger.warning(f"告警未预热，规则组: {STANDARD_RULE_GROUP}，测试可能受影响")
         yield
-
-        # 3. 测试完成后清理
-        logger.info(f"🧹 清理规则组: {STANDARD_RULE_GROUP}")
-        cleanup_global_rule_group(STANDARD_RULE_GROUP)
 
     def test_list_all_success(self):
         """正常查询列表"""
@@ -195,7 +161,7 @@ class TestListGlobalAlerts:
 
         total = data.get("totalItems", 0)
         assert total > 0, f"规则组 {STANDARD_RULE_GROUP} 查询结果应 >0，实际: {total}"
-        print(f"规则组 {STANDARD_RULE_GROUP} 找到 {total} 条告警")
+        logger.info(f"规则组 {STANDARD_RULE_GROUP} 找到 {total} 条告警")
 
         rule_groups = [item.get("labels", {}).get("rule_group", "") for item in items]
         assert STANDARD_RULE_GROUP in rule_groups, \

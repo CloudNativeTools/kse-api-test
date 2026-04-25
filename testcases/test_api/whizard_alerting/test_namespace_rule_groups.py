@@ -40,12 +40,8 @@ MEMBER_STANDARD_RULE_GROUP = "member-ns-alert-standard"
 
 @pytest.fixture(scope="module")
 def cleanup_host_standard(host_cluster, test_namespace):
-    """模块级清理：清理 host项目 标准资源"""
+    """模块级 fixture：标准资源由 after_all 统一清理，此处不做清理"""
     yield
-    try:
-        cleanup_namespace_rule_group(host_cluster, test_namespace, HOST_STANDARD_RULE_GROUP)
-    except Exception as e:
-        logger.warning(f"清理 host 项目标准规则组失败: {e}")
 
 
 # ==================== Create ====================
@@ -388,30 +384,46 @@ class TestDeleteNamespaceRuleGroup:
     """删除项目规则组"""
 
     def test_delete_success(self, host_cluster, test_namespace):
-        """正常删除 - 创建专用资源并删除"""
-        # 确保标准资源存在
-        if not get_for_test_namespace_rule_group(host_cluster, test_namespace, HOST_STANDARD_RULE_GROUP):
-            pytest.skip("无法创建标准规则组")
+        """正常删除 - 创建临时规则组并删除"""
+        group_name = generate_test_name("delete-ns")
 
         set_current_cluster(host_cluster)
         try:
+            request_body = load_test_data(
+                "whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_custom"
+            )
+            request_body["metadata"]["name"] = group_name
+            request_body["metadata"]["namespace"] = test_namespace
+            request_body["spec"]["rules"][0]["alert"] = f"{group_name}-custom"
+            request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
+
+            create_api = HandleCreateRuleGroupAPI(
+                path_params=HandleCreateRuleGroupAPI.PathParams(cluster=host_cluster, namespace=test_namespace),
+                request_body=request_body,
+                enable_schema_validation=False
+            )
+            create_res = create_api.send()
+
+            if create_res.cached_response.raw_response.status_code not in (200, 201):
+                pytest.skip(f"无法创建待删除的测试规则组: {group_name}")
+
             api = HandleDeleteRuleGroupAPI(
                 path_params=HandleDeleteRuleGroupAPI.PathParams(
                     cluster=host_cluster,
                     namespace=test_namespace,
-                    name=HOST_STANDARD_RULE_GROUP
+                    name=group_name
                 ),
                 enable_schema_validation=False
             )
             res = api.send()
 
-            assert res.cached_response.raw_response.status_code == 200 
+            assert res.cached_response.raw_response.status_code == 200
 
-            # 校验返回 message
             data = res.cached_response.raw_response.json()
             assert data.get("message") == "success"
         finally:
             clear_current_cluster()
+            cleanup_namespace_rule_group(host_cluster, test_namespace, group_name)
 
     def test_delete_not_found(self, host_cluster, test_namespace):
         """删除不存在的规则组"""
@@ -442,27 +454,24 @@ class TestNamespaceRuleGroupsMember:
 
     @pytest.fixture(scope="module")
     def cleanup_member_standard(self, member_cluster, test_namespace_member):
-        """清理 member 标准资源"""
+        """模块级 fixture：标准资源由 after_all 统一清理，此处不做清理"""
         yield
-        try:
-            cleanup_namespace_rule_group(member_cluster, test_namespace_member, MEMBER_STANDARD_RULE_GROUP)
-        except Exception as e:
-            logger.warning(f"清理 member 标准规则组失败: {e}")
 
     def test_create_rule_group_on_member(self, member_cluster, test_namespace_member):
         """
         member 集群创建项目规则组
         """
+        group_name = generate_test_name("member-ns")
+
         set_current_cluster(member_cluster)
         try:
-            # 从数据文件加载模板并替换占位符
             request_body = load_test_data(
                 "whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_custom"
             )
-            request_body["metadata"]["name"] = MEMBER_STANDARD_RULE_GROUP
+            request_body["metadata"]["name"] = group_name
             request_body["metadata"]["namespace"] = test_namespace_member
-            request_body["spec"]["rules"][0]["alert"] = "member-alert"
-            request_body["spec"]["rules"][0]["annotations"]["summary"] = "member-summary"
+            request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
+            request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
 
             api = HandleCreateRuleGroupAPI(
                 path_params=HandleCreateRuleGroupAPI.PathParams(
@@ -476,13 +485,12 @@ class TestNamespaceRuleGroupsMember:
 
             assert res.cached_response.raw_response.status_code == 200
 
-            # 校验 owner_cluster 和 owner_namespace 标签
             data = res.cached_response.raw_response.json()
             labels = data.get("metadata", {}).get("labels", {})
             assert labels.get("alerting.kubesphere.io/owner_cluster") == member_cluster
             assert labels.get("alerting.kubesphere.io/owner_namespace") == test_namespace_member
         finally:
-            clear_current_cluster()
+            cleanup_namespace_rule_group(member_cluster, test_namespace_member, group_name)
 
     def test_list_rule_groups_on_member(self, member_cluster, test_namespace_member, cleanup_member_standard):
         """查看 member 项目规则组列表"""
@@ -517,26 +525,45 @@ class TestNamespaceRuleGroupsMember:
             clear_current_cluster()
 
     def test_delete_rule_group_on_member(self, member_cluster, test_namespace_member, cleanup_member_standard):
-        """删除 member 项目规则组"""
-        # 确保标准资源存在
-        if not get_for_test_namespace_rule_group(member_cluster, test_namespace_member, MEMBER_STANDARD_RULE_GROUP):
-            pytest.skip("无法在 member 集群创建标准规则组")
+        """删除 member 项目规则组 - 使用临时规则组"""
+        group_name = generate_test_name("delete-member-ns")
 
         set_current_cluster(member_cluster)
         try:
+            request_body = load_test_data(
+                "whizard_alerting", "alerting_management/namespace_rule_groups", "namespace_rule_group_custom"
+            )
+            request_body["metadata"]["name"] = group_name
+            request_body["metadata"]["namespace"] = test_namespace_member
+            request_body["spec"]["rules"][0]["alert"] = f"{group_name}-custom"
+            request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
+
+            create_api = HandleCreateRuleGroupAPI(
+                path_params=HandleCreateRuleGroupAPI.PathParams(
+                    cluster=member_cluster,
+                    namespace=test_namespace_member
+                ),
+                request_body=request_body,
+                enable_schema_validation=False
+            )
+            create_res = create_api.send()
+
+            if create_res.cached_response.raw_response.status_code not in (200, 201):
+                pytest.skip(f"无法创建待删除的测试规则组: {group_name}")
+
             api = HandleDeleteRuleGroupAPI(
                 path_params=HandleDeleteRuleGroupAPI.PathParams(
                     cluster=member_cluster,
                     namespace=test_namespace_member,
-                    name=MEMBER_STANDARD_RULE_GROUP
+                    name=group_name
                 )
             )
             res = api.send()
 
             assert res.cached_response.raw_response.status_code == 200
 
-            # 校验返回 message
             data = res.cached_response.raw_response.json()
             assert data.get("message") == "success"
         finally:
             clear_current_cluster()
+            cleanup_namespace_rule_group(member_cluster, test_namespace_member, group_name)

@@ -11,6 +11,7 @@ API: HandleList/Create/Get/Update/Delete/PatchGlobalRuleGroupAPI
 5. 全局规则组是Global级别，不区分多集群（但规则组内容可包含多集群资源）
 """
 import pytest
+from loguru import logger
 
 from apis.whizard_alerting.alerting_management.apis import (
     HandleListGlobalRuleGroupsAPI,
@@ -38,13 +39,8 @@ STANDARD_RULE_GROUP_MULTI = "global-alert-multi"
 
 @pytest.fixture(scope="module")
 def cleanup_standard():
-    """模块级清理：清理标准资源"""
+    """模块级 fixture：标准资源由 after_all 统一清理，此处不做清理"""
     yield
-    try:
-        cleanup_global_rule_group(STANDARD_RULE_GROUP)
-        cleanup_global_rule_group(STANDARD_RULE_GROUP_MULTI)
-    except Exception as e:
-        print(f"清理标准规则组失败: {e}")
 
 
 @pytest.fixture(scope="session")
@@ -70,7 +66,7 @@ class TestCreateGlobalRuleGroup:
             try:
                 cleanup_global_rule_group(group_name)
             except Exception as e:
-                print(f"清理失败 {group_name}: {e}")
+                logger.warning(f"清理失败 {group_name}: {e}")
 
     def test_create_template_node_single(self, cleanup_created_groups):
         """
@@ -100,7 +96,7 @@ class TestCreateGlobalRuleGroup:
         assert "node" in data["spec"]["rules"][0]["exprBuilder"]
 
         cleanup_created_groups.append(group_name)
-        print(f"单集群节点规则组创建成功: {group_name}")
+        logger.info(f"单集群节点规则组创建成功: {group_name}")
 
     @pytest.mark.multi_cluster
     def test_create_template_node_multi(self, cleanup_created_groups, has_member_cluster):
@@ -134,7 +130,7 @@ class TestCreateGlobalRuleGroup:
         assert "node" in data["spec"]["rules"][0]["exprBuilder"]
 
         cleanup_created_groups.append(group_name)
-        print(f"多集群节点规则组创建成功: {group_name}")
+        logger.info(f"多集群节点规则组创建成功: {group_name}")
 
     def test_create_template_workload_single(self, cleanup_created_groups):
         """
@@ -164,7 +160,7 @@ class TestCreateGlobalRuleGroup:
         assert "workload" in data["spec"]["rules"][0]["exprBuilder"]
 
         cleanup_created_groups.append(group_name)
-        print(f"单集群工作负载规则组创建成功: {group_name}")
+        logger.info(f"单集群工作负载规则组创建成功: {group_name}")
 
     @pytest.mark.multi_cluster
     def test_create_template_workload_multi(self, cleanup_created_groups, has_member_cluster):
@@ -198,7 +194,7 @@ class TestCreateGlobalRuleGroup:
         assert "workload" in data["spec"]["rules"][0]["exprBuilder"]
 
         cleanup_created_groups.append(group_name)
-        print(f"多集群工作负载规则组创建成功: {group_name}")
+        logger.info(f"多集群工作负载规则组创建成功: {group_name}")
 
     def test_create_custom_rule_group(self, cleanup_created_groups):
         """
@@ -233,7 +229,7 @@ class TestCreateGlobalRuleGroup:
         assert rules[0].get("expr") == "vector(1)", f"自定义规则组的 expr 不正确: {rules[0].get('expr')}"
 
         cleanup_created_groups.append(group_name)
-        print(f"自定义规则组创建成功: {group_name}")
+        logger.info(f"自定义规则组创建成功: {group_name}")
 
 
 # ==================== List ====================
@@ -399,43 +395,36 @@ class TestUpdateGlobalRuleGroup:
         if not get_for_test_global_rule_group(STANDARD_RULE_GROUP):
             pytest.skip("无法创建标准规则组")
 
-        try:
-            # 1. 先 GET 获取当前规则组完整数据
-            get_api = HandleGetGlobalRuleGroupAPI(
-                path_params=HandleGetGlobalRuleGroupAPI.PathParams(
-                    name=STANDARD_RULE_GROUP
-                ),
-                enable_schema_validation=False
-            )
-            get_res = get_api.send()
-            current_data = get_res.cached_response.raw_response.json()
+        get_api = HandleGetGlobalRuleGroupAPI(
+            path_params=HandleGetGlobalRuleGroupAPI.PathParams(
+                name=STANDARD_RULE_GROUP
+            ),
+            enable_schema_validation=False
+        )
+        get_res = get_api.send()
+        current_data = get_res.cached_response.raw_response.json()
 
-            # 2. 使用公共方法构建 PUT 请求体（修改 spec.rules[].annotations，保留 resourceVersion）
-            request_body = build_update_body_for_rules_annotations(
-                current_data=current_data,
-                summary="updated-global-alert-summary",
-                message="updated desc"
-            )
+        request_body = build_update_body_for_rules_annotations(
+            current_data=current_data,
+            summary="updated-global-alert-summary",
+            message="updated desc"
+        )
 
-            # 3. 发送更新请求
-            api = HandleUpdateGlobalRuleGroupAPI(
-                path_params=HandleUpdateGlobalRuleGroupAPI.PathParams(
-                    name=STANDARD_RULE_GROUP
-                ),
-                request_body=request_body,
-                enable_schema_validation=False
-            )
-            res = api.send()
+        api = HandleUpdateGlobalRuleGroupAPI(
+            path_params=HandleUpdateGlobalRuleGroupAPI.PathParams(
+                name=STANDARD_RULE_GROUP
+            ),
+            request_body=request_body,
+            enable_schema_validation=False
+        )
+        res = api.send()
 
-            assert res.cached_response.raw_response.status_code == 200
+        assert res.cached_response.raw_response.status_code == 200
 
-            # 4. 验证规则注解已更新
-            data = res.cached_response.raw_response.json()
-            annotations = data.get("spec", {}).get("rules", [{}])[0].get("annotations", {})
-            assert annotations.get("summary") == "updated-global-alert-summary", "summary 应已更新"
-            assert annotations.get("message") == "updated desc", "message 应已更新"
-        finally:
-            cleanup_global_rule_group(STANDARD_RULE_GROUP)
+        data = res.cached_response.raw_response.json()
+        annotations = data.get("spec", {}).get("rules", [{}])[0].get("annotations", {})
+        assert annotations.get("summary") == "updated-global-alert-summary", "summary 应已更新"
+        assert annotations.get("message") == "updated desc", "message 应已更新"
 
     def test_reset_builtin_rule_group(self):
         """
@@ -506,43 +495,36 @@ class TestPatchGlobalRuleGroup:
         if not get_for_test_global_rule_group(STANDARD_RULE_GROUP):
             pytest.skip("无法创建标准规则组")
 
-        try:
-            # 1. 先 GET 获取当前规则组完整数据
-            get_api = HandleGetGlobalRuleGroupAPI(
-                path_params=HandleGetGlobalRuleGroupAPI.PathParams(
-                    name=STANDARD_RULE_GROUP
-                ),
-                enable_schema_validation=False
-            )
-            get_res = get_api.send()
-            current_data = get_res.cached_response.raw_response.json()
+        get_api = HandleGetGlobalRuleGroupAPI(
+            path_params=HandleGetGlobalRuleGroupAPI.PathParams(
+                name=STANDARD_RULE_GROUP
+            ),
+            enable_schema_validation=False
+        )
+        get_res = get_api.send()
+        current_data = get_res.cached_response.raw_response.json()
 
-            # 2. 使用公共方法构建 Patch 请求体
-            request_body = build_patch_body_for_alias_desc(
-                current_data=current_data,
-                alias_name="global-alias-updated",
-                description="global-desc-updated"
-            )
+        request_body = build_patch_body_for_alias_desc(
+            current_data=current_data,
+            alias_name="global-alias-updated",
+            description="global-desc-updated"
+        )
 
-            # 3. 发送 Patch 请求
-            api = HandlePatchGlobalRuleGroupAPI(
-                path_params=HandlePatchGlobalRuleGroupAPI.PathParams(
-                    name=STANDARD_RULE_GROUP
-                ),
-                request_body=request_body,
-                enable_schema_validation=False
-            )
-            res = api.send()
+        api = HandlePatchGlobalRuleGroupAPI(
+            path_params=HandlePatchGlobalRuleGroupAPI.PathParams(
+                name=STANDARD_RULE_GROUP
+            ),
+            request_body=request_body,
+            enable_schema_validation=False
+        )
+        res = api.send()
 
-            assert res.cached_response.raw_response.status_code == 200
+        assert res.cached_response.raw_response.status_code == 200
 
-            # 4. 验证别名和描述已更新
-            data = res.cached_response.raw_response.json()
-            annotations = data.get("metadata", {}).get("annotations", {})
-            assert annotations.get("kubesphere.io/alias-name") == "global-alias-updated", "别名应已更新"
-            assert annotations.get("kubesphere.io/description") == "global-desc-updated", "描述应已更新"
-        finally:
-            cleanup_global_rule_group(STANDARD_RULE_GROUP)
+        data = res.cached_response.raw_response.json()
+        annotations = data.get("metadata", {}).get("annotations", {})
+        assert annotations.get("kubesphere.io/alias-name") == "global-alias-updated", "别名应已更新"
+        assert annotations.get("kubesphere.io/description") == "global-desc-updated", "描述应已更新"
 
 
 # ==================== Delete ====================
@@ -552,24 +534,33 @@ class TestDeleteGlobalRuleGroup:
     """删除全局规则组"""
 
     def test_delete_success(self):
-        """正常删除 - 创建专用资源并删除"""
+        """正常删除 - 创建临时规则组并删除"""
         group_name = generate_test_name("global-delete")
 
-        if not get_for_test_global_rule_group(group_name):
-            pytest.skip("无法创建待删除的测试规则组")
-
-        api = HandleDeleteGlobalRuleGroupAPI(
-            path_params=HandleDeleteGlobalRuleGroupAPI.PathParams(
-                name=group_name
-            )
+        request_body = load_test_data(
+            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_custom"
         )
-        res = api.send()
+        request_body["metadata"]["name"] = group_name
+        request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
 
-        assert res.cached_response.raw_response.status_code in (200, 204)
+        create_api = HandleCreateGlobalRuleGroupAPI(request_body=request_body, enable_schema_validation=False)
+        create_res = create_api.send()
 
-        # 校验返回 message
-        data = res.cached_response.raw_response.json()
-        assert data.get("message") == "success"
+        if create_res.cached_response.raw_response.status_code not in (200, 201):
+            pytest.skip(f"无法创建待删除的测试规则组: {group_name}")
+
+        try:
+            api = HandleDeleteGlobalRuleGroupAPI(
+                path_params=HandleDeleteGlobalRuleGroupAPI.PathParams(name=group_name)
+            )
+            res = api.send()
+
+            assert res.cached_response.raw_response.status_code in (200, 204)
+
+            data = res.cached_response.raw_response.json()
+            assert data.get("message") == "success"
+        finally:
+            cleanup_global_rule_group(group_name)
 
     def test_delete_not_found(self):
         """删除不存在的规则组"""

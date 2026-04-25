@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 """
 全局告警场景测试
-流程：创建规则组 -> 查看规则组列表 -> 等待告警触发 -> 查看告警列表 -> 编辑规则组(PUT) -> 编辑规则组(PATCH) -> 查看规则组详情 -> 删除规则组
+流程：预热标准规则组 -> 创建临时规则组 -> 查看规则组列表 -> 等待告警触发 -> 查看告警列表 -> 编辑规则组(PUT) -> 编辑规则组(PATCH) -> 查看规则组详情 -> 删除临时规则组
 """
 import pytest
 import logging
@@ -16,17 +16,18 @@ from apis.whizard_alerting.alerting_management.apis import (
     HandleListGlobalAlertsAPI,
 )
 from testcases.test_api.whizard_alerting.base import (
-    wait_for_alerts,
+    is_alert_prewarmed,
     build_patch_body_for_alias_desc,
     build_update_body_for_rules_annotations,
     cleanup_global_rule_group,
-    query_global_alerts,
+    generate_test_name,
 )
 from utils.test_data_helper import load_test_data
 
 logger = logging.getLogger(__name__)
 
-SCENE_RULE_GROUP_NAME = "scene-global-alert"
+STANDARD_RULE_GROUP_NAME = "global-alert-standard"
+TEMP_RULE_GROUP_NAME = f"global-alert-{generate_test_name()}"
 
 
 @pytest.mark.alerting_scene
@@ -36,15 +37,15 @@ class TestGlobalAlertScene:
     @pytest.fixture(scope="class", autouse=True)
     def prepare_data(self):
         """
-        类级别 fixture：创建规则组，测试结束后清理
+        类级别 fixture：创建临时规则组，测试结束后清理
         """
         request_body = load_test_data(
             "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_custom"
         )
-        request_body["metadata"]["name"] = SCENE_RULE_GROUP_NAME
-        request_body["spec"]["rules"][0]["alert"] = f"{SCENE_RULE_GROUP_NAME}-alert"
-        request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{SCENE_RULE_GROUP_NAME}-summary"
-        request_body["spec"]["rules"][0]["annotations"]["message"] = f"{SCENE_RULE_GROUP_NAME}-message"
+        request_body["metadata"]["name"] = TEMP_RULE_GROUP_NAME
+        request_body["spec"]["rules"][0]["alert"] = f"{TEMP_RULE_GROUP_NAME}-alert"
+        request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{TEMP_RULE_GROUP_NAME}-summary"
+        request_body["spec"]["rules"][0]["annotations"]["message"] = f"{TEMP_RULE_GROUP_NAME}-message"
 
         create_api = HandleCreateGlobalRuleGroupAPI(
             request_body=request_body,
@@ -53,29 +54,29 @@ class TestGlobalAlertScene:
         res = create_api.send()
 
         if res.cached_response.raw_response.status_code not in (200, 201):
-            pytest.skip(f"无法创建测试规则组: {SCENE_RULE_GROUP_NAME}")
+            pytest.skip(f"无法创建测试规则组: {TEMP_RULE_GROUP_NAME}")
 
-        logger.info(f"场景规则组创建成功: {SCENE_RULE_GROUP_NAME}")
+        logger.info(f"临时规则组创建成功: {TEMP_RULE_GROUP_NAME}")
 
         yield
 
-        logger.info(f"清理场景规则组: {SCENE_RULE_GROUP_NAME}")
-        cleanup_global_rule_group(SCENE_RULE_GROUP_NAME)
+        logger.info(f"清理临时规则组: {TEMP_RULE_GROUP_NAME}")
+        cleanup_global_rule_group(TEMP_RULE_GROUP_NAME)
 
-    def test_01_create_rule_group(self):
+    def test_01_verify_standard_rule_group(self):
         """
-        步骤1: 验证规则组已创建
+        步骤1: 验证预热的标准规则组已存在
         """
         api = HandleGetGlobalRuleGroupAPI(
-            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=SCENE_RULE_GROUP_NAME),
+            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=STANDARD_RULE_GROUP_NAME),
             enable_schema_validation=False
         )
         res = api.send()
         assert res.cached_response.raw_response.status_code == 200
 
         data = res.cached_response.raw_response.json()
-        assert data["metadata"]["name"] == SCENE_RULE_GROUP_NAME
-        logger.info("步骤1: 规则组创建成功")
+        assert data["metadata"]["name"] == STANDARD_RULE_GROUP_NAME
+        logger.info("步骤1: 标准规则组存在")
 
     def test_02_list_rule_groups(self):
         """
@@ -95,30 +96,24 @@ class TestGlobalAlertScene:
 
         data = res.cached_response.raw_response.json()
         items = data.get("items") or []
-        found = any(item["metadata"]["name"] == SCENE_RULE_GROUP_NAME for item in items)
-        assert found, f"列表中未找到规则组: {SCENE_RULE_GROUP_NAME}"
+        found = any(item["metadata"]["name"] == STANDARD_RULE_GROUP_NAME for item in items)
+        assert found, f"列表中未找到规则组: {STANDARD_RULE_GROUP_NAME}"
         logger.info("步骤2: 规则组列表查询成功")
 
     def test_03_wait_and_check_alerts(self):
         """
-        步骤3: 等待告警触发
+        步骤3: 验证标准规则组告警已预热
         """
-        logger.info(f"步骤3: 等待告警触发，规则组: {SCENE_RULE_GROUP_NAME}")
+        logger.info(f"步骤3: 检查告警预热状态，规则组: {STANDARD_RULE_GROUP_NAME}")
 
-        found_alert, _ = wait_for_alerts(
-            query_func=lambda: query_global_alerts(
-                rule_group_name=SCENE_RULE_GROUP_NAME
-            ),
-            max_attempts=48,
-            sleep_interval=5
-        )
-
-        if not found_alert:
-            logger.warning("告警未触发，场景继续执行")
+        if is_alert_prewarmed("global", group_name=STANDARD_RULE_GROUP_NAME):
+            logger.info("标准规则组告警已预热，直接复用")
+        else:
+            logger.warning("标准规则组告警未预热，场景继续执行")
 
     def test_04_list_alerts(self):
         """
-        步骤4: 查看告警列表
+        步骤4: 查看标准规则组告警列表
         """
         api = HandleListGlobalAlertsAPI(
             enable_schema_validation=False,
@@ -128,7 +123,7 @@ class TestGlobalAlertScene:
         api.query_params.limit = "10"
         api.query_params.sortBy = "createTime"
         api.query_params.builtin = "false"
-        api.query_params.label_filters = f"rule_group={SCENE_RULE_GROUP_NAME}"
+        api.query_params.label_filters = f"rule_group={STANDARD_RULE_GROUP_NAME}"
 
         res = api.send()
         assert res.cached_response.raw_response.status_code == 200
@@ -141,17 +136,17 @@ class TestGlobalAlertScene:
 
         items = data.get("items") or []
         rule_groups = [item.get("labels", {}).get("rule_group", "") for item in items]
-        assert SCENE_RULE_GROUP_NAME in rule_groups, \
-            f"未找到 rule_group 为 {SCENE_RULE_GROUP_NAME} 的告警，实际: {rule_groups}"
+        assert STANDARD_RULE_GROUP_NAME in rule_groups, \
+            f"未找到 rule_group 为 {STANDARD_RULE_GROUP_NAME} 的告警，实际: {rule_groups}"
 
         logger.info("步骤4: 告警列表查询成功")
 
     def test_05_update_rule_group_put(self):
         """
-        步骤5: 编辑规则组(PUT) - 修改规则注解
+        步骤5: 编辑标准规则组(PUT) - 修改规则注解
         """
         get_api = HandleGetGlobalRuleGroupAPI(
-            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=SCENE_RULE_GROUP_NAME),
+            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=STANDARD_RULE_GROUP_NAME),
             enable_schema_validation=False
         )
         get_res = get_api.send()
@@ -164,7 +159,7 @@ class TestGlobalAlertScene:
         )
 
         api = HandleUpdateGlobalRuleGroupAPI(
-            path_params=HandleUpdateGlobalRuleGroupAPI.PathParams(name=SCENE_RULE_GROUP_NAME),
+            path_params=HandleUpdateGlobalRuleGroupAPI.PathParams(name=STANDARD_RULE_GROUP_NAME),
             request_body=update_body,
             enable_schema_validation=False
         )
@@ -174,10 +169,10 @@ class TestGlobalAlertScene:
 
     def test_06_patch_rule_group(self):
         """
-        步骤6: 编辑规则组(PATCH) - 修改别名和描述
+        步骤6: 编辑标准规则组(PATCH) - 修改别名和描述
         """
         get_api = HandleGetGlobalRuleGroupAPI(
-            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=SCENE_RULE_GROUP_NAME),
+            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=STANDARD_RULE_GROUP_NAME),
             enable_schema_validation=False
         )
         get_res = get_api.send()
@@ -190,7 +185,7 @@ class TestGlobalAlertScene:
         )
 
         api = HandlePatchGlobalRuleGroupAPI(
-            path_params=HandlePatchGlobalRuleGroupAPI.PathParams(name=SCENE_RULE_GROUP_NAME),
+            path_params=HandlePatchGlobalRuleGroupAPI.PathParams(name=STANDARD_RULE_GROUP_NAME),
             request_body=patch_body,
             enable_schema_validation=False
         )
@@ -200,10 +195,10 @@ class TestGlobalAlertScene:
 
     def test_07_verify_rule_group_detail(self):
         """
-        步骤7: 查看规则组详情，验证编辑结果
+        步骤7: 查看标准规则组详情，验证编辑结果
         """
         api = HandleGetGlobalRuleGroupAPI(
-            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=SCENE_RULE_GROUP_NAME),
+            path_params=HandleGetGlobalRuleGroupAPI.PathParams(name=STANDARD_RULE_GROUP_NAME),
             enable_schema_validation=False
         )
         res = api.send()
@@ -221,14 +216,14 @@ class TestGlobalAlertScene:
 
         logger.info("步骤7: 规则组详情验证成功")
 
-    def test_08_delete_rule_group(self):
+    def test_08_delete_temp_rule_group(self):
         """
-        步骤8: 删除规则组
+        步骤8: 删除临时规则组
         """
         api = HandleDeleteGlobalRuleGroupAPI(
-            path_params=HandleDeleteGlobalRuleGroupAPI.PathParams(name=SCENE_RULE_GROUP_NAME),
+            path_params=HandleDeleteGlobalRuleGroupAPI.PathParams(name=TEMP_RULE_GROUP_NAME),
             enable_schema_validation=False
         )
         res = api.send()
         assert res.cached_response.raw_response.status_code in (200, 204)
-        logger.info("步骤8: 规则组删除成功")
+        logger.info("步骤8: 临时规则组删除成功")

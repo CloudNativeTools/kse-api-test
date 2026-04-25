@@ -675,9 +675,40 @@ class TestListClusterRuleGroupsMember:
 
 **Global 接口不需要多集群测试**（不区分集群）
 
+## 日志记录
+
+框架使用 `loguru` 进行日志记录，禁止使用 `print`。
+
+### 基本使用
+
+```python
+from loguru import logger
+
+# 通用信息记录
+logger.info("操作成功")
+
+# 警告信息（异常但可继续）
+logger.warning("数据不存在，使用默认值")
+
+# 错误信息
+logger.error("请求失败")
+
+# 详细调试信息
+logger.debug("详细信息")
+```
+
+### 日志级别选择
+
+| 级别 | 使用场景 |
+|------|---------|
+| `logger.info()` | 正常流程信息、成功操作、调试信息 |
+| `logger.warning()` | 异常情况、失败操作、跳过测试 |
+| `logger.error()` | 严重错误、需要立即处理的问题 |
+| `logger.debug()` | 详细调试信息（生产环境通常不显示） |
+
 ## 注意事项
 
-1. **不要使用print** - 按框架风格，使用日志或直接assert
+1. **使用 loguru 而非 print** - 使用 `from loguru import logger`，按日志级别选择 logger.info/warning/error
 2. **统一使用公共方法加载数据** - 使用 `utils/test_data_helper.py`
 3. **处理异常场景** - API返回非200时，可能需要关闭schema校验
 4. **测试数据放到JSON文件** - 放在 `data/api_data/` 目录下

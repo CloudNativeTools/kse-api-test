@@ -105,7 +105,7 @@ def set_current_cluster(cluster_name: str):
         host_cluster, _ = get_clusters()
         set_current_cluster(host_cluster)  # 后续请求会自动添加 /clusters/{host_cluster} 前缀
     """
-    cache.set("current_cluster", cluster_name)
+    cache.upsert("current_cluster", cluster_name)
 
 
 def clear_current_cluster():
