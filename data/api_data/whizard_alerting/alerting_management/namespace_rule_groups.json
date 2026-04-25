@@ -1,0 +1,84 @@
+{
+  "namespace_rule_group_template": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "RuleGroup",
+    "metadata": {
+      "name": "PLACEHOLDER",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "namespace": "PLACEHOLDER",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "annotations": {
+      "aliasName": "",
+      "description": ""
+    },
+    "spec": {
+      "interval": "10s",
+      "partial_response_strategy": "",
+      "rules": [
+        {
+          "alert": "PLACEHOLDER",
+          "annotations": {
+            "summary": "PLACEHOLDER",
+            "message": ""
+          },
+          "exprBuilder": {
+            "workload": {
+              "names": ["host-nginx"],
+              "kind": "Deployment",
+              "metricThreshold": {
+                "memory": {
+                  "usage": 5242880
+                }
+              },
+              "comparator": ">"
+            }
+          },
+          "disable": false,
+          "for": "1m",
+          "severity": "critical",
+          "expr": ""
+        }
+      ]
+    }
+  },
+  "namespace_rule_group_custom": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "RuleGroup",
+    "metadata": {
+      "name": "PLACEHOLDER",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "namespace": "PLACEHOLDER",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "annotations": {
+      "aliasName": "",
+      "description": ""
+    },
+    "spec": {
+      "interval": "10s",
+      "partial_response_strategy": "",
+      "rules": [
+        {
+          "alert": "PLACEHOLDER-custom",
+          "annotations": {
+            "summary": "PLACEHOLDER-summary",
+            "message": ""
+          },
+          "for": "",
+          "expr": "vector(1)",
+          "severity": "critical",
+          "disable": false
+        }
+      ]
+    }
+  }
+}

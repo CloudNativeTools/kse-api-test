@@ -175,11 +175,11 @@ def load_test_data(
         module_path = Path(module)
         # 如果 module 是文件名（没有后缀），且 data_key 为 None，直接使用 {module}.json
         # 如果 module 是目录，且 data_key 为 None，使用 {data_key}.json
-        if module_path.suffix == '' and data_key is None:
-            # 直接使用 module.json
+        if module_path.suffix == '':
+            # module 是路径（可能包含子目录），添加 .json 后缀
             data_file = Path(__file__).parent.parent / "data" / "api_data" / component / f"{module}.json"
         else:
-            # module 包含子目录或需要 data_key
+            # module 已经包含后缀
             data_file = Path(__file__).parent.parent / "data" / "api_data" / component / module_path
     
     try:

@@ -1,0 +1,257 @@
+{
+  "global_rule_group_template_node_single": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "PLACEHOLDER",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "annotations": {
+      "aliasName": "",
+      "description": ""
+    },
+    "spec": {
+      "interval": "10s",
+      "partial_response_strategy": "",
+      "rules": [
+        {
+          "alert": "PLACEHOLDER",
+          "annotations": {
+            "summary": "global memory over 10%",
+            "message": ""
+          },
+          "exprBuilder": {
+            "node": {
+              "names": [
+                {
+                  "cluster": "host",
+                  "names": ["node3", "node2", "node1"]
+                }
+              ],
+              "metricThreshold": {
+                "memory": {
+                  "utilization": 0.1
+                }
+              },
+              "comparator": ">"
+            }
+          },
+          "disable": false,
+          "for": "1m",
+          "severity": "critical"
+        }
+      ]
+    }
+  },
+  "global_rule_group_template_node_multi": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "PLACEHOLDER",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "annotations": {
+      "aliasName": "",
+      "description": ""
+    },
+    "spec": {
+      "interval": "10s",
+      "partial_response_strategy": "",
+      "rules": [
+        {
+          "alert": "PLACEHOLDER",
+          "annotations": {
+            "summary": "global memory over 10%",
+            "message": ""
+          },
+          "exprBuilder": {
+            "node": {
+              "names": [
+                {
+                  "cluster": "host",
+                  "names": ["node3", "node2", "node1"]
+                },
+                {
+                  "cluster": "member-cluster",
+                  "names": ["node1"]
+                }
+              ],
+              "metricThreshold": {
+                "memory": {
+                  "utilization": 0.1
+                }
+              },
+              "comparator": ">"
+            }
+          },
+          "disable": false,
+          "for": "1m",
+          "severity": "critical"
+        }
+      ]
+    }
+  },
+  "global_rule_group_template_workload_single": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "PLACEHOLDER",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "annotations": {
+      "aliasName": "",
+      "description": ""
+    },
+    "spec": {
+      "interval": "",
+      "partial_response_strategy": "",
+      "rules": [
+        {
+          "alert": "PLACEHOLDER",
+          "annotations": {
+            "summary": "workload memory over 5MiB",
+            "message": ""
+          },
+          "namespaceSelector": {
+            "inValues": ["host-pro1-test"]
+          },
+          "expr": "",
+          "exprBuilder": {
+            "workload": {
+              "names": [
+                {
+                  "cluster": "host",
+                  "namespace": "host-pro1-test",
+                  "names": ["host-nginx"]
+                }
+              ],
+              "metricThreshold": {
+                "memory": {
+                  "usage": 5242880
+                }
+              },
+              "kind": "Deployment",
+              "comparator": ">"
+            }
+          },
+          "disable": false,
+          "for": "1m",
+          "severity": "error"
+        }
+      ]
+    }
+  },
+  "global_rule_group_template_workload_multi": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "PLACEHOLDER",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "annotations": {
+      "aliasName": "",
+      "description": ""
+    },
+    "spec": {
+      "interval": "",
+      "partial_response_strategy": "",
+      "rules": [
+        {
+          "alert": "PLACEHOLDER",
+          "annotations": {
+            "summary": "workload memory over 5MiB",
+            "message": ""
+          },
+          "namespaceSelector": {
+            "inValues": ["mem-pro1-test", "host-pro1-test"]
+          },
+          "expr": "",
+          "exprBuilder": {
+            "workload": {
+              "names": [
+                {
+                  "cluster": "member-cluster",
+                  "namespace": "mem-pro1-test",
+                  "names": ["mem-nginx"]
+                },
+                {
+                  "cluster": "host",
+                  "namespace": "host-pro1-test",
+                  "names": ["host-nginx"]
+                }
+              ],
+              "metricThreshold": {
+                "memory": {
+                  "usage": 5242880
+                }
+              },
+              "kind": "Deployment",
+              "comparator": ">"
+            }
+          },
+          "disable": false,
+          "for": "1m",
+          "severity": "error"
+        }
+      ]
+    }
+  },
+  "global_rule_group_custom": {
+    "apiVersion": "alerting.kubesphere.io/v2beta1",
+    "kind": "GlobalRuleGroup",
+    "metadata": {
+      "name": "PLACEHOLDER",
+      "labels": {
+        "alerting.kubesphere.io/enable": "true"
+      },
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "annotations": {
+      "aliasName": "",
+      "description": ""
+    },
+    "spec": {
+      "interval": "10s",
+      "partial_response_strategy": "",
+      "rules": [
+        {
+          "alert": "PLACEHOLDER",
+          "annotations": {
+            "summary": "global-alert-standard-summary",
+            "message": ""
+          },
+          "clusterSelector": {
+            "inValues": []
+          },
+          "for": "",
+          "expr": "vector(1)",
+          "severity": "warning",
+          "disable": false,
+          "exprBuilder": {}
+        }
+      ]
+    }
+  }
+}

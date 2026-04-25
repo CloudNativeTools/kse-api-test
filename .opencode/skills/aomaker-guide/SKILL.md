@@ -197,14 +197,109 @@ api = SomeAPI(enable_schema_validation=False)
 res = api.send()
 ```
 
-### 2. 获取响应
+### 1.1 enable_schema_validation 与 response 的区别
+
+- `enable_schema_validation=False` - 关闭 JSON Schema 校验，但 attrs 仍会尝试将响应解析为定义的 response model 类型
+- `response=None` - 完全不解析响应体，直接返回原始 raw_response
+
+**使用场景：**
+- 当 List 接口返回空数据如 `{'items': None, 'totalItems': 0}` 时，attrs 解析可能失败
+- 需要同时使用：`enable_schema_validation=False, response=None`
+
 ```python
-res = API().send()
-status = res.cached_response.raw_response.status_code
-data = res.cached_response.raw_response.json()
+# 完整关闭校验和解析
+list_api = HandleListRuleGroupsAPI(
+    path_params=HandleListRuleGroupsAPI.PathParams(cluster=cluster, namespace=namespace),
+    enable_schema_validation=False,
+    response=None  # 必须，否则 attrs 解析可能失败
+)
+res = list_api.send()
 ```
 
-### 3. 加载测试数据
+### 2. 响应Body非JSON格式处理
+当接口返回404或错误响应体不是JSON格式时，需要禁用响应解析：
+```python
+# 方式1：设置 response=None 禁用响应体解析
+api = SomeAPI(
+    path_params=SomeAPI.PathParams(name="nonexistent"),
+    enable_schema_validation=False,
+    response=None  # 禁用响应体解析，避免JSONDecodeError
+)
+res = api.send()
+assert res.cached_response.raw_response.status_code == 404
+
+# 方式2：直接访问 raw_response 不调用 .json()
+status_code = res.cached_response.raw_response.status_code
+text = res.cached_response.raw_response.text  # 获取原始文本而非JSON
+```
+
+### 3. Update接口最佳实践
+Update接口需要先GET获取当前数据，然后修改字段作为request body：
+```python
+# 1. GET获取当前数据
+get_api = HandleGetXXXAPI(
+    path_params=HandleGetXXXAPI.PathParams(name=resource_name),
+    enable_schema_validation=False
+)
+get_res = get_api.send()
+current_data = get_res.cached_response.raw_response.json()
+
+# 2. 修改需要的字段
+current_data["spec"]["rules"][0]["annotations"]["summary"] = "updated summary"
+
+# 3. 发送Update请求
+update_api = HandleUpdateXXXAPI(
+    path_params=HandleUpdateXXXAPI.PathParams(name=resource_name),
+    request_body=current_data,  # 使用GET返回的数据作为body
+    enable_schema_validation=False
+)
+update_res = update_api.send()
+assert update_res.cached_response.raw_response.status_code == 200
+```
+
+### 4. Patch接口最佳实践
+Patch接口需要先从LIST接口获取数据，移除不必要的参数，作为request body：
+```python
+# 1. LIST获取数据（或GET单个资源）
+list_api = HandleListXXXAPI(
+    path_params=HandleListXXXAPI.PathParams(cluster=cluster)
+)
+list_res = list_api.send()
+data = list_res.cached_response.raw_response.json()
+items = data.get("items", [])
+if not items:
+    pytest.skip("无数据")
+
+# 2. 获取第一个item并移除不必要的字段
+import copy
+patch_body = copy.deepcopy(items[0])
+
+# 移除metadata中不需要的字段
+metadata = patch_body.get("metadata", {})
+metadata.pop("uid", None)
+metadata.pop("resourceVersion", None)
+metadata.pop("generation", None)
+metadata.pop("managedFields", None)
+
+# 移除status字段
+patch_body.pop("status", None)
+
+# 3. 修改需要更新的字段
+metadata.setdefault("annotations", {})
+metadata["annotations"]["kubesphere.io/alias-name"] = "new-alias"
+metadata["annotations"]["kubesphere.io/description"] = "new description"
+
+# 4. 发送Patch请求
+patch_api = HandlePatchXXXAPI(
+    path_params=HandlePatchXXXAPI.PathParams(name=metadata["name"]),
+    request_body=patch_body,
+    enable_schema_validation=False
+)
+patch_res = patch_api.send()
+assert patch_res.cached_response.raw_response.status_code == 200
+```
+
+### 5. 加载测试数据
 ```python
 from utils.test_data_helper import load_test_data, get_test_data_list
 
@@ -502,9 +597,118 @@ clear_current_cluster()
 
 后续如有新接口不需要前缀，添加到 `EXCLUDE_PATHS` 即可。
 
+## 多集群测试规范
+
+### 测试环境类型
+
+| 环境类型 | 集群情况 | 说明 |
+|---------|---------|------|
+| 单集群 | 只有 host 集群 | 只执行 host 集群用例 |
+| 多集群 | host + 1 个 member 集群 | 执行 host + member 集群用例 |
+
+### 标签定义
+
+| 标签 | 说明 | 示例 |
+|-----|------|------|
+| `@pytest.mark.xxx_module` | 模块级标记，按功能分 | `@pytest.mark.alerting_management` |
+| `@pytest.mark.multi_cluster` | 多集群用例（只在多集群环境执行） | Member 集群验证 |
+| `@pytest.mark.scenario` | 场景测试 | 业务流验证 |
+
+**模块标签命名**（按功能模块，不是按组件）：
+- `@pytest.mark.alerting_management` - 告警管理
+- `@pytest.mark.whizard_monitoring` - 监控
+- `@pytest.mark.ks_core` - ks-core 通用
+- `@pytest.mark.whizard_logging` - 日志
+- `@pytest.mark.notification` - 通知管理
+- 等等...
+
+**完整模块列表见：** `conf/labels.yaml`
+
+### 运行策略
+
+```bash
+# 单集群环境 - 排除多集群用例，其他全跑（包含场景）
+arun -e dev -m "not multi_cluster"
+
+# 多集群环境 - 全部跑
+arun -e dev
+
+# 运行单个模块（单集群）
+arun -e dev -m "alerting_management and not multi_cluster"
+
+# 运行单个模块（多集群）
+arun -e dev -m alerting_management
+```
+
+### Member 集群测试要点
+
+在涉及集群的接口测试中，必须补充 member 集群的验证用例：
+
+1. **验证数据隔离** - 确保 member 集群返回的是 member 集群的数据，而非 host 集群数据
+2. **验证接口可用性** - 在 member 集群下 CRUD 操作正常
+
+**fixture 声明**：
+```python
+@pytest.fixture(scope="module")
+def member_cluster():
+    """获取 member 集群（多集群环境）"""
+    _, member = get_clusters()
+    if not member:
+        pytest.skip("无 member 集群，单集群环境跳过")
+    return member
+```
+
+**测试类声明**：
+```python
+@pytest.mark.alerting_management
+@pytest.mark.multi_cluster
+class TestListClusterRuleGroupsMember:
+    """Member 集群 - 查询集群规则组列表"""
+```
+
+### 测试用例组织
+
+每个涉及集群的 API，需要包含以下测试：
+1. Host 集群基础测试（成功、异常、边界）
+2. Host 与 Member 集群数据差异验证
+3. Member 集群 CRUD 操作
+
+**Global 接口不需要多集群测试**（不区分集群）
+
+## 日志记录
+
+框架使用 `loguru` 进行日志记录，禁止使用 `print`。
+
+### 基本使用
+
+```python
+from loguru import logger
+
+# 通用信息记录
+logger.info("操作成功")
+
+# 警告信息（异常但可继续）
+logger.warning("数据不存在，使用默认值")
+
+# 错误信息
+logger.error("请求失败")
+
+# 详细调试信息
+logger.debug("详细信息")
+```
+
+### 日志级别选择
+
+| 级别 | 使用场景 |
+|------|---------|
+| `logger.info()` | 正常流程信息、成功操作、调试信息 |
+| `logger.warning()` | 异常情况、失败操作、跳过测试 |
+| `logger.error()` | 严重错误、需要立即处理的问题 |
+| `logger.debug()` | 详细调试信息（生产环境通常不显示） |
+
 ## 注意事项
 
-1. **不要使用print** - 按框架风格，使用日志或直接assert
+1. **使用 loguru 而非 print** - 使用 `from loguru import logger`，按日志级别选择 logger.info/warning/error
 2. **统一使用公共方法加载数据** - 使用 `utils/test_data_helper.py`
 3. **处理异常场景** - API返回非200时，可能需要关闭schema校验
 4. **测试数据放到JSON文件** - 放在 `data/api_data/` 目录下
@@ -512,7 +716,5 @@ clear_current_cluster()
 6. **区分接口类型**：
    - 集群管理类接口（labels、clusters、workspaces等）**不需要** `/clusters/xxx` 前缀
    - 资源类接口（deployments、services、pods等）**需要** `/clusters/xxx` 前缀
-7. **多集群测试规范**：
-   - Host集群用例：使用 `@pytest.mark.resource` 等模块标签
-   - Member集群用例：额外添加 `@pytest.mark.multi_cluster` 标签
-   - 通过 `get_clusters()` 获取集群信息，动态判断是否跳过member用例
+7. **多集群测试必须补充** - 每个集群级 API 都需要 member 集群的验证用例
+8. **Global 接口不需要多集群测试** - 全局 API（globalrulegroups、globalalerts）不区分集群
