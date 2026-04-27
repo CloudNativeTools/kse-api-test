@@ -1,0 +1,38 @@
+{
+  "pl_admin": {
+    "user": "pl-admin",
+    "pwd": "P@88w0rd"
+  },
+  "pl_regular": {
+    "user": "pl-regular",
+    "pwd": "P@88w0rd"
+  },
+  "cluster_admin": {
+    "user": "cluster-admin",
+    "pwd": "P@88w0rd"
+  },
+  "cluster_viewer": {
+    "user": "cluster-viewer",
+    "pwd": "P@88w0rd"
+  },
+  "ws_admin": {
+    "user": "ws-admin",
+    "pwd": "P@88w0rd"
+  },
+  "ws_viewer": {
+    "user": "ws-viewer",
+    "pwd": "P@88w0rd"
+  },
+  "pro_admin": {
+    "user": "pro-admin",
+    "pwd": "P@88w0rd"
+  },
+  "pro_operator": {
+    "user": "pro-operator",
+    "pwd": "P@88w0rd"
+  },
+  "pro_viewer": {
+    "user": "pro-viewer",
+    "pwd": "P@88w0rd"
+  }
+}
