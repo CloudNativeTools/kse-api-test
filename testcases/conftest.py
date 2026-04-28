@@ -78,17 +78,21 @@ def test_namespace_member():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def session_cleanup():
+def session_cleanup(request):
     """
-    Session 级别清理 fixture
-    在所有测试结束后自动清理预热规则组和测试环境
+    Session 级别 fixture
+    在所有测试开始前如有 whizard_alerting 用例则预热规则组
+    在所有测试结束后清理测试环境及预热规则组
     """
-    yield
-    from utils.cluster_helpers import get_clusters, cleanup_test_environment
+    from loguru import logger
+    from utils.cluster_helpers import get_clusters
     from utils.test_data_helper import load_test_data
-    from testcases.test_api.whizard_alerting.base import cleanup_all_prewarmed_rule_groups
 
-    try:
+    has_alerting = any("whizard_alerting" in item.nodeid for item in request.session.items)
+
+    if has_alerting:
+        from testcases.test_api.whizard_alerting.base import prewarm_all_rule_groups
+
         host_cluster, member_cluster = get_clusters()
         if host_cluster:
             test_env = load_test_data("ks_core", "test_environment")
@@ -97,12 +101,38 @@ def session_cleanup():
             if member_cluster:
                 test_namespace_member = test_env.get("projects", {}).get("member", {}).get("name", "mem-pro1-test")
 
-            cleanup_all_prewarmed_rule_groups(
+            logger.info("【并发预热】开始创建标准规则组并等待告警触发...")
+            prewarm_all_rule_groups(
                 host_cluster=host_cluster,
                 test_namespace=test_namespace,
                 member_cluster=member_cluster,
-                test_namespace_member=test_namespace_member
+                test_namespace_member=test_namespace_member,
             )
+            logger.info("告警预热完成")
+
+    yield
+
+    from utils.cluster_helpers import get_clusters, cleanup_test_environment
+
+    try:
+        host_cluster, member_cluster = get_clusters()
+        if host_cluster:
+            if has_alerting:
+                from testcases.test_api.whizard_alerting.base import cleanup_all_prewarmed_rule_groups
+                test_env = load_test_data("ks_core", "test_environment")
+                test_namespace = test_env.get("projects", {}).get("host", {}).get("name", "host-pro1-test")
+                test_namespace_member = None
+                if member_cluster:
+                    test_namespace_member = test_env.get("projects", {}).get("member", {}).get("name", "mem-pro1-test")
+
+                logger.info("开始清理预热规则组...")
+                cleanup_all_prewarmed_rule_groups(
+                    host_cluster=host_cluster,
+                    test_namespace=test_namespace,
+                    member_cluster=member_cluster,
+                    test_namespace_member=test_namespace_member,
+                )
+                logger.info("预热规则组清理完成")
             cleanup_test_environment()
     except Exception as e:
         print(f"Session cleanup failed: {e}")

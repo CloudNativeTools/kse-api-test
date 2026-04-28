@@ -11,7 +11,7 @@ from .models import (
     JoseJSONWebKeySet,
     TokenClaims,
 )
-from aomaker.core.api_object import BaseAPIObject as BaseAPI
+from aomaker.core.api_object import BaseAPIObject as BaseAPI, ContentType
 from aomaker.core.router import router
 
 __ALL__ = [
@@ -266,6 +266,7 @@ class OpenidTokenAPI(BaseAPI[OauthToken]):
         code: Optional[str] = field(default=None)
 
     request_body: RequestBodyModel
+    content_type: ContentType = field(default=ContentType.FORM)
 
     response: Optional[OauthToken] = field(default=OauthToken)
     endpoint_id: Optional[str] = field(default="openid-token")

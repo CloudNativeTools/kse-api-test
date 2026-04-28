@@ -33,6 +33,79 @@
       "creator": "{{admin_user}}"
     }
   },
+  "users": {
+    "platform": [
+      {
+        "name": "pl-admin",
+        "email": "pl-admin@yunify.com",
+        "password": "P@88w0rd",
+        "globalRole": "platform-admin"
+      },
+      {
+        "name": "pl-self",
+        "email": "pl-self@yunify.com",
+        "password": "P@88w0rd",
+        "globalRole": "platform-self-provisioner"
+      },
+      {
+        "name": "pl-regular",
+        "email": "pl-regular@yunify.com",
+        "password": "P@88w0rd",
+        "globalRole": "platform-regular"
+      }
+    ],
+    "cluster": [
+      {
+        "name": "cluster-admin",
+        "email": "cluster-admin@yunify.com",
+        "password": "P@88w0rd",
+        "clusterRole": "cluster-admin"
+      },
+      {
+        "name": "cluster-viewer",
+        "email": "cluster-viewer@yunify.com",
+        "password": "P@88w0rd",
+        "clusterRole": "cluster-viewer"
+      }
+    ],
+    "workspace": [
+      {
+        "name": "ws-admin",
+        "email": "ws-admin@yunify.com",
+        "password": "P@88w0rd",
+        "workspaceRole": "ws-host-test-admin"
+      },
+      {
+        "name": "ws-viewer",
+        "email": "ws-viewer@yunify.com",
+        "password": "P@88w0rd",
+        "workspaceRole": "ws-host-test-viewer"
+      }
+    ],
+    "project": [
+      {
+        "name": "pro-admin",
+        "email": "pro-admin@yunify.com",
+        "password": "P@88w0rd",
+        "workspaceRole": "ws-host-test-regular",
+        "projectRole": "admin"
+      },
+      {
+        "name": "pro-operator",
+        "email": "pro-operator@yunify.com",
+        "password": "P@88w0rd",
+        "workspaceRole": "ws-host-test-regular",
+        "projectRole": "operator"
+      },
+      {
+        "name": "pro-viewer",
+        "email": "pro-viewer@yunify.com",
+        "password": "P@88w0rd",
+        "workspaceRole": "ws-host-test-regular",
+        "projectRole": "viewer"
+      }
+    ]
+  },
   "annotations": {
     "creator_key": "kubesphere.io/creator",
     "creator_value": "{{admin_user}}"
