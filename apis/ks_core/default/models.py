@@ -1,18 +1,60 @@
 from __future__ import annotations
 
-from typing import Optional, Dict, List
+from datetime import datetime
+from typing import Optional, List, Any, Dict
 from attrs import define, field
 
 __ALL__ = [
+    "ApiListResult",
+    "V1Time",
     "V1ManagedFieldsEntry",
     "V1OwnerReference",
     "V1ObjectMeta",
+    "V2ApplicationReleaseSpec",
+    "V2ApplicationReleaseStatus",
+    "ErrorsError",
+    "V2ApplicationRelease",
+    "UnstructuredUnstructured",
+    "V2GroupVersionResource",
+    "V2ApplicationSpec",
+    "V2ApplicationStatus",
+    "V2Application",
+    "V2RepoCredential",
+    "V2Maintainer",
+    "V2ApplicationVersionSpec",
+    "V2ApplicationVersionStatus",
+    "V2ApplicationVersion",
+    "V2Attachment",
+    "V2CategorySpec",
+    "V2CategoryStatus",
+    "V2Category",
+    "V2RepoSpec",
+    "V2RepoStatus",
+    "V2Repo",
+    "V1alpha2ClusterConnectionConfiguration",
+    "V1alpha2GenericClusterConfiguration",
+    "OauthClient",
+    "IdentityproviderConfiguration",
+    "OauthIssuerOptions",
+    "V1alpha2OAuthConfiguration",
+    "V1alpha2GenericPlatformConfiguration",
     "V1alpha2IngressClass",
     "V1alpha2Scope",
     "V1alpha2IngressClassScopeSpec",
     "V1alpha2IngressClassScope",
     "LoaderBufferedFile",
 ]
+
+
+@define(kw_only=True)
+class ApiListResult:
+    items: List[Any] = field()
+    totalItems: int = field()
+
+
+@define(kw_only=True)
+class V1Time:
+    Time: datetime = field()
 
 
 @define(kw_only=True)
@@ -29,7 +71,7 @@ class V1ManagedFieldsEntry:
             "description": 'FieldsType is the discriminator for the different fields format and version. There is currently only one possible value: "FieldsV1"'
         },
     )
-    fieldsV1: Optional[str] = field(
+    fieldsV1: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'FieldsV1 holds the first JSON version format as described in the "FieldsV1" type.'
@@ -53,7 +95,7 @@ class V1ManagedFieldsEntry:
             "description": "Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource."
         },
     )
-    time: Optional[str] = field(
+    time: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "Time is the timestamp of when the ManagedFields entry was added. The timestamp will also be updated if a field is added, the manager changes any of the owned fields value or removes a field. The timestamp does not update when a field is removed from the entry because another manager took it over."
@@ -101,7 +143,7 @@ class V1ObjectMeta:
             "description": "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations"
         },
     )
-    creationTimestamp: Optional[str] = field(
+    creationTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -117,7 +159,7 @@ Populated by the system. Read-only. Null for lists. More info: https://git.k8s.i
             "description": "Number of seconds allowed for this object to gracefully terminate before it will be removed from the system. Only set when deletionTimestamp is also set. May only be shortened. Read-only."
         },
     )
-    deletionTimestamp: Optional[str] = field(
+    deletionTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -214,6 +256,317 @@ Populated by the system. Read-only. More info: https://kubernetes.io/docs/concep
 
 
 @define(kw_only=True)
+class V2ApplicationReleaseSpec:
+    appID: str = field()
+    appVersionID: str = field()
+    appType: Optional[str] = field(default=None)
+    icon: Optional[str] = field(default=None)
+    values: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2ApplicationReleaseStatus:
+    state: str = field()
+    installJobName: Optional[str] = field(default=None)
+    lastUpdate: Optional[V1Time] = field(default=None)
+    message: Optional[str] = field(default=None)
+    realTimeResources: Optional[List[str]] = field(default=None)
+    specHash: Optional[str] = field(default=None)
+    uninstallJobName: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class ErrorsError:
+    message: str = field(metadata={"description": "error message"})
+
+
+@define(kw_only=True)
+class V2ApplicationRelease:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[V2ApplicationReleaseSpec] = field(default=None)
+    status: Optional[V2ApplicationReleaseStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class UnstructuredUnstructured:
+    Object: Dict = field()
+
+
+@define(kw_only=True)
+class V2GroupVersionResource:
+    Desc: Optional[str] = field(default=None)
+    Group: Optional[str] = field(default=None)
+    Name: Optional[str] = field(default=None)
+    ParentNode: Optional[str] = field(default=None)
+    Resource: Optional[str] = field(default=None)
+    Version: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2ApplicationSpec:
+    abstraction: Optional[str] = field(default=None)
+    appHome: Optional[str] = field(default=None)
+    appType: Optional[str] = field(default=None)
+    attachments: Optional[List[str]] = field(default=None)
+    icon: Optional[str] = field(default=None)
+    resources: Optional[List[V2GroupVersionResource]] = field(default=None)
+
+
+@define(kw_only=True)
+class V2ApplicationStatus:
+    updateTime: V1Time = field()
+    state: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2Application:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[V2ApplicationSpec] = field(default=None)
+    status: Optional[V2ApplicationStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class V2RepoCredential:
+    caFile: Optional[str] = field(default=None)
+    certFile: Optional[str] = field(default=None)
+    insecureSkipTLSVerify: Optional[bool] = field(default=None)
+    keyFile: Optional[str] = field(default=None)
+    password: Optional[str] = field(default=None)
+    username: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2Maintainer:
+    email: Optional[str] = field(default=None)
+    name: Optional[str] = field(default=None)
+    url: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2ApplicationVersionSpec:
+    versionName: str = field()
+    appHome: Optional[str] = field(default=None)
+    appType: Optional[str] = field(default=None)
+    created: Optional[V1Time] = field(default=None)
+    digest: Optional[str] = field(default=None)
+    icon: Optional[str] = field(default=None)
+    maintainer: Optional[List[V2Maintainer]] = field(default=None)
+    pullUrl: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2ApplicationVersionStatus:
+    message: Optional[str] = field(default=None)
+    state: Optional[str] = field(default=None)
+    updated: Optional[V1Time] = field(default=None)
+    userName: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2ApplicationVersion:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[V2ApplicationVersionSpec] = field(default=None)
+    status: Optional[V2ApplicationVersionStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class V2Attachment:
+    attachment_content: Optional[Dict] = field(default=None)
+    attachment_id: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2CategorySpec:
+    icon: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2CategoryStatus:
+    total: int = field()
+
+
+@define(kw_only=True)
+class V2Category:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[V2CategorySpec] = field(default=None)
+    status: Optional[V2CategoryStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class V2RepoSpec:
+    syncPeriod: int = field()
+    url: str = field()
+    credential: Optional[V2RepoCredential] = field(default=None)
+    description: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2RepoStatus:
+    lastUpdateTime: Optional[V1Time] = field(default=None)
+    state: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V2Repo:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[V2RepoSpec] = field(default=None)
+    status: Optional[V2RepoStatus] = field(default=None)
+
+
+@define(kw_only=True)
+class V1alpha2ClusterConnectionConfiguration:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    data: Optional[Any] = field(default=None)
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+
+
+@define(kw_only=True)
+class V1alpha2GenericClusterConfiguration:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    data: Optional[Any] = field(default=None)
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+
+
+@define(kw_only=True)
+class OauthClient:
+    grantMethod: str = field()
+    name: str = field()
+    trusted: bool = field()
+    accessTokenInactivityTimeoutSeconds: Optional[int] = field(default=None)
+    accessTokenMaxAgeSeconds: Optional[int] = field(default=None)
+    redirectURIs: Optional[List[str]] = field(default=None)
+    respondWithChallenges: Optional[bool] = field(default=None)
+    scopeRestrictions: Optional[List[str]] = field(default=None)
+
+
+@define(kw_only=True)
+class IdentityproviderConfiguration:
+    disabled: bool = field()
+    displayName: str = field()
+    hidden: bool = field()
+    mappingMethod: str = field()
+    name: str = field()
+    provider: Dict = field()
+    type: str = field()
+
+
+@define(kw_only=True)
+class OauthIssuerOptions:
+    accessTokenInactivityTimeout: int = field()
+    accessTokenMaxAge: int = field()
+    maximumClockSkew: int = field()
+    signKey: Optional[str] = field(default=None)
+    url: Optional[str] = field(default=None)
+
+
+@define(kw_only=True)
+class V1alpha2OAuthConfiguration:
+    clients: List[OauthClient] = field()
+    identityProviders: List[IdentityproviderConfiguration] = field()
+    issuer: OauthIssuerOptions = field()
+
+
+@define(kw_only=True)
+class V1alpha2GenericPlatformConfiguration:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    data: Optional[Any] = field(default=None)
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+
+
+@define(kw_only=True)
 class V1alpha2IngressClass:
     default: Optional[bool] = field(default=None)
     name: Optional[str] = field(default=None)
@@ -247,7 +600,7 @@ class V1alpha2IngressClassScope:
     )
     metadata: Optional[V1ObjectMeta] = field(default=None)
     spec: Optional[V1alpha2IngressClassScopeSpec] = field(default=None)
-    status: Optional[str] = field(default=None)
+    status: Optional[Any] = field(default=None)
 
 
 @define(kw_only=True)

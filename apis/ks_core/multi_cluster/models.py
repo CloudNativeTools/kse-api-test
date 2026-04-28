@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Optional, Any, Dict, List
+from datetime import datetime
+from typing import Optional, Dict, List, Any
 from attrs import define, field
 
 __ALL__ = [
+    "V1Time",
     "V1ManagedFieldsEntry",
     "V1OwnerReference",
     "V1ObjectMeta",
@@ -11,12 +13,17 @@ __ALL__ = [
     "V1alpha1ClusterSpec",
     "V1alpha1ClusterCondition",
     "V1alpha1ClusterStatus",
+    "V1alpha1Cluster",
     "V1alpha1BindingClustersRequest",
     "V1alpha1CreateLabelRequest",
-    "ApiListResult",
     "V1alpha1LabelSpec",
     "V1alpha1Label",
 ]
+
+
+@define(kw_only=True)
+class V1Time:
+    Time: datetime = field()
 
 
 @define(kw_only=True)
@@ -33,7 +40,7 @@ class V1ManagedFieldsEntry:
             "description": 'FieldsType is the discriminator for the different fields format and version. There is currently only one possible value: "FieldsV1"'
         },
     )
-    fieldsV1: Optional[str] = field(
+    fieldsV1: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'FieldsV1 holds the first JSON version format as described in the "FieldsV1" type.'
@@ -57,7 +64,7 @@ class V1ManagedFieldsEntry:
             "description": "Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource."
         },
     )
-    time: Optional[str] = field(
+    time: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "Time is the timestamp of when the ManagedFields entry was added. The timestamp will also be updated if a field is added, the manager changes any of the owned fields value or removes a field. The timestamp does not update when a field is removed from the entry because another manager took it over."
@@ -105,7 +112,7 @@ class V1ObjectMeta:
             "description": "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations"
         },
     )
-    creationTimestamp: Optional[str] = field(
+    creationTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -121,7 +128,7 @@ Populated by the system. Read-only. Null for lists. More info: https://git.k8s.i
             "description": "Number of seconds allowed for this object to gracefully terminate before it will be removed from the system. Only set when deletionTimestamp is also set. May only be shortened. Read-only."
         },
     )
-    deletionTimestamp: Optional[str] = field(
+    deletionTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -243,8 +250,8 @@ class V1alpha1ClusterSpec:
 class V1alpha1ClusterCondition:
     status: str = field()
     type: str = field()
-    lastTransitionTime: Optional[str] = field(default=None)
-    lastUpdateTime: Optional[str] = field(default=None)
+    lastTransitionTime: Optional[V1Time] = field(default=None)
+    lastUpdateTime: Optional[V1Time] = field(default=None)
     message: Optional[str] = field(default=None)
     reason: Optional[str] = field(default=None)
 
@@ -262,6 +269,25 @@ class V1alpha1ClusterStatus:
 
 
 @define(kw_only=True)
+class V1alpha1Cluster:
+    apiVersion: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+        },
+    )
+    kind: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+        },
+    )
+    metadata: Optional[V1ObjectMeta] = field(default=None)
+    spec: Optional[V1alpha1ClusterSpec] = field(default=None)
+    status: Optional[V1alpha1ClusterStatus] = field(default=None)
+
+
+@define(kw_only=True)
 class V1alpha1BindingClustersRequest:
     clusters: List[str] = field()
     labels: List[str] = field()
@@ -271,12 +297,6 @@ class V1alpha1BindingClustersRequest:
 class V1alpha1CreateLabelRequest:
     key: str = field()
     value: str = field()
-
-
-@define(kw_only=True)
-class ApiListResult:
-    items: List[Any] = field()
-    totalItems: int = field()
 
 
 @define(kw_only=True)

@@ -4,7 +4,6 @@ from .models import (
     V1beta1WorkspaceTemplate,
     V1alpha1UpdateVisibilityRequest,
     ApiListResult,
-    ModelsPageableResponse,
     V1alpha1Workspace,
     V1Namespace,
     V1alpha2WorkspaceTemplate,
@@ -12,11 +11,11 @@ from .models import (
     V1beta1WorkspaceTemplateSpec,
     V1ObjectMeta,
     ErrorsError,
-    V1NamespaceStatus,
     V1NamespaceSpec,
-    V1alpha2ResourceQuotaSpec,
+    V1NamespaceStatus,
     V1alpha2ResourceQuotaStatus,
     V1alpha2ResourceQuota,
+    V1alpha2ResourceQuotaSpec,
 )
 from aomaker.core.api_object import BaseAPIObject as BaseAPI
 from aomaker.core.router import router
@@ -111,16 +110,56 @@ class ListClustersAPI(BaseAPI[ApiListResult]):
 class ListNamespacesAPI(BaseAPI[ApiListResult]):
     """None"""
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="ListNamespaces")
 
 
 @define(kw_only=True)
 @router.get("/kapis/tenant.kubesphere.io/v1alpha3/workspaces")
-class ListWorkspacesAPI(BaseAPI[ModelsPageableResponse]):
+class ListWorkspacesAPI(BaseAPI[ApiListResult]):
     """None"""
 
-    response: Optional[ModelsPageableResponse] = field(default=ModelsPageableResponse)
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
+    response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="ListWorkspaces")
 
 
@@ -161,7 +200,27 @@ class ListNamespacesAPI_1(BaseAPI[ApiListResult]):
     class PathParams:
         workspace: str = field(metadata={"description": "workspace name"})
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
     path_params: PathParams
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="ListNamespaces")
 
@@ -185,10 +244,30 @@ class DescribeNamespaceAPI(BaseAPI[V1Namespace]):
 
 @define(kw_only=True)
 @router.get("/kapis/tenant.kubesphere.io/v1alpha3/workspacetemplates")
-class ListWorkspaceTemplatesAPI(BaseAPI[ModelsPageableResponse]):
+class ListWorkspaceTemplatesAPI(BaseAPI[ApiListResult]):
     """None"""
 
-    response: Optional[ModelsPageableResponse] = field(default=ModelsPageableResponse)
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
+    response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="ListWorkspaceTemplates")
 
 
@@ -213,6 +292,26 @@ class DescribeWorkspaceTemplateAPI(BaseAPI[V1alpha2WorkspaceTemplate]):
 class UserRelatedClustersAPI(BaseAPI[ApiListResult]):
     """None"""
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="user-related-clusters")
 
@@ -222,6 +321,26 @@ class UserRelatedClustersAPI(BaseAPI[ApiListResult]):
 class GetPlatformMetricsAPI(BaseAPI[OverviewMetricResults]):
     """None"""
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[OverviewMetricResults] = field(default=OverviewMetricResults)
     endpoint_id: Optional[str] = field(default="GetPlatformMetrics")
 
@@ -231,16 +350,56 @@ class GetPlatformMetricsAPI(BaseAPI[OverviewMetricResults]):
 class ListNamespacesAPI_2(BaseAPI[ApiListResult]):
     """None"""
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="list-namespaces")
 
 
 @define(kw_only=True)
 @router.get("/kapis/tenant.kubesphere.io/v1beta1/workspaces")
-class ListWorkspacesAPI_1(BaseAPI[ModelsPageableResponse]):
+class ListWorkspacesAPI_1(BaseAPI[ApiListResult]):
     """None"""
 
-    response: Optional[ModelsPageableResponse] = field(default=ModelsPageableResponse)
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
+    response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="list-workspaces")
 
 
@@ -397,7 +556,27 @@ class GetWorkspaceMetricsAPI(BaseAPI[OverviewMetricResults]):
     class PathParams:
         workspace: str = field(metadata={"description": "The specified workspace."})
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
     path_params: PathParams
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[OverviewMetricResults] = field(default=OverviewMetricResults)
     endpoint_id: Optional[str] = field(default="GetWorkspaceMetrics")
 
@@ -411,7 +590,27 @@ class ListNamespacesWorkspaceAPI(BaseAPI[ApiListResult]):
     class PathParams:
         workspace: str = field(metadata={"description": "The specified workspace."})
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
     path_params: PathParams
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="list-namespaces-workspace")
 
@@ -714,7 +913,7 @@ class UpdateWorkspaceResourceQuotaAPI(BaseAPI[V1alpha2ResourceQuota]):
 @router.get(
     "/kapis/tenant.kubesphere.io/v1beta1/workspaces/{workspace}/workspacemembers/{workspacemember}/namespaces"
 )
-class ListNamespacesWorkspaceMemberAPI(BaseAPI[V1Namespace]):
+class ListNamespacesWorkspaceMemberAPI(BaseAPI[ApiListResult]):
     """None"""
 
     @define
@@ -725,51 +924,56 @@ class ListNamespacesWorkspaceMemberAPI(BaseAPI[V1Namespace]):
         )
 
     @define
-    class RequestBodyModel:
-        apiVersion: Optional[str] = field(
-            default=None,
-            metadata={
-                "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
-            },
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
         )
-        kind: Optional[str] = field(
-            default=None,
-            metadata={
-                "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
-            },
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
         )
-        metadata: Optional[V1ObjectMeta] = field(
+        sortBy: Optional[str] = field(
             default=None,
-            metadata={
-                "description": "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata"
-            },
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
         )
-        spec: Optional[V1NamespaceSpec] = field(
-            default=None,
-            metadata={
-                "description": "Spec defines the behavior of the Namespace. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status"
-            },
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
         )
-        status: Optional[V1NamespaceStatus] = field(
-            default=None,
-            metadata={
-                "description": "Status describes the current status of a Namespace. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status"
-            },
-        )
-
-    request_body: RequestBodyModel
 
     path_params: PathParams
-    response: Optional[V1Namespace] = field(default=V1Namespace)
+    query_params: QueryParams = field(factory=QueryParams)
+    response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="list-namespaces-workspace-member")
 
 
 @define(kw_only=True)
 @router.get("/kapis/tenant.kubesphere.io/v1beta1/workspacetemplates")
-class ListWorkspaceTemplatesAPI_1(BaseAPI[ModelsPageableResponse]):
+class ListWorkspaceTemplatesAPI_1(BaseAPI[ApiListResult]):
     """None"""
 
-    response: Optional[ModelsPageableResponse] = field(default=ModelsPageableResponse)
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+
+    query_params: QueryParams = field(factory=QueryParams)
+    response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="list-workspace-templates")
 
 

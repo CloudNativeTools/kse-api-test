@@ -1,13 +1,13 @@
 from typing import Optional, List
 from attrs import define, field
 from .models import (
-    V1ObjectMeta,
-    V1alpha1ClusterStatus,
     V1alpha1ClusterSpec,
+    V1ObjectMeta,
+    V1alpha1Cluster,
+    V1alpha1ClusterStatus,
     V1alpha1BindingClustersRequest,
-    ApiListResult,
-    V1alpha1CreateLabelRequest,
     V1alpha1Label,
+    V1alpha1CreateLabelRequest,
 )
 from aomaker.core.api_object import BaseAPIObject as BaseAPI
 from aomaker.core.router import router
@@ -32,13 +32,19 @@ class UpdateKubeConfigAPI(BaseAPI):
     class PathParams:
         cluster: str = field(metadata={"description": "The specified cluster."})
 
+    @define
+    class RequestBodyModel:
+        kubeconfig: str = field()
+
+    request_body: RequestBodyModel
+
     path_params: PathParams
     endpoint_id: Optional[str] = field(default="updateKubeConfig")
 
 
 @define(kw_only=True)
 @router.post("/kapis/cluster.kubesphere.io/v1alpha1/clusters/validation")
-class ValidateClusterAPI(BaseAPI):
+class ValidateClusterAPI(BaseAPI[V1alpha1Cluster]):
     """None"""
 
     @define
@@ -61,6 +67,7 @@ class ValidateClusterAPI(BaseAPI):
 
     request_body: RequestBodyModel
 
+    response: Optional[V1alpha1Cluster] = field(default=V1alpha1Cluster)
     endpoint_id: Optional[str] = field(default="validateCluster")
 
 
@@ -94,11 +101,12 @@ class ListLabelGroupsAPI(BaseAPI):
 
 @define(kw_only=True)
 @router.post("/kapis/cluster.kubesphere.io/v1alpha1/labels")
-class CreateLabelsAPI(BaseAPI):
+class CreateLabelsAPI(BaseAPI[V1alpha1Label]):
     """None"""
 
     request_body: List[V1alpha1CreateLabelRequest] = field()
 
+    response: Optional[V1alpha1Label] = field(default=V1alpha1Label)
     endpoint_id: Optional[str] = field(default="createLabels")
 
 

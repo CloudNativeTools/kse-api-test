@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Any, List, Dict
+from typing import Optional, List, Any, Dict
 from attrs import define, field
 
 __ALL__ = [
     "OauthProviderMetadata",
     "ErrorsError",
-    "GenerateTOTPAuthKey",
+    "V1Time",
     "V1ManagedFieldsEntry",
     "V1OwnerReference",
     "V1ObjectMeta",
@@ -18,15 +18,19 @@ __ALL__ = [
     "OauthStatus",
     "OauthTokenReview",
     "OauthToken",
+    "BigInt",
     "NetIPNet",
     "PkixExtension",
     "PkixAttributeTypeAndValue",
     "PkixName",
+    "X509OID",
+    "X509PolicyMapping",
     "UrlUserinfo",
     "UrlURL",
     "X509Certificate",
     "JoseJSONWebKey",
     "JoseJSONWebKeySet",
+    "JwtNumericDate",
     "TokenClaims",
 ]
 
@@ -50,12 +54,12 @@ class OauthProviderMetadata:
 
 @define(kw_only=True)
 class ErrorsError:
-    authKey: str = field(metadata={"description": "error message"})
+    message: str = field(metadata={"description": "error message"})
 
 
 @define(kw_only=True)
-class GenerateTOTPAuthKey:
-    authKey: str = field()
+class V1Time:
+    Time: datetime = field()
 
 
 @define(kw_only=True)
@@ -72,7 +76,7 @@ class V1ManagedFieldsEntry:
             "description": 'FieldsType is the discriminator for the different fields format and version. There is currently only one possible value: "FieldsV1"'
         },
     )
-    fieldsV1: Optional[str] = field(
+    fieldsV1: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'FieldsV1 holds the first JSON version format as described in the "FieldsV1" type.'
@@ -96,7 +100,7 @@ class V1ManagedFieldsEntry:
             "description": "Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource."
         },
     )
-    time: Optional[str] = field(
+    time: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "Time is the timestamp of when the ManagedFields entry was added. The timestamp will also be updated if a field is added, the manager changes any of the owned fields value or removes a field. The timestamp does not update when a field is removed from the entry because another manager took it over."
@@ -144,7 +148,7 @@ class V1ObjectMeta:
             "description": "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations"
         },
     )
-    creationTimestamp: Optional[str] = field(
+    creationTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -160,7 +164,7 @@ Populated by the system. Read-only. Null for lists. More info: https://git.k8s.i
             "description": "Number of seconds allowed for this object to gracefully terminate before it will be removed from the system. Only set when deletionTimestamp is also set. May only be shortened. Read-only."
         },
     )
-    deletionTimestamp: Optional[str] = field(
+    deletionTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -268,8 +272,8 @@ class V1beta1UserSpec:
 
 @define(kw_only=True)
 class V1beta1UserStatus:
-    lastLoginTime: Optional[str] = field(default=None)
-    lastTransitionTime: Optional[str] = field(default=None)
+    lastLoginTime: Optional[V1Time] = field(default=None)
+    lastTransitionTime: Optional[V1Time] = field(default=None)
     reason: Optional[str] = field(default=None)
     state: Optional[str] = field(default=None)
 
@@ -324,6 +328,12 @@ class OauthToken:
 
 
 @define(kw_only=True)
+class BigInt:
+    abs: Any = field()
+    neg: Any = field()
+
+
+@define(kw_only=True)
 class NetIPNet:
     IP: str = field()
     Mask: str = field()
@@ -355,6 +365,17 @@ class PkixName:
     Province: List[str] = field()
     SerialNumber: str = field()
     StreetAddress: List[str] = field()
+
+
+@define(kw_only=True)
+class X509OID:
+    der: str = field()
+
+
+@define(kw_only=True)
+class X509PolicyMapping:
+    IssuerDomainPolicy: X509OID = field()
+    SubjectDomainPolicy: X509OID = field()
 
 
 @define(kw_only=True)
@@ -394,6 +415,10 @@ class X509Certificate:
     Extensions: List[PkixExtension] = field()
     ExtraExtensions: List[PkixExtension] = field()
     IPAddresses: List[str] = field()
+    InhibitAnyPolicy: int = field()
+    InhibitAnyPolicyZero: bool = field()
+    InhibitPolicyMapping: int = field()
+    InhibitPolicyMappingZero: bool = field()
     IsCA: bool = field()
     Issuer: PkixName = field()
     IssuingCertificateURL: List[str] = field()
@@ -408,7 +433,9 @@ class X509Certificate:
     PermittedEmailAddresses: List[str] = field()
     PermittedIPRanges: List[NetIPNet] = field()
     PermittedURIDomains: List[str] = field()
+    Policies: List[X509OID] = field()
     PolicyIdentifiers: List[List[int]] = field()
+    PolicyMappings: List[X509PolicyMapping] = field()
     PublicKey: Any = field()
     PublicKeyAlgorithm: int = field()
     Raw: str = field()
@@ -416,7 +443,9 @@ class X509Certificate:
     RawSubject: str = field()
     RawSubjectPublicKeyInfo: str = field()
     RawTBSCertificate: str = field()
-    SerialNumber: str = field()
+    RequireExplicitPolicy: int = field()
+    RequireExplicitPolicyZero: bool = field()
+    SerialNumber: BigInt = field()
     Signature: str = field()
     SignatureAlgorithm: int = field()
     Subject: PkixName = field()
@@ -429,15 +458,14 @@ class X509Certificate:
 
 @define(kw_only=True)
 class JoseJSONWebKey:
-    # 修改返回模型
-    use: Optional[str] = None
-    kty: Optional[str] = None
-    kid: Optional[str] = None
-    alg: Optional[str] = None
-    n: Optional[str] = None
-    e: Optional[str] = None
-    # 允许存在其他不在模型里的字段
-    __extra__: dict = field(factory=dict)
+    Algorithm: str = field()
+    CertificateThumbprintSHA1: str = field()
+    CertificateThumbprintSHA256: str = field()
+    Certificates: List[X509Certificate] = field()
+    CertificatesURL: UrlURL = field()
+    Key: Any = field()
+    KeyID: str = field()
+    Use: str = field()
 
 
 @define(kw_only=True)
@@ -446,17 +474,22 @@ class JoseJSONWebKeySet:
 
 
 @define(kw_only=True)
+class JwtNumericDate:
+    Time: datetime = field()
+
+
+@define(kw_only=True)
 class TokenClaims:
-    aud: Optional[str] = field(default=None)
+    aud: Optional[List[str]] = field(default=None)
     email: Optional[str] = field(default=None)
-    exp: Optional[str] = field(default=None)
+    exp: Optional[JwtNumericDate] = field(default=None)
     extra: Optional[Dict] = field(default=None)
-    iat: Optional[str] = field(default=None)
+    iat: Optional[JwtNumericDate] = field(default=None)
     iss: Optional[str] = field(default=None)
     jti: Optional[str] = field(default=None)
     locale: Optional[str] = field(default=None)
     name: Optional[str] = field(default=None)
-    nbf: Optional[str] = field(default=None)
+    nbf: Optional[JwtNumericDate] = field(default=None)
     nonce: Optional[str] = field(default=None)
     preferred_username: Optional[str] = field(default=None)
     scopes: Optional[List[str]] = field(default=None)

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from typing import Optional, Any, List, Dict
+from datetime import datetime
+from typing import Optional, Any, Dict, List
 from attrs import define, field
 
 __ALL__ = [
-    "V1alpha1UpdateVisibilityRequest",
+    "V1Time",
     "V1ManagedFieldsEntry",
     "V1OwnerReference",
     "V1ObjectMeta",
+    "V1alpha1UpdateVisibilityRequest",
     "V1LabelSelectorRequirement",
     "V1LabelSelector",
     "V1beta1GenericClusterReference",
@@ -18,7 +20,6 @@ __ALL__ = [
     "V1beta1WorkspaceTemplateSpec",
     "V1beta1WorkspaceTemplate",
     "ApiListResult",
-    "ModelsPageableResponse",
     "V1alpha1WorkspaceSpec",
     "V1alpha1Workspace",
     "V1NamespaceSpec",
@@ -49,9 +50,8 @@ __ALL__ = [
 
 
 @define(kw_only=True)
-class V1alpha1UpdateVisibilityRequest:
-    op: str = field()
-    workspace: str = field()
+class V1Time:
+    Time: datetime = field()
 
 
 @define(kw_only=True)
@@ -68,7 +68,7 @@ class V1ManagedFieldsEntry:
             "description": 'FieldsType is the discriminator for the different fields format and version. There is currently only one possible value: "FieldsV1"'
         },
     )
-    fieldsV1: Optional[str] = field(
+    fieldsV1: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'FieldsV1 holds the first JSON version format as described in the "FieldsV1" type.'
@@ -92,7 +92,7 @@ class V1ManagedFieldsEntry:
             "description": "Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource."
         },
     )
-    time: Optional[str] = field(
+    time: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "Time is the timestamp of when the ManagedFields entry was added. The timestamp will also be updated if a field is added, the manager changes any of the owned fields value or removes a field. The timestamp does not update when a field is removed from the entry because another manager took it over."
@@ -140,7 +140,7 @@ class V1ObjectMeta:
             "description": "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations"
         },
     )
-    creationTimestamp: Optional[str] = field(
+    creationTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -156,7 +156,7 @@ Populated by the system. Read-only. Null for lists. More info: https://git.k8s.i
             "description": "Number of seconds allowed for this object to gracefully terminate before it will be removed from the system. Only set when deletionTimestamp is also set. May only be shortened. Read-only."
         },
     )
-    deletionTimestamp: Optional[str] = field(
+    deletionTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -253,6 +253,12 @@ Populated by the system. Read-only. More info: https://kubernetes.io/docs/concep
 
 
 @define(kw_only=True)
+class V1alpha1UpdateVisibilityRequest:
+    op: str = field()
+    workspace: str = field()
+
+
+@define(kw_only=True)
 class V1LabelSelectorRequirement:
     key: str = field(
         metadata={"description": "key is the label key that the selector applies to."}
@@ -345,12 +351,6 @@ class ApiListResult:
 
 
 @define(kw_only=True)
-class ModelsPageableResponse:
-    items: List[Any] = field(metadata={"description": "paging data"})
-    total_count: int = field(metadata={"description": "total count"})
-
-
-@define(kw_only=True)
 class V1alpha1WorkspaceSpec:
     manager: Optional[str] = field(default=None)
     networkIsolation: Optional[bool] = field(default=None)
@@ -395,9 +395,24 @@ class V1NamespaceCondition:
     type: str = field(
         metadata={"description": "Type of namespace controller condition."}
     )
-    lastTransitionTime: Optional[str] = field(default=None)
-    message: Optional[str] = field(default=None)
-    reason: Optional[str] = field(default=None)
+    lastTransitionTime: Optional[V1Time] = field(
+        default=None,
+        metadata={
+            "description": "Last time the condition transitioned from one status to another."
+        },
+    )
+    message: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Human-readable message indicating details about last transition."
+        },
+    )
+    reason: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Unique, one-word, CamelCase reason for the condition's last transition."
+        },
+    )
 
 
 @define(kw_only=True)
@@ -454,7 +469,7 @@ class V1Namespace:
 class V1alpha2ClusterOverride:
     path: str = field()
     op: Optional[str] = field(default=None)
-    value: Optional[str] = field(default=None)
+    value: Optional[Any] = field(default=None)
 
 
 @define(kw_only=True)

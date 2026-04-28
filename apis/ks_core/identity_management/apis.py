@@ -2,10 +2,10 @@ from typing import Optional
 from attrs import define, field
 from .models import (
     ApiListResult,
-    V1beta1UserStatus,
     V1beta1User,
-    V1beta1UserSpec,
     V1ObjectMeta,
+    V1beta1UserSpec,
+    V1beta1UserStatus,
     ErrorsError,
 )
 from aomaker.core.api_object import BaseAPIObject as BaseAPI
@@ -30,7 +30,26 @@ class ListUsersAPI(BaseAPI[ApiListResult]):
     @define
     class QueryParams:
         globalrole: Optional[str] = field(
-            default=None, metadata={"description": "specific golalrole name"}
+            default=None, metadata={"description": "specific globalrole name"}
+        )
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="ascending=false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+        fieldSelector: Optional[str] = field(
+            default=None, metadata={"description": "field selector used for filtering"}
         )
 
     query_params: QueryParams = field(factory=QueryParams)
@@ -138,7 +157,30 @@ class ListUserLoginRecordsAPI(BaseAPI[ApiListResult]):
     class PathParams:
         user: str = field(metadata={"description": "username of the user"})
 
+    @define
+    class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="ascending=false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+        fieldSelector: Optional[str] = field(
+            default=None, metadata={"description": "field selector used for filtering"}
+        )
+
     path_params: PathParams
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ApiListResult] = field(default=ApiListResult)
     endpoint_id: Optional[str] = field(default="ListUserLoginRecords")
 

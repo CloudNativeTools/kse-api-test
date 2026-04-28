@@ -1,47 +1,44 @@
 from __future__ import annotations
 
-from typing import Optional, List, Dict, Any
+from datetime import datetime
+from typing import Optional, Any, List, Dict
 from attrs import define, field
 
 __ALL__ = [
     "ApiWorkloads",
+    "V1Time",
     "V1ManagedFieldsEntry",
     "V1OwnerReference",
     "V1ObjectMeta",
     "V1LabelSelectorRequirement",
     "V1LabelSelector",
-    "V1NodeSelectorRequirement",
-    "V1NodeSelectorTerm",
+    "BigInt",
+    "InfDec",
+    "ResourceInfDecAmount",
+    "ResourceInt64Amount",
+    "ResourceQuantity",
     "V1PreferredSchedulingTerm",
     "V1NodeSelector",
     "V1NodeAffinity",
-    "V1PodAffinityTerm",
     "V1WeightedPodAffinityTerm",
+    "V1PodAffinityTerm",
     "V1PodAffinity",
     "V1PodAntiAffinity",
     "V1Affinity",
-    "V1ConfigMapKeySelector",
-    "V1ObjectFieldSelector",
-    "V1ResourceFieldSelector",
-    "V1SecretKeySelector",
-    "V1EnvVarSource",
     "V1EnvVar",
-    "V1ConfigMapEnvSource",
-    "V1SecretEnvSource",
     "V1EnvFromSource",
-    "V1ExecAction",
-    "V1HTTPHeader",
-    "V1HTTPGetAction",
-    "V1SleepAction",
-    "V1TCPSocketAction",
     "V1LifecycleHandler",
     "V1Lifecycle",
+    "V1ExecAction",
     "V1GRPCAction",
+    "V1HTTPGetAction",
+    "V1TCPSocketAction",
     "V1Probe",
     "V1ContainerPort",
     "V1ContainerResizePolicy",
-    "V1ResourceClaim",
     "V1ResourceRequirements",
+    "V1ContainerRestartRule",
+    "V1AppArmorProfile",
     "V1Capabilities",
     "V1SELinuxOptions",
     "V1SeccompProfile",
@@ -57,7 +54,6 @@ __ALL__ = [
     "V1LocalObjectReference",
     "V1PodOS",
     "V1PodReadinessGate",
-    "V1ClaimSource",
     "V1PodResourceClaim",
     "V1PodSchedulingGate",
     "V1Sysctl",
@@ -69,16 +65,10 @@ __ALL__ = [
     "V1AzureFileVolumeSource",
     "V1CephFSVolumeSource",
     "V1CinderVolumeSource",
-    "V1KeyToPath",
     "V1ConfigMapVolumeSource",
     "V1CSIVolumeSource",
-    "V1DownwardAPIVolumeFile",
     "V1DownwardAPIVolumeSource",
     "V1EmptyDirVolumeSource",
-    "V1TypedLocalObjectReference",
-    "V1TypedObjectReference",
-    "V1VolumeResourceRequirements",
-    "V1PersistentVolumeClaimSpec",
     "V1PersistentVolumeClaimTemplate",
     "V1EphemeralVolumeSource",
     "V1FCVolumeSource",
@@ -88,17 +78,12 @@ __ALL__ = [
     "V1GitRepoVolumeSource",
     "V1GlusterfsVolumeSource",
     "V1HostPathVolumeSource",
+    "V1ImageVolumeSource",
     "V1ISCSIVolumeSource",
     "V1NFSVolumeSource",
     "V1PersistentVolumeClaimVolumeSource",
     "V1PhotonPersistentDiskVolumeSource",
     "V1PortworxVolumeSource",
-    "V1ClusterTrustBundleProjection",
-    "V1ConfigMapProjection",
-    "V1DownwardAPIProjection",
-    "V1SecretProjection",
-    "V1ServiceAccountTokenProjection",
-    "V1VolumeProjection",
     "V1ProjectedVolumeSource",
     "V1QuobyteVolumeSource",
     "V1RBDVolumeSource",
@@ -109,6 +94,7 @@ __ALL__ = [
     "V1Volume",
     "V1PodSpec",
     "V1PodTemplateSpec",
+    "IntstrIntOrString",
     "V1RollingUpdateDaemonSet",
     "V1DaemonSetUpdateStrategy",
     "V1DaemonSetSpec",
@@ -125,6 +111,10 @@ __ALL__ = [
     "V1StatefulSetPersistentVolumeClaimRetentionPolicy",
     "V1RollingUpdateStatefulSetStrategy",
     "V1StatefulSetUpdateStrategy",
+    "V1TypedLocalObjectReference",
+    "V1TypedObjectReference",
+    "V1VolumeResourceRequirements",
+    "V1PersistentVolumeClaimSpec",
     "V1PersistentVolumeClaimCondition",
     "V1ModifyVolumeStatus",
     "V1PersistentVolumeClaimStatus",
@@ -141,6 +131,7 @@ __ALL__ = [
     "V1RootFS",
     "V1ConfigFile",
     "V2ImageConfig",
+    "ImagesearchResults",
     "OverviewMetricValue",
     "OverviewMetricData",
     "OverviewMetric",
@@ -160,6 +151,11 @@ class ApiWorkloads:
 
 
 @define(kw_only=True)
+class V1Time:
+    Time: datetime = field()
+
+
+@define(kw_only=True)
 class V1ManagedFieldsEntry:
     apiVersion: Optional[str] = field(
         default=None,
@@ -173,7 +169,7 @@ class V1ManagedFieldsEntry:
             "description": 'FieldsType is the discriminator for the different fields format and version. There is currently only one possible value: "FieldsV1"'
         },
     )
-    fieldsV1: Optional[str] = field(
+    fieldsV1: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'FieldsV1 holds the first JSON version format as described in the "FieldsV1" type.'
@@ -197,7 +193,7 @@ class V1ManagedFieldsEntry:
             "description": "Subresource is the name of the subresource used to update that object, or empty string if the object was updated through the main resource. The value of this field is used to distinguish between managers, even if they share the same name. For example, a status update will be distinct from a regular update using the same manager name. Note that the APIVersion field is not related to the Subresource field and it always corresponds to the version of the main resource."
         },
     )
-    time: Optional[str] = field(
+    time: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "Time is the timestamp of when the ManagedFields entry was added. The timestamp will also be updated if a field is added, the manager changes any of the owned fields value or removes a field. The timestamp does not update when a field is removed from the entry because another manager took it over."
@@ -245,7 +241,7 @@ class V1ObjectMeta:
             "description": "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations"
         },
     )
-    creationTimestamp: Optional[str] = field(
+    creationTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -261,7 +257,7 @@ Populated by the system. Read-only. Null for lists. More info: https://git.k8s.i
             "description": "Number of seconds allowed for this object to gracefully terminate before it will be removed from the system. Only set when deletionTimestamp is also set. May only be shortened. Read-only."
         },
     )
-    deletionTimestamp: Optional[str] = field(
+    deletionTimestamp: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": """\
@@ -392,47 +388,44 @@ class V1LabelSelector:
 
 
 @define(kw_only=True)
-class V1NodeSelectorRequirement:
-    key: str = field(
-        metadata={"description": "The label key that the selector applies to."}
-    )
-    operator: str = field(
-        metadata={
-            "description": "Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt."
-        }
-    )
-    values: Optional[List[str]] = field(
-        default=None,
-        metadata={
-            "description": "An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch."
-        },
-    )
+class BigInt:
+    abs: Any = field()
+    neg: Any = field()
 
 
 @define(kw_only=True)
-class V1NodeSelectorTerm:
-    matchExpressions: Optional[List[V1NodeSelectorRequirement]] = field(
-        default=None,
-        metadata={
-            "description": "A list of node selector requirements by node's labels."
-        },
-    )
-    matchFields: Optional[List[V1NodeSelectorRequirement]] = field(
-        default=None,
-        metadata={
-            "description": "A list of node selector requirements by node's fields."
-        },
-    )
+class InfDec:
+    scale: int = field()
+    unscaled: BigInt = field()
+
+
+@define(kw_only=True)
+class ResourceInfDecAmount:
+    Dec: InfDec = field()
+
+
+@define(kw_only=True)
+class ResourceInt64Amount:
+    scale: int = field()
+    value: int = field()
+
+
+@define(kw_only=True)
+class ResourceQuantity:
+    Format: str = field()
+    d: ResourceInfDecAmount = field()
+    i: ResourceInt64Amount = field()
+    s: str = field()
 
 
 @define(kw_only=True)
 class V1PreferredSchedulingTerm:
-    preference: V1NodeSelectorTerm = field(
+    preference: Any = field(
         metadata={
             "description": "A node selector term, associated with the corresponding weight."
         }
     )
-    weight: int = field(
+    weight: Any = field(
         metadata={
             "description": "Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100."
         }
@@ -441,7 +434,7 @@ class V1PreferredSchedulingTerm:
 
 @define(kw_only=True)
 class V1NodeSelector:
-    nodeSelectorTerms: List[V1NodeSelectorTerm] = field(
+    nodeSelectorTerms: List[Any] = field(
         metadata={
             "description": "Required. A list of node selector terms. The terms are ORed."
         }
@@ -467,55 +460,55 @@ class V1NodeAffinity:
 
 
 @define(kw_only=True)
+class V1WeightedPodAffinityTerm:
+    podAffinityTerm: Any = field(
+        metadata={
+            "description": "Required. A pod affinity term, associated with the corresponding weight."
+        }
+    )
+    weight: Any = field(
+        metadata={
+            "description": "weight associated with matching the corresponding podAffinityTerm, in the range 1-100."
+        }
+    )
+
+
+@define(kw_only=True)
 class V1PodAffinityTerm:
-    topologyKey: str = field(
+    topologyKey: Any = field(
         metadata={
             "description": "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed."
         }
     )
-    labelSelector: Optional[V1LabelSelector] = field(
+    labelSelector: Optional[Any] = field(
         default=None,
         metadata={
             "description": "A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods."
         },
     )
-    matchLabelKeys: Optional[List[str]] = field(
+    matchLabelKeys: Optional[Any] = field(
         default=None,
         metadata={
-            "description": "MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate."
+            "description": "MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both matchLabelKeys and labelSelector. Also, matchLabelKeys cannot be set when labelSelector isn't set."
         },
     )
-    mismatchLabelKeys: Optional[List[str]] = field(
+    mismatchLabelKeys: Optional[Any] = field(
         default=None,
         metadata={
-            "description": "MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate."
+            "description": "MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both mismatchLabelKeys and labelSelector. Also, mismatchLabelKeys cannot be set when labelSelector isn't set."
         },
     )
-    namespaceSelector: Optional[V1LabelSelector] = field(
+    namespaceSelector: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod\'s namespace". An empty selector ({}) matches all namespaces.'
         },
     )
-    namespaces: Optional[List[str]] = field(
+    namespaces: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod\'s namespace".'
         },
-    )
-
-
-@define(kw_only=True)
-class V1WeightedPodAffinityTerm:
-    podAffinityTerm: V1PodAffinityTerm = field(
-        metadata={
-            "description": "Required. A pod affinity term, associated with the corresponding weight."
-        }
-    )
-    weight: int = field(
-        metadata={
-            "description": "weight associated with matching the corresponding podAffinityTerm, in the range 1-100."
-        }
     )
 
 
@@ -546,7 +539,7 @@ class V1PodAntiAffinity:
     ] = field(
         default=None,
         metadata={
-            "description": 'The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.'
+            "description": 'The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and subtracting "weight" from the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.'
         },
     )
     requiredDuringSchedulingIgnoredDuringExecution: Optional[
@@ -582,103 +575,10 @@ class V1Affinity:
 
 
 @define(kw_only=True)
-class V1ConfigMapKeySelector:
-    key: str = field(metadata={"description": "The key to select."})
-    name: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-        },
-    )
-    optional: Optional[bool] = field(
-        default=None,
-        metadata={
-            "description": "Specify whether the ConfigMap or its key must be defined"
-        },
-    )
-
-
-@define(kw_only=True)
-class V1ObjectFieldSelector:
-    fieldPath: str = field(
-        metadata={
-            "description": "Path of the field to select in the specified API version."
-        }
-    )
-    apiVersion: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": 'Version of the schema the FieldPath is written in terms of, defaults to "v1".'
-        },
-    )
-
-
-@define(kw_only=True)
-class V1ResourceFieldSelector:
-    resource: str = field(metadata={"description": "Required: resource to select"})
-    containerName: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Container name: required for volumes, optional for env vars"
-        },
-    )
-    divisor: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": 'Specifies the output format of the exposed resources, defaults to "1"'
-        },
-    )
-
-
-@define(kw_only=True)
-class V1SecretKeySelector:
-    key: str = field(
-        metadata={
-            "description": "The key of the secret to select from.  Must be a valid secret key."
-        }
-    )
-    name: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-        },
-    )
-    optional: Optional[bool] = field(
-        default=None,
-        metadata={
-            "description": "Specify whether the Secret or its key must be defined"
-        },
-    )
-
-
-@define(kw_only=True)
-class V1EnvVarSource:
-    configMapKeyRef: Optional[V1ConfigMapKeySelector] = field(
-        default=None, metadata={"description": "Selects a key of a ConfigMap."}
-    )
-    fieldRef: Optional[V1ObjectFieldSelector] = field(
-        default=None,
-        metadata={
-            "description": "Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs."
-        },
-    )
-    resourceFieldRef: Optional[V1ResourceFieldSelector] = field(
-        default=None,
-        metadata={
-            "description": "Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported."
-        },
-    )
-    secretKeyRef: Optional[V1SecretKeySelector] = field(
-        default=None,
-        metadata={"description": "Selects a key of a secret in the pod's namespace"},
-    )
-
-
-@define(kw_only=True)
 class V1EnvVar:
     name: str = field(
         metadata={
-            "description": "Name of the environment variable. Must be a C_IDENTIFIER."
+            "description": "Name of the environment variable. May consist of any printable ASCII characters except '='."
         }
     )
     value: Optional[str] = field(
@@ -687,7 +587,7 @@ class V1EnvVar:
             "description": 'Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
         },
     )
-    valueFrom: Optional[V1EnvVarSource] = field(
+    valueFrom: Optional[Any] = field(
         default=None,
         metadata={
             "description": "Source for the environment variable's value. Cannot be used if value is not empty."
@@ -696,140 +596,43 @@ class V1EnvVar:
 
 
 @define(kw_only=True)
-class V1ConfigMapEnvSource:
-    name: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-        },
-    )
-    optional: Optional[bool] = field(
-        default=None,
-        metadata={"description": "Specify whether the ConfigMap must be defined"},
-    )
-
-
-@define(kw_only=True)
-class V1SecretEnvSource:
-    name: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-        },
-    )
-    optional: Optional[bool] = field(
-        default=None,
-        metadata={"description": "Specify whether the Secret must be defined"},
-    )
-
-
-@define(kw_only=True)
 class V1EnvFromSource:
-    configMapRef: Optional[V1ConfigMapEnvSource] = field(
+    configMapRef: Optional[Any] = field(
         default=None, metadata={"description": "The ConfigMap to select from"}
     )
     prefix: Optional[str] = field(
         default=None,
         metadata={
-            "description": "An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER."
+            "description": "Optional text to prepend to the name of each environment variable. May consist of any printable ASCII characters except '='."
         },
     )
-    secretRef: Optional[V1SecretEnvSource] = field(
+    secretRef: Optional[Any] = field(
         default=None, metadata={"description": "The Secret to select from"}
     )
 
 
 @define(kw_only=True)
-class V1ExecAction:
-    command: Optional[List[str]] = field(
-        default=None,
-        metadata={
-            "description": "Command is the command line to execute inside the container, the working directory for the command  is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy."
-        },
-    )
-
-
-@define(kw_only=True)
-class V1HTTPHeader:
-    name: str = field(
-        metadata={
-            "description": "The header field name. This will be canonicalized upon output, so case-variant names will be understood as the same header."
-        }
-    )
-    value: str = field(metadata={"description": "The header field value"})
-
-
-@define(kw_only=True)
-class V1HTTPGetAction:
-    port: str = field(
-        metadata={
-            "description": "Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME."
-        }
-    )
-    host: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": 'Host name to connect to, defaults to the pod IP. You probably want to set "Host" in httpHeaders instead.'
-        },
-    )
-    httpHeaders: Optional[List[V1HTTPHeader]] = field(
-        default=None,
-        metadata={
-            "description": "Custom headers to set in the request. HTTP allows repeated headers."
-        },
-    )
-    path: Optional[str] = field(
-        default=None, metadata={"description": "Path to access on the HTTP server."}
-    )
-    scheme: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Scheme to use for connecting to the host. Defaults to HTTP."
-        },
-    )
-
-
-@define(kw_only=True)
-class V1SleepAction:
-    seconds: int = field(
-        metadata={"description": "Seconds is the number of seconds to sleep."}
-    )
-
-
-@define(kw_only=True)
-class V1TCPSocketAction:
-    port: str = field(
-        metadata={
-            "description": "Number or name of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME."
-        }
-    )
-    host: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Optional: Host name to connect to, defaults to the pod IP."
-        },
-    )
-
-
-@define(kw_only=True)
 class V1LifecycleHandler:
-    exec: Optional[V1ExecAction] = field(
-        default=None, metadata={"description": "Exec specifies the action to take."}
-    )
-    httpGet: Optional[V1HTTPGetAction] = field(
-        default=None,
-        metadata={"description": "HTTPGet specifies the http request to perform."},
-    )
-    sleep: Optional[V1SleepAction] = field(
+    exec: Optional[Any] = field(
         default=None,
         metadata={
-            "description": "Sleep represents the duration that the container should sleep before being terminated."
+            "description": "Exec specifies a command to execute in the container."
         },
     )
-    tcpSocket: Optional[V1TCPSocketAction] = field(
+    httpGet: Optional[Any] = field(
+        default=None,
+        metadata={"description": "HTTPGet specifies an HTTP GET request to perform."},
+    )
+    sleep: Optional[Any] = field(
         default=None,
         metadata={
-            "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for the backward compatibility. There are no validation of this field and lifecycle hooks will fail in runtime when tcp handler is specified."
+            "description": "Sleep represents a duration that the container should sleep."
+        },
+    )
+    tcpSocket: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept for backward compatibility. There is no validation of this field and lifecycle hooks will fail at runtime when it is specified."
         },
     )
 
@@ -848,16 +651,32 @@ class V1Lifecycle:
             "description": "PreStop is called immediately before a container is terminated due to an API request or management event such as liveness/startup probe failure, preemption, resource contention, etc. The handler is not called if the container crashes or exits. The Pod's termination grace period countdown begins before the PreStop hook is executed. Regardless of the outcome of the handler, the container will eventually terminate within the Pod's termination grace period (unless delayed by finalizers). Other management of the container blocks until the hook completes or until the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks"
         },
     )
+    stopSignal: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "StopSignal defines which signal will be sent to a container when it is being stopped. If not specified, the default is defined by the container runtime in use. StopSignal can only be set for Pods with a non-empty .spec.os.name"
+        },
+    )
+
+
+@define(kw_only=True)
+class V1ExecAction:
+    command: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": "Command is the command line to execute inside the container, the working directory for the command  is root ('/') in the container's filesystem. The command is simply exec'd, it is not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use a shell, you need to explicitly call out to that shell. Exit status of 0 is treated as live/healthy and non-zero is unhealthy."
+        },
+    )
 
 
 @define(kw_only=True)
 class V1GRPCAction:
-    port: int = field(
+    port: Any = field(
         metadata={
             "description": "Port number of the gRPC service. Number must be in the range 1 to 65535."
         }
     )
-    service: str = field(
+    service: Any = field(
         metadata={
             "description": """\
 Service is the name of the service to place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
@@ -869,9 +688,57 @@ If this is not specified, the default behavior is defined by gRPC.
 
 
 @define(kw_only=True)
+class V1HTTPGetAction:
+    port: Any = field(
+        metadata={
+            "description": "Name or number of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME."
+        }
+    )
+    host: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": 'Host name to connect to, defaults to the pod IP. You probably want to set "Host" in httpHeaders instead.'
+        },
+    )
+    httpHeaders: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": "Custom headers to set in the request. HTTP allows repeated headers."
+        },
+    )
+    path: Optional[Any] = field(
+        default=None, metadata={"description": "Path to access on the HTTP server."}
+    )
+    scheme: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": "Scheme to use for connecting to the host. Defaults to HTTP."
+        },
+    )
+
+
+@define(kw_only=True)
+class V1TCPSocketAction:
+    port: Any = field(
+        metadata={
+            "description": "Number or name of the port to access on the container. Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME."
+        }
+    )
+    host: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": "Optional: Host name to connect to, defaults to the pod IP."
+        },
+    )
+
+
+@define(kw_only=True)
 class V1Probe:
     exec: Optional[V1ExecAction] = field(
-        default=None, metadata={"description": "Exec specifies the action to take."}
+        default=None,
+        metadata={
+            "description": "Exec specifies a command to execute in the container."
+        },
     )
     failureThreshold: Optional[int] = field(
         default=None,
@@ -881,11 +748,11 @@ class V1Probe:
     )
     grpc: Optional[V1GRPCAction] = field(
         default=None,
-        metadata={"description": "GRPC specifies an action involving a GRPC port."},
+        metadata={"description": "GRPC specifies a GRPC HealthCheckRequest."},
     )
     httpGet: Optional[V1HTTPGetAction] = field(
         default=None,
-        metadata={"description": "HTTPGet specifies the http request to perform."},
+        metadata={"description": "HTTPGet specifies an HTTP GET request to perform."},
     )
     initialDelaySeconds: Optional[int] = field(
         default=None,
@@ -907,7 +774,7 @@ class V1Probe:
     )
     tcpSocket: Optional[V1TCPSocketAction] = field(
         default=None,
-        metadata={"description": "TCPSocket specifies an action involving a TCP port."},
+        metadata={"description": "TCPSocket specifies a connection to a TCP port."},
     )
     terminationGracePeriodSeconds: Optional[int] = field(
         default=None,
@@ -969,23 +836,14 @@ class V1ContainerResizePolicy:
 
 
 @define(kw_only=True)
-class V1ResourceClaim:
-    name: str = field(
-        metadata={
-            "description": "Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container."
-        }
-    )
-
-
-@define(kw_only=True)
 class V1ResourceRequirements:
-    claims: Optional[List[V1ResourceClaim]] = field(
+    claims: Optional[List[Any]] = field(
         default=None,
         metadata={
             "description": """\
 Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
 
-This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+This field depends on the DynamicResourceAllocation feature gate.
 
 This field is immutable. It can only be set for containers.
 """
@@ -1006,36 +864,72 @@ This field is immutable. It can only be set for containers.
 
 
 @define(kw_only=True)
+class V1ContainerRestartRule:
+    action: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": 'Specifies the action taken on a container exit if the requirements are satisfied. The only possible value is "Restart" to restart the container.'
+        },
+    )
+    exitCodes: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": "Represents the exit codes to check on container exits."
+        },
+    )
+
+
+@define(kw_only=True)
+class V1AppArmorProfile:
+    type: Any = field(
+        metadata={
+            "description": """\
+type indicates which kind of AppArmor profile will be applied. Valid options are:
+  Localhost - a profile pre-loaded on the node.
+  RuntimeDefault - the container runtime's default profile.
+  Unconfined - no AppArmor enforcement.
+"""
+        }
+    )
+    localhostProfile: Optional[Any] = field(
+        default=None,
+        metadata={
+            "description": 'localhostProfile indicates a profile loaded on the node that should be used. The profile must be preconfigured on the node to work. Must match the loaded name of the profile. Must be set if and only if type is "Localhost".'
+        },
+    )
+
+
+@define(kw_only=True)
 class V1Capabilities:
-    add: Optional[List[str]] = field(
+    add: Optional[Any] = field(
         default=None, metadata={"description": "Added capabilities"}
     )
-    drop: Optional[List[str]] = field(
+    drop: Optional[Any] = field(
         default=None, metadata={"description": "Removed capabilities"}
     )
 
 
 @define(kw_only=True)
 class V1SELinuxOptions:
-    level: Optional[str] = field(
+    level: Optional[Any] = field(
         default=None,
         metadata={
             "description": "Level is SELinux level label that applies to the container."
         },
     )
-    role: Optional[str] = field(
+    role: Optional[Any] = field(
         default=None,
         metadata={
             "description": "Role is a SELinux role label that applies to the container."
         },
     )
-    type: Optional[str] = field(
+    type: Optional[Any] = field(
         default=None,
         metadata={
             "description": "Type is a SELinux type label that applies to the container."
         },
     )
-    user: Optional[str] = field(
+    user: Optional[Any] = field(
         default=None,
         metadata={
             "description": "User is a SELinux user label that applies to the container."
@@ -1045,7 +939,7 @@ class V1SELinuxOptions:
 
 @define(kw_only=True)
 class V1SeccompProfile:
-    type: str = field(
+    type: Any = field(
         metadata={
             "description": """\
 type indicates which kind of seccomp profile will be applied. Valid options are:
@@ -1054,7 +948,7 @@ Localhost - a profile defined in a file on the node should be used. RuntimeDefau
 """
         }
     )
-    localhostProfile: Optional[str] = field(
+    localhostProfile: Optional[Any] = field(
         default=None,
         metadata={
             "description": 'localhostProfile indicates a profile defined in a file on the node should be used. The profile must be preconfigured on the node to work. Must be a descending path, relative to the kubelet\'s configured seccomp profile location. Must be set if type is "Localhost". Must NOT be set for any other type.'
@@ -1064,25 +958,25 @@ Localhost - a profile defined in a file on the node should be used. RuntimeDefau
 
 @define(kw_only=True)
 class V1WindowsSecurityContextOptions:
-    gmsaCredentialSpec: Optional[str] = field(
+    gmsaCredentialSpec: Optional[Any] = field(
         default=None,
         metadata={
             "description": "GMSACredentialSpec is where the GMSA admission webhook (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the GMSA credential spec named by the GMSACredentialSpecName field."
         },
     )
-    gmsaCredentialSpecName: Optional[str] = field(
+    gmsaCredentialSpecName: Optional[Any] = field(
         default=None,
         metadata={
             "description": "GMSACredentialSpecName is the name of the GMSA credential spec to use."
         },
     )
-    hostProcess: Optional[bool] = field(
+    hostProcess: Optional[Any] = field(
         default=None,
         metadata={
             "description": "HostProcess determines if a container should be run as a 'Host Process' container. All of a Pod's containers must have the same effective HostProcess value (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers). In addition, if HostProcess is true then HostNetwork must also be set to true."
         },
     )
-    runAsUserName: Optional[str] = field(
+    runAsUserName: Optional[Any] = field(
         default=None,
         metadata={
             "description": "The UserName in Windows to run the entrypoint of the container process. Defaults to the user specified in image metadata if unspecified. May also be set in PodSecurityContext. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence."
@@ -1096,6 +990,12 @@ class V1SecurityContext:
         default=None,
         metadata={
             "description": "AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note that this field cannot be set when spec.os.name is windows."
+        },
+    )
+    appArmorProfile: Optional[V1AppArmorProfile] = field(
+        default=None,
+        metadata={
+            "description": "appArmorProfile is the AppArmor options to use by this container. If set, this profile overrides the pod's appArmorProfile. Note that this field cannot be set when spec.os.name is windows."
         },
     )
     capabilities: Optional[V1Capabilities] = field(
@@ -1113,7 +1013,7 @@ class V1SecurityContext:
     procMount: Optional[str] = field(
         default=None,
         metadata={
-            "description": "procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled. Note that this field cannot be set when spec.os.name is windows."
+            "description": "procMount denotes the type of proc mount to use for the containers. The default value is Default which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled. Note that this field cannot be set when spec.os.name is windows."
         },
     )
     readOnlyRootFilesystem: Optional[bool] = field(
@@ -1185,13 +1085,29 @@ class V1VolumeMount:
     mountPropagation: Optional[str] = field(
         default=None,
         metadata={
-            "description": "mountPropagation determines how mounts are propagated from the host to container and the other way around. When not set, MountPropagationNone is used. This field is beta in 1.10."
+            "description": "mountPropagation determines how mounts are propagated from the host to container and the other way around. When not set, MountPropagationNone is used. This field is beta in 1.10. When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified (which defaults to None)."
         },
     )
     readOnly: Optional[bool] = field(
         default=None,
         metadata={
             "description": "Mounted read-only if true, read-write otherwise (false or unspecified). Defaults to false."
+        },
+    )
+    recursiveReadOnly: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": """\
+RecursiveReadOnly specifies whether read-only mounts should be handled recursively.
+
+If ReadOnly is false, this field has no meaning and must be unspecified.
+
+If ReadOnly is true, and this field is set to Disabled, the mount is not made recursively read-only.  If this field is set to IfPossible, the mount is made recursively read-only, if it is supported by the container runtime.  If this field is set to Enabled, the mount is made recursively read-only if it is supported by the container runtime, otherwise the pod will not be started and an error will be generated to indicate the reason.
+
+If this field is set to IfPossible or Enabled, MountPropagation must be set to None (or be unspecified, which defaults to None).
+
+If this field is not specified, it is treated as an equivalent of Disabled.
+"""
         },
     )
     subPath: Optional[str] = field(
@@ -1236,7 +1152,7 @@ class V1Container:
     envFrom: Optional[List[V1EnvFromSource]] = field(
         default=None,
         metadata={
-            "description": "List of sources to populate environment variables in the container. The keys defined within a source must be a C_IDENTIFIER. All invalid keys will be reported as an event when the container is starting. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated."
+            "description": "List of sources to populate environment variables in the container. The keys defined within a source may consist of any printable ASCII characters except '='. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated."
         },
     )
     image: Optional[str] = field(
@@ -1288,7 +1204,13 @@ class V1Container:
     restartPolicy: Optional[str] = field(
         default=None,
         metadata={
-            "description": 'RestartPolicy defines the restart behavior of individual containers in a pod. This field may only be set for init containers, and the only allowed value is "Always". For non-init containers or when this field is not specified, the restart behavior is defined by the Pod\'s restart policy and the container type. Setting the RestartPolicy as "Always" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy "Always" will be shut down. This lifecycle differs from normal init containers and is often referred to as a "sidecar" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed.'
+            "description": 'RestartPolicy defines the restart behavior of individual containers in a pod. This overrides the pod-level restart policy. When this field is not specified, the restart behavior is defined by the Pod\'s restart policy and the container type. Additionally, setting the RestartPolicy as "Always" for the init container will have the following effect: this init container will be continually restarted on exit until all regular containers have terminated. Once all regular containers have completed, all init containers with restartPolicy "Always" will be shut down. This lifecycle differs from normal init containers and is often referred to as a "sidecar" container. Although this init container still starts in the init container sequence, it does not wait for the container to complete before proceeding to the next init container. Instead, the next init container starts immediately after this init container is started, or after any startupProbe has successfully completed.'
+        },
+    )
+    restartPolicyRules: Optional[List[V1ContainerRestartRule]] = field(
+        default=None,
+        metadata={
+            "description": "Represents a list of rules to be checked to determine if the container should be restarted on exit. The rules are evaluated in order. Once a rule matches a container exit condition, the remaining rules are ignored. If no rule matches the container exit condition, the Container-level restart policy determines the whether the container is restarted or not. Constraints on the rules: - At most 20 rules are allowed. - Rules can have the same action. - Identical rules are not forbidden in validations. When rules are specified, container MUST set RestartPolicy explicitly even it if matches the Pod's RestartPolicy."
         },
     )
     securityContext: Optional[V1SecurityContext] = field(
@@ -1355,8 +1277,14 @@ class V1Container:
 
 @define(kw_only=True)
 class V1PodDNSConfigOption:
-    name: Optional[str] = field(default=None, metadata={"description": "Required."})
-    value: Optional[str] = field(default=None)
+    name: Optional[str] = field(
+        default=None,
+        metadata={"description": "Name is this DNS resolver option's name. Required."},
+    )
+    value: Optional[str] = field(
+        default=None,
+        metadata={"description": "Value is this DNS resolver option's value."},
+    )
 
 
 @define(kw_only=True)
@@ -1409,7 +1337,7 @@ class V1EphemeralContainer:
     envFrom: Optional[List[V1EnvFromSource]] = field(
         default=None,
         metadata={
-            "description": "List of sources to populate environment variables in the container. The keys defined within a source must be a C_IDENTIFIER. All invalid keys will be reported as an event when the container is starting. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated."
+            "description": "List of sources to populate environment variables in the container. The keys defined within a source may consist of any printable ASCII characters except '='. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated."
         },
     )
     image: Optional[str] = field(
@@ -1453,7 +1381,13 @@ class V1EphemeralContainer:
     restartPolicy: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Restart policy for the container to manage the restart behavior of each container within a pod. This may only be set for init containers. You cannot set this field on ephemeral containers."
+            "description": "Restart policy for the container to manage the restart behavior of each container within a pod. You cannot set this field on ephemeral containers."
+        },
+    )
+    restartPolicyRules: Optional[List[V1ContainerRestartRule]] = field(
+        default=None,
+        metadata={
+            "description": "Represents a list of rules to be checked to determine if the container should be restarted on exit. You cannot set this field on ephemeral containers."
         },
     )
     securityContext: Optional[V1SecurityContext] = field(
@@ -1528,11 +1462,9 @@ The container runtime must implement support for this feature. If the runtime do
 
 @define(kw_only=True)
 class V1HostAlias:
+    ip: str = field(metadata={"description": "IP address of the host file entry."})
     hostnames: Optional[List[str]] = field(
         default=None, metadata={"description": "Hostnames for the above IP address."}
-    )
-    ip: Optional[str] = field(
-        default=None, metadata={"description": "IP address of the host file entry."}
     )
 
 
@@ -1541,7 +1473,7 @@ class V1LocalObjectReference:
     name: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
+            "description": "Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
         },
     )
 
@@ -1565,11 +1497,20 @@ class V1PodReadinessGate:
 
 
 @define(kw_only=True)
-class V1ClaimSource:
+class V1PodResourceClaim:
+    name: str = field(
+        metadata={
+            "description": "Name uniquely identifies this resource claim inside the pod. This must be a DNS_LABEL."
+        }
+    )
     resourceClaimName: Optional[str] = field(
         default=None,
         metadata={
-            "description": "ResourceClaimName is the name of a ResourceClaim object in the same namespace as this pod."
+            "description": """\
+ResourceClaimName is the name of a ResourceClaim object in the same namespace as this pod.
+
+Exactly one of ResourceClaimName and ResourceClaimTemplateName must be set.
+"""
         },
     )
     resourceClaimTemplateName: Optional[str] = field(
@@ -1581,21 +1522,10 @@ ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the s
 The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The pod name and resource name, along with a generated component, will be used to form a unique name for the ResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.
 
 This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
+
+Exactly one of ResourceClaimName and ResourceClaimTemplateName must be set.
 """
         },
-    )
-
-
-@define(kw_only=True)
-class V1PodResourceClaim:
-    name: str = field(
-        metadata={
-            "description": "Name uniquely identifies this resource claim inside the pod. This must be a DNS_LABEL."
-        }
-    )
-    source: Optional[V1ClaimSource] = field(
-        default=None,
-        metadata={"description": "Source describes where to find the ResourceClaim."},
     )
 
 
@@ -1616,6 +1546,12 @@ class V1Sysctl:
 
 @define(kw_only=True)
 class V1PodSecurityContext:
+    appArmorProfile: Optional[V1AppArmorProfile] = field(
+        default=None,
+        metadata={
+            "description": "appArmorProfile is the AppArmor options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows."
+        },
+    )
     fsGroup: Optional[int] = field(
         default=None,
         metadata={
@@ -1650,6 +1586,24 @@ A special supplemental group that applies to all containers in a pod. Some volum
             "description": "The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows."
         },
     )
+    seLinuxChangePolicy: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": """\
+seLinuxChangePolicy defines how the container's SELinux label is applied to all volumes used by the Pod. It has no effect on nodes that do not support SELinux or to volumes does not support SELinux. Valid values are \"MountOption\" and \"Recursive\".
+
+\"Recursive\" means relabeling of all files on all Pod volumes by the container runtime. This may be slow for large volumes, but allows mixing privileged and unprivileged Pods sharing the same volume on the same node.
+
+\"MountOption\" mounts all eligible Pod volumes with `-o context` mount option. This requires all Pods that share the same volume to use the same SELinux label. It is not possible to share the same volume among privileged and unprivileged Pods. Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their CSIDriver instance. Other volumes are always re-labelled recursively. \"MountOption\" value is allowed only when SELinuxMount feature gate is enabled.
+
+If not specified and SELinuxMount feature gate is enabled, \"MountOption\" is used. If not specified and SELinuxMount feature gate is disabled, \"MountOption\" is used for ReadWriteOncePod volumes and \"Recursive\" for all other volumes.
+
+This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
+
+All Pods that use the same volume should use the same seLinuxChangePolicy, otherwise some pods can get stuck in ContainerCreating state. Note that this field cannot be set when spec.os.name is windows.
+"""
+        },
+    )
     seLinuxOptions: Optional[V1SELinuxOptions] = field(
         default=None,
         metadata={
@@ -1665,7 +1619,13 @@ A special supplemental group that applies to all containers in a pod. Some volum
     supplementalGroups: Optional[List[int]] = field(
         default=None,
         metadata={
-            "description": "A list of groups applied to the first process run in each container, in addition to the container's primary GID, the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process. If unspecified, no additional groups are added to any container. Note that group memberships defined in the container image for the uid of the container process are still effective, even if they are not included in this list. Note that this field cannot be set when spec.os.name is windows."
+            "description": "A list of groups applied to the first process run in each container, in addition to the container's primary GID and fsGroup (if specified).  If the SupplementalGroupsPolicy feature is enabled, the supplementalGroupsPolicy field determines whether these are in addition to or instead of any group memberships defined in the container image. If unspecified, no additional groups are added, though group memberships defined in the container image may still be used, depending on the supplementalGroupsPolicy field. Note that this field cannot be set when spec.os.name is windows."
+        },
+    )
+    supplementalGroupsPolicy: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": 'Defines how supplemental groups of the first container processes are calculated. Valid values are "Merge" and "Strict". If not specified, "Merge" is used. (Alpha) Using the field requires the SupplementalGroupsPolicy feature gate to be enabled and the container runtime must implement support for this feature. Note that this field cannot be set when spec.os.name is windows.'
         },
     )
     sysctls: Optional[List[V1Sysctl]] = field(
@@ -1770,7 +1730,7 @@ For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 an
             "description": """\
 NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
 
-If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+If this value is nil, the behavior is equivalent to the Honor policy.
 """
         },
     )
@@ -1780,7 +1740,7 @@ If this value is nil, the behavior is equivalent to the Honor policy. This is a 
             "description": """\
 NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
 
-If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+If this value is nil, the behavior is equivalent to the Ignore policy.
 """
         },
     )
@@ -1934,22 +1894,6 @@ class V1CinderVolumeSource:
 
 
 @define(kw_only=True)
-class V1KeyToPath:
-    key: str = field(metadata={"description": "key is the key to project."})
-    path: str = field(
-        metadata={
-            "description": "path is the relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'."
-        }
-    )
-    mode: Optional[int] = field(
-        default=None,
-        metadata={
-            "description": "mode is Optional: mode bits used to set permissions on this file. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set."
-        },
-    )
-
-
-@define(kw_only=True)
 class V1ConfigMapVolumeSource:
     defaultMode: Optional[int] = field(
         default=None,
@@ -1957,7 +1901,7 @@ class V1ConfigMapVolumeSource:
             "description": "defaultMode is optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set."
         },
     )
-    items: Optional[List[V1KeyToPath]] = field(
+    items: Optional[List[Any]] = field(
         default=None,
         metadata={
             "description": "items if unspecified, each key-value pair in the Data field of the referenced ConfigMap will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the ConfigMap, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'."
@@ -1966,7 +1910,7 @@ class V1ConfigMapVolumeSource:
     name: Optional[str] = field(
         default=None,
         metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
+            "description": "Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
         },
     )
     optional: Optional[bool] = field(
@@ -2011,33 +1955,6 @@ class V1CSIVolumeSource:
 
 
 @define(kw_only=True)
-class V1DownwardAPIVolumeFile:
-    path: str = field(
-        metadata={
-            "description": "Required: Path is  the relative path name of the file to be created. Must not be absolute or contain the '..' path. Must be utf-8 encoded. The first item of the relative path must not start with '..'"
-        }
-    )
-    fieldRef: Optional[V1ObjectFieldSelector] = field(
-        default=None,
-        metadata={
-            "description": "Required: Selects a field of the pod: only annotations, labels, name and namespace are supported."
-        },
-    )
-    mode: Optional[int] = field(
-        default=None,
-        metadata={
-            "description": "Optional: mode bits used to set permissions on this file, must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set."
-        },
-    )
-    resourceFieldRef: Optional[V1ResourceFieldSelector] = field(
-        default=None,
-        metadata={
-            "description": "Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, requests.cpu and requests.memory) are currently supported."
-        },
-    )
-
-
-@define(kw_only=True)
 class V1DownwardAPIVolumeSource:
     defaultMode: Optional[int] = field(
         default=None,
@@ -2045,7 +1962,7 @@ class V1DownwardAPIVolumeSource:
             "description": "Optional: mode bits to use on created files by default. Must be a Optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set."
         },
     )
-    items: Optional[List[V1DownwardAPIVolumeFile]] = field(
+    items: Optional[List[Any]] = field(
         default=None,
         metadata={"description": "Items is a list of downward API volume file"},
     )
@@ -2059,7 +1976,7 @@ class V1EmptyDirVolumeSource:
             "description": 'medium represents what type of storage medium should back this directory. The default is "" which means to use the node\'s default medium. Must be an empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir'
         },
     )
-    sizeLimit: Optional[str] = field(
+    sizeLimit: Optional[ResourceQuantity] = field(
         default=None,
         metadata={
             "description": "sizeLimit is the total amount of local storage required for this EmptyDir volume. The size limit is also applicable for memory medium. The maximum usage on memory medium EmptyDir would be the minimum value between the SizeLimit specified here and the sum of memory limits of all containers in a pod. The default is nil which means that the limit is undefined. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir"
@@ -2068,132 +1985,13 @@ class V1EmptyDirVolumeSource:
 
 
 @define(kw_only=True)
-class V1TypedLocalObjectReference:
-    apiGroup: str = field(
-        metadata={
-            "description": "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required."
-        }
-    )
-    kind: str = field(
-        metadata={"description": "Kind is the type of resource being referenced"}
-    )
-    name: str = field(
-        metadata={"description": "Name is the name of resource being referenced"}
-    )
-
-
-@define(kw_only=True)
-class V1TypedObjectReference:
-    apiGroup: str = field(
-        metadata={
-            "description": "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required."
-        }
-    )
-    kind: str = field(
-        metadata={"description": "Kind is the type of resource being referenced"}
-    )
-    name: str = field(
-        metadata={"description": "Name is the name of resource being referenced"}
-    )
-    namespace: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Namespace is the namespace of resource being referenced Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details. (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled."
-        },
-    )
-
-
-@define(kw_only=True)
-class V1VolumeResourceRequirements:
-    limits: Optional[Dict] = field(
-        default=None,
-        metadata={
-            "description": "Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
-        },
-    )
-    requests: Optional[Dict] = field(
-        default=None,
-        metadata={
-            "description": "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
-        },
-    )
-
-
-@define(kw_only=True)
-class V1PersistentVolumeClaimSpec:
-    accessModes: Optional[List[str]] = field(
-        default=None,
-        metadata={
-            "description": "accessModes contains the desired access modes the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1"
-        },
-    )
-    dataSource: Optional[V1TypedLocalObjectReference] = field(
-        default=None,
-        metadata={
-            "description": "dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified. If the namespace is specified, then dataSourceRef will not be copied to dataSource."
-        },
-    )
-    dataSourceRef: Optional[V1TypedObjectReference] = field(
-        default=None,
-        metadata={
-            "description": """\
-dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the dataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, when namespace isn't specified in dataSourceRef, both fields (dataSource and dataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. When namespace is specified in dataSourceRef, dataSource isn't set to the same value and must be empty. There are three important differences between dataSource and dataSourceRef: * While dataSource only allows two specific types of objects, dataSourceRef
-  allows any non-core object, as well as PersistentVolumeClaim objects.
-* While dataSource ignores disallowed values (dropping them), dataSourceRef
-  preserves all values, and generates an error if a disallowed value is
-  specified.
-* While dataSource only allows local objects, dataSourceRef allows objects
-  in any namespaces.
-(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled. (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
-"""
-        },
-    )
-    resources: Optional[V1VolumeResourceRequirements] = field(
-        default=None,
-        metadata={
-            "description": "resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources"
-        },
-    )
-    selector: Optional[V1LabelSelector] = field(
-        default=None,
-        metadata={
-            "description": "selector is a label query over volumes to consider for binding."
-        },
-    )
-    storageClassName: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "storageClassName is the name of the StorageClass required by the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1"
-        },
-    )
-    volumeAttributesClassName: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim. If specified, the CSI driver will create or update the volume with the attributes defined in the corresponding VolumeAttributesClass. This has a different purpose than storageClassName, it can be changed after the claim is created. An empty string value means that no VolumeAttributesClass will be applied to the claim but it's not allowed to reset this field to empty string once it is set. If unspecified and the PersistentVolumeClaim is unbound, the default VolumeAttributesClass will be set by the persistentvolume controller if it exists. If the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be set to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource exists. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass (Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled."
-        },
-    )
-    volumeMode: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "volumeMode defines what type of volume is required by the claim. Value of Filesystem is implied when not included in claim spec."
-        },
-    )
-    volumeName: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "volumeName is the binding reference to the PersistentVolume backing this claim."
-        },
-    )
-
-
-@define(kw_only=True)
 class V1PersistentVolumeClaimTemplate:
-    spec: V1PersistentVolumeClaimSpec = field(
+    spec: Any = field(
         metadata={
             "description": "The specification for the PersistentVolumeClaim. The entire content is copied unchanged into the PVC that gets created from this template. The same fields as in a PersistentVolumeClaim are also valid here."
         }
     )
-    metadata: Optional[V1ObjectMeta] = field(
+    metadata: Optional[Any] = field(
         default=None,
         metadata={
             "description": "May contain labels and annotations that will be copied into the PVC when creating it. No other fields are allowed and will be rejected during validation."
@@ -2347,7 +2145,7 @@ class V1GitRepoVolumeSource:
 class V1GlusterfsVolumeSource:
     endpoints: str = field(
         metadata={
-            "description": "endpoints is the endpoint name that details Glusterfs topology. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod"
+            "description": "endpoints is the endpoint name that details Glusterfs topology."
         }
     )
     path: str = field(
@@ -2374,6 +2172,22 @@ class V1HostPathVolumeSource:
         default=None,
         metadata={
             "description": 'type for HostPath Volume Defaults to "" More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath'
+        },
+    )
+
+
+@define(kw_only=True)
+class V1ImageVolumeSource:
+    pullPolicy: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Policy for pulling OCI objects. Possible values are: Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails. Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present. IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails. Defaults to Always if :latest tag is specified, or IfNotPresent otherwise."
+        },
+    )
+    reference: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Required: Image or artifact reference to be used. Behaves in the same way as pod.spec.containers[*].image. Pull secrets will be assembled in the same way as for the container image by looking up node credentials, SA image pull secrets, and pod spec image pull secrets. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override container images in workload controllers like Deployments and StatefulSets."
         },
     )
 
@@ -2511,155 +2325,11 @@ class V1PortworxVolumeSource:
 
 
 @define(kw_only=True)
-class V1ClusterTrustBundleProjection:
-    path: str = field(
-        metadata={
-            "description": "Relative path from the volume root to write the bundle."
-        }
-    )
-    labelSelector: Optional[V1LabelSelector] = field(
-        default=None,
-        metadata={
-            "description": 'Select all ClusterTrustBundles that match this label selector.  Only has effect if signerName is set.  Mutually-exclusive with name.  If unset, interpreted as "match nothing".  If set but empty, interpreted as "match everything".'
-        },
-    )
-    name: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Select a single ClusterTrustBundle by object name.  Mutually-exclusive with signerName and labelSelector."
-        },
-    )
-    optional: Optional[bool] = field(
-        default=None,
-        metadata={
-            "description": "If true, don't block pod startup if the referenced ClusterTrustBundle(s) aren't available.  If using name, then the named ClusterTrustBundle is allowed not to exist.  If using signerName, then the combination of signerName and labelSelector is allowed to match zero ClusterTrustBundles."
-        },
-    )
-    signerName: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Select all ClusterTrustBundles that match this signer name. Mutually-exclusive with name.  The contents of all selected ClusterTrustBundles will be unified and deduplicated."
-        },
-    )
-
-
-@define(kw_only=True)
-class V1ConfigMapProjection:
-    items: Optional[List[V1KeyToPath]] = field(
-        default=None,
-        metadata={
-            "description": "items if unspecified, each key-value pair in the Data field of the referenced ConfigMap will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the ConfigMap, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'."
-        },
-    )
-    name: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-        },
-    )
-    optional: Optional[bool] = field(
-        default=None,
-        metadata={
-            "description": "optional specify whether the ConfigMap or its keys must be defined"
-        },
-    )
-
-
-@define(kw_only=True)
-class V1DownwardAPIProjection:
-    items: Optional[List[V1DownwardAPIVolumeFile]] = field(
-        default=None,
-        metadata={"description": "Items is a list of DownwardAPIVolume file"},
-    )
-
-
-@define(kw_only=True)
-class V1SecretProjection:
-    items: Optional[List[V1KeyToPath]] = field(
-        default=None,
-        metadata={
-            "description": "items if unspecified, each key-value pair in the Data field of the referenced Secret will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the Secret, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'."
-        },
-    )
-    name: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-        },
-    )
-    optional: Optional[bool] = field(
-        default=None,
-        metadata={
-            "description": "optional field specify whether the Secret or its key must be defined"
-        },
-    )
-
-
-@define(kw_only=True)
-class V1ServiceAccountTokenProjection:
-    path: str = field(
-        metadata={
-            "description": "path is the path relative to the mount point of the file to project the token into."
-        }
-    )
-    audience: Optional[str] = field(
-        default=None,
-        metadata={
-            "description": "audience is the intended audience of the token. A recipient of a token must identify itself with an identifier specified in the audience of the token, and otherwise should reject the token. The audience defaults to the identifier of the apiserver."
-        },
-    )
-    expirationSeconds: Optional[int] = field(
-        default=None,
-        metadata={
-            "description": "expirationSeconds is the requested duration of validity of the service account token. As the token approaches expiration, the kubelet volume plugin will proactively rotate the service account token. The kubelet will start trying to rotate the token if the token is older than 80 percent of its time to live or if the token is older than 24 hours.Defaults to 1 hour and must be at least 10 minutes."
-        },
-    )
-
-
-@define(kw_only=True)
-class V1VolumeProjection:
-    clusterTrustBundle: Optional[V1ClusterTrustBundleProjection] = field(
-        default=None,
-        metadata={
-            "description": """\
-ClusterTrustBundle allows a pod to access the `.spec.trustBundle` field of ClusterTrustBundle objects in an auto-updating file.
-
-Alpha, gated by the ClusterTrustBundleProjection feature gate.
-
-ClusterTrustBundle objects can either be selected by name, or by the combination of signer name and a label selector.
-
-Kubelet performs aggressive normalization of the PEM contents written into the pod filesystem.  Esoteric PEM features such as inter-block comments and block headers are stripped.  Certificates are deduplicated. The ordering of certificates within the file is arbitrary, and Kubelet may change the order over time.
-"""
-        },
-    )
-    configMap: Optional[V1ConfigMapProjection] = field(
-        default=None,
-        metadata={
-            "description": "configMap information about the configMap data to project"
-        },
-    )
-    downwardAPI: Optional[V1DownwardAPIProjection] = field(
-        default=None,
-        metadata={
-            "description": "downwardAPI information about the downwardAPI data to project"
-        },
-    )
-    secret: Optional[V1SecretProjection] = field(
-        default=None,
-        metadata={"description": "secret information about the secret data to project"},
-    )
-    serviceAccountToken: Optional[V1ServiceAccountTokenProjection] = field(
-        default=None,
-        metadata={
-            "description": "serviceAccountToken is information about the serviceAccountToken data to project"
-        },
-    )
-
-
-@define(kw_only=True)
 class V1ProjectedVolumeSource:
-    sources: List[V1VolumeProjection] = field(
-        metadata={"description": "sources is the list of volume projections"}
+    sources: List[Any] = field(
+        metadata={
+            "description": "sources is the list of volume projections. Each entry in this list handles one source."
+        }
     )
     defaultMode: Optional[int] = field(
         default=None,
@@ -2824,7 +2494,7 @@ class V1SecretVolumeSource:
             "description": "defaultMode is Optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set."
         },
     )
-    items: Optional[List[V1KeyToPath]] = field(
+    items: Optional[List[Any]] = field(
         default=None,
         metadata={
             "description": "items If unspecified, each key-value pair in the Data field of the referenced Secret will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the Secret, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'."
@@ -2915,31 +2585,31 @@ class V1Volume:
     awsElasticBlockStore: Optional[V1AWSElasticBlockStoreVolumeSource] = field(
         default=None,
         metadata={
-            "description": "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore"
+            "description": "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: AWSElasticBlockStore is deprecated. All operations for the in-tree awsElasticBlockStore type are redirected to the ebs.csi.aws.com CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore"
         },
     )
     azureDisk: Optional[V1AzureDiskVolumeSource] = field(
         default=None,
         metadata={
-            "description": "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod."
+            "description": "azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod. Deprecated: AzureDisk is deprecated. All operations for the in-tree azureDisk type are redirected to the disk.csi.azure.com CSI driver."
         },
     )
     azureFile: Optional[V1AzureFileVolumeSource] = field(
         default=None,
         metadata={
-            "description": "azureFile represents an Azure File Service mount on the host and bind mount to the pod."
+            "description": "azureFile represents an Azure File Service mount on the host and bind mount to the pod. Deprecated: AzureFile is deprecated. All operations for the in-tree azureFile type are redirected to the file.csi.azure.com CSI driver."
         },
     )
     cephfs: Optional[V1CephFSVolumeSource] = field(
         default=None,
         metadata={
-            "description": "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime"
+            "description": "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported."
         },
     )
     cinder: Optional[V1CinderVolumeSource] = field(
         default=None,
         metadata={
-            "description": "cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md"
+            "description": "cinder represents a cinder volume attached and mounted on kubelets host machine. Deprecated: Cinder is deprecated. All operations for the in-tree cinder type are redirected to the cinder.csi.openstack.org CSI driver. More info: https://examples.k8s.io/mysql-cinder-pd/README.md"
         },
     )
     configMap: Optional[V1ConfigMapVolumeSource] = field(
@@ -2951,7 +2621,7 @@ class V1Volume:
     csi: Optional[V1CSIVolumeSource] = field(
         default=None,
         metadata={
-            "description": "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers (Beta feature)."
+            "description": "csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers."
         },
     )
     downwardAPI: Optional[V1DownwardAPIVolumeSource] = field(
@@ -2996,31 +2666,31 @@ A pod can use both types of ephemeral volumes and persistent volumes at the same
     flexVolume: Optional[V1FlexVolumeSource] = field(
         default=None,
         metadata={
-            "description": "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin."
+            "description": "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin. Deprecated: FlexVolume is deprecated. Consider using a CSIDriver instead."
         },
     )
     flocker: Optional[V1FlockerVolumeSource] = field(
         default=None,
         metadata={
-            "description": "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running"
+            "description": "flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running. Deprecated: Flocker is deprecated and the in-tree flocker type is no longer supported."
         },
     )
     gcePersistentDisk: Optional[V1GCEPersistentDiskVolumeSource] = field(
         default=None,
         metadata={
-            "description": "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk"
+            "description": "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Deprecated: GCEPersistentDisk is deprecated. All operations for the in-tree gcePersistentDisk type are redirected to the pd.csi.storage.gke.io CSI driver. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk"
         },
     )
     gitRepo: Optional[V1GitRepoVolumeSource] = field(
         default=None,
         metadata={
-            "description": "gitRepo represents a git repository at a particular revision. DEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container."
+            "description": "gitRepo represents a git repository at a particular revision. Deprecated: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container."
         },
     )
     glusterfs: Optional[V1GlusterfsVolumeSource] = field(
         default=None,
         metadata={
-            "description": "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/glusterfs/README.md"
+            "description": "glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime. Deprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported."
         },
     )
     hostPath: Optional[V1HostPathVolumeSource] = field(
@@ -3029,10 +2699,22 @@ A pod can use both types of ephemeral volumes and persistent volumes at the same
             "description": "hostPath represents a pre-existing file or directory on the host machine that is directly exposed to the container. This is generally used for system agents or other privileged things that are allowed to see the host machine. Most containers will NOT need this. More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath"
         },
     )
+    image: Optional[V1ImageVolumeSource] = field(
+        default=None,
+        metadata={
+            "description": """\
+image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine. The volume is resolved at pod startup depending on which PullPolicy value is provided:
+
+- Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails. - Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present. - IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
+
+The volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation. A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message. The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field. The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images. The volume will be mounted read-only (ro) and non-executable files (noexec). Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33. The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
+"""
+        },
+    )
     iscsi: Optional[V1ISCSIVolumeSource] = field(
         default=None,
         metadata={
-            "description": "iscsi represents an ISCSI Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://examples.k8s.io/volumes/iscsi/README.md"
+            "description": "iscsi represents an ISCSI Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes/#iscsi"
         },
     )
     nfs: Optional[V1NFSVolumeSource] = field(
@@ -3050,13 +2732,13 @@ A pod can use both types of ephemeral volumes and persistent volumes at the same
     photonPersistentDisk: Optional[V1PhotonPersistentDiskVolumeSource] = field(
         default=None,
         metadata={
-            "description": "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine"
+            "description": "photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine. Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported."
         },
     )
     portworxVolume: Optional[V1PortworxVolumeSource] = field(
         default=None,
         metadata={
-            "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine"
+            "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine. Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate is on."
         },
     )
     projected: Optional[V1ProjectedVolumeSource] = field(
@@ -3068,19 +2750,19 @@ A pod can use both types of ephemeral volumes and persistent volumes at the same
     quobyte: Optional[V1QuobyteVolumeSource] = field(
         default=None,
         metadata={
-            "description": "quobyte represents a Quobyte mount on the host that shares a pod's lifetime"
+            "description": "quobyte represents a Quobyte mount on the host that shares a pod's lifetime. Deprecated: Quobyte is deprecated and the in-tree quobyte type is no longer supported."
         },
     )
     rbd: Optional[V1RBDVolumeSource] = field(
         default=None,
         metadata={
-            "description": "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md"
+            "description": "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. Deprecated: RBD is deprecated and the in-tree rbd type is no longer supported."
         },
     )
     scaleIO: Optional[V1ScaleIOVolumeSource] = field(
         default=None,
         metadata={
-            "description": "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes."
+            "description": "scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes. Deprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported."
         },
     )
     secret: Optional[V1SecretVolumeSource] = field(
@@ -3092,13 +2774,13 @@ A pod can use both types of ephemeral volumes and persistent volumes at the same
     storageos: Optional[V1StorageOSVolumeSource] = field(
         default=None,
         metadata={
-            "description": "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes."
+            "description": "storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes. Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported."
         },
     )
     vsphereVolume: Optional[V1VsphereVirtualDiskVolumeSource] = field(
         default=None,
         metadata={
-            "description": "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine"
+            "description": "vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine. Deprecated: VsphereVolume is deprecated. All operations for the in-tree vsphereVolume type are redirected to the csi.vsphere.vmware.com CSI driver."
         },
     )
 
@@ -3153,7 +2835,7 @@ class V1PodSpec:
     hostAliases: Optional[List[V1HostAlias]] = field(
         default=None,
         metadata={
-            "description": "HostAliases is an optional list of hosts and IPs that will be injected into the pod's hosts file if specified. This is only valid for non-hostNetwork pods."
+            "description": "HostAliases is an optional list of hosts and IPs that will be injected into the pod's hosts file if specified."
         },
     )
     hostIPC: Optional[bool] = field(
@@ -3165,7 +2847,7 @@ class V1PodSpec:
     hostNetwork: Optional[bool] = field(
         default=None,
         metadata={
-            "description": "Host networking requested for this pod. Use the host's network namespace. If this option is set, the ports that will be used must be specified. Default to false."
+            "description": "Host networking requested for this pod. Use the host's network namespace. When using HostNetwork you should specify ports so the scheduler is aware. When `hostNetwork` is true, specified `hostPort` fields in port definitions must match `containerPort`, and unspecified `hostPort` fields in port definitions are defaulted to match `containerPort`. Default to false."
         },
     )
     hostPID: Optional[bool] = field(
@@ -3186,6 +2868,16 @@ class V1PodSpec:
             "description": "Specifies the hostname of the Pod If not specified, the pod's hostname will be set to a system-defined value."
         },
     )
+    hostnameOverride: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": """\
+HostnameOverride specifies an explicit override for the pod's hostname as perceived by the pod. This field only specifies the pod's hostname and does not affect its DNS records. When this field is set to a non-empty string: - It takes precedence over the values set in `hostname` and `subdomain`. - The Pod's hostname will be set to this value. - `setHostnameAsFQDN` must be nil or set to false. - `hostNetwork` must be set to false.
+
+This field must be a valid DNS subdomain as defined in RFC 1123 and contain at most 64 characters. Requires the HostnameOverride feature gate to be enabled.
+"""
+        },
+    )
     imagePullSecrets: Optional[List[V1LocalObjectReference]] = field(
         default=None,
         metadata={
@@ -3195,13 +2887,13 @@ class V1PodSpec:
     initContainers: Optional[List[V1Container]] = field(
         default=None,
         metadata={
-            "description": "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
+            "description": "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/"
         },
     )
     nodeName: Optional[str] = field(
         default=None,
         metadata={
-            "description": "NodeName is a request to schedule this pod onto a specific node. If it is non-empty, the scheduler simply schedules this pod onto that node, assuming that it fits resource requirements."
+            "description": "NodeName indicates in which node this pod is scheduled. If empty, this pod is a candidate for scheduling by the scheduler defined in schedulerName. Once this field is set, the kubelet for this node becomes responsible for the lifecycle of this pod. This field should not be used to express a desire for the pod to be scheduled on a specific node. https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodename"
         },
     )
     nodeSelector: Optional[Dict] = field(
@@ -3218,7 +2910,7 @@ Specifies the OS of the containers in the pod. Some pod and container fields are
 
 If the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions
 
-If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup
+If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.resources - spec.securityContext.appArmorProfile - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.securityContext.supplementalGroupsPolicy - spec.containers[*].securityContext.appArmorProfile - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup
 """
         },
     )
@@ -3264,6 +2956,18 @@ This field is immutable.
 """
         },
     )
+    resources: Optional[V1ResourceRequirements] = field(
+        default=None,
+        metadata={
+            "description": """\
+Resources is the total amount of CPU and Memory resources required by all containers in the pod. It supports specifying Requests and Limits for \"cpu\", \"memory\" and \"hugepages-\" resource names only. ResourceClaims are not supported.
+
+This field enables fine-grained control over resource allocation for the entire pod, allowing resource sharing among containers in a pod.
+
+This is an alpha field and requires enabling the PodLevelResources feature gate.
+"""
+        },
+    )
     restartPolicy: Optional[str] = field(
         default=None,
         metadata={
@@ -3289,8 +2993,6 @@ This field is immutable.
 SchedulingGates is an opaque list of values that if specified will block scheduling the pod. If schedulingGates is not empty, the pod will stay in the SchedulingGated state and the scheduler will not attempt to schedule the pod.
 
 SchedulingGates can only be set at pod creation time, and be removed only afterwards.
-
-This is a beta feature enabled by the PodSchedulingReadiness feature gate.
 """
         },
     )
@@ -3303,7 +3005,7 @@ This is a beta feature enabled by the PodSchedulingReadiness feature gate.
     serviceAccount: Optional[str] = field(
         default=None,
         metadata={
-            "description": "DeprecatedServiceAccount is a depreciated alias for ServiceAccountName. Deprecated: Use serviceAccountName instead."
+            "description": "DeprecatedServiceAccount is a deprecated alias for ServiceAccountName. Deprecated: Use serviceAccountName instead."
         },
     )
     serviceAccountName: Optional[str] = field(
@@ -3370,14 +3072,21 @@ class V1PodTemplateSpec:
 
 
 @define(kw_only=True)
+class IntstrIntOrString:
+    IntVal: int = field()
+    StrVal: str = field()
+    Type: int = field()
+
+
+@define(kw_only=True)
 class V1RollingUpdateDaemonSet:
-    maxSurge: Optional[str] = field(
+    maxSurge: Optional[IntstrIntOrString] = field(
         default=None,
         metadata={
-            "description": "The maximum number of nodes with an existing available DaemonSet pod that can have an updated DaemonSet pod during during an update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). This can not be 0 if MaxUnavailable is 0. Absolute number is calculated from percentage by rounding up to a minimum of 1. Default value is 0. Example: when this is set to 30%, at most 30% of the total number of nodes that should be running the daemon pod (i.e. status.desiredNumberScheduled) can have their a new pod created before the old pod is marked as deleted. The update starts by launching new pods on 30% of nodes. Once an updated pod is available (Ready for at least minReadySeconds) the old DaemonSet pod on that node is marked deleted. If the old pod becomes unavailable for any reason (Ready transitions to false, is evicted, or is drained) an updated pod is immediatedly created on that node without considering surge limits. Allowing surge implies the possibility that the resources consumed by the daemonset on any given node can double if the readiness check fails, and so resource intensive daemonsets should take into account that they may cause evictions during disruption."
+            "description": "The maximum number of nodes with an existing available DaemonSet pod that can have an updated DaemonSet pod during during an update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). This can not be 0 if MaxUnavailable is 0. Absolute number is calculated from percentage by rounding up to a minimum of 1. Default value is 0. Example: when this is set to 30%, at most 30% of the total number of nodes that should be running the daemon pod (i.e. status.desiredNumberScheduled) can have their a new pod created before the old pod is marked as deleted. The update starts by launching new pods on 30% of nodes. Once an updated pod is available (Ready for at least minReadySeconds) the old DaemonSet pod on that node is marked deleted. If the old pod becomes unavailable for any reason (Ready transitions to false, is evicted, or is drained) an updated pod is immediately created on that node without considering surge limits. Allowing surge implies the possibility that the resources consumed by the daemonset on any given node can double if the readiness check fails, and so resource intensive daemonsets should take into account that they may cause evictions during disruption."
         },
     )
-    maxUnavailable: Optional[str] = field(
+    maxUnavailable: Optional[IntstrIntOrString] = field(
         default=None,
         metadata={
             "description": "The maximum number of DaemonSet pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of total number of DaemonSet pods at the start of the update (ex: 10%). Absolute number is calculated from percentage by rounding up. This cannot be 0 if MaxSurge is 0 Default value is 1. Example: when this is set to 30%, at most 30% of the total number of nodes that should be running the daemon pod (i.e. status.desiredNumberScheduled) can have their pods stopped for an update at any given time. The update starts by stopping at most 30% of those DaemonSet pods and then brings up new DaemonSet pods in their place. Once the new pods are available, it then proceeds onto other DaemonSet pods, thus ensuring that at least 70% of original number of DaemonSet pods are available at all times during the update."
@@ -3441,7 +3150,7 @@ class V1DaemonSetCondition:
         }
     )
     type: str = field(metadata={"description": "Type of DaemonSet condition."})
-    lastTransitionTime: Optional[str] = field(
+    lastTransitionTime: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "Last time the condition transitioned from one status to another."
@@ -3569,13 +3278,13 @@ class V1ReplicaSetSpec:
     replicas: Optional[int] = field(
         default=None,
         metadata={
-            "description": "Replicas is the number of desired replicas. This is a pointer to distinguish between explicit zero and unspecified. Defaults to 1. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/#what-is-a-replicationcontroller"
+            "description": "Replicas is the number of desired pods. This is a pointer to distinguish between explicit zero and unspecified. Defaults to 1. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset"
         },
     )
     template: Optional[V1PodTemplateSpec] = field(
         default=None,
         metadata={
-            "description": "Template is the object that describes the pod that will be created if insufficient replicas are detected. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template"
+            "description": "Template is the object that describes the pod that will be created if insufficient replicas are detected. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#pod-template"
         },
     )
 
@@ -3588,7 +3297,7 @@ class V1ReplicaSetCondition:
         }
     )
     type: str = field(metadata={"description": "Type of replica set condition."})
-    lastTransitionTime: Optional[str] = field(
+    lastTransitionTime: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "The last time the condition transitioned from one status to another."
@@ -3610,13 +3319,13 @@ class V1ReplicaSetCondition:
 class V1ReplicaSetStatus:
     replicas: int = field(
         metadata={
-            "description": "Replicas is the most recently observed number of replicas. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/#what-is-a-replicationcontroller"
+            "description": "Replicas is the most recently observed number of non-terminating pods. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset"
         }
     )
     availableReplicas: Optional[int] = field(
         default=None,
         metadata={
-            "description": "The number of available replicas (ready for at least minReadySeconds) for this replica set."
+            "description": "The number of available non-terminating pods (ready for at least minReadySeconds) for this replica set."
         },
     )
     conditions: Optional[List[V1ReplicaSetCondition]] = field(
@@ -3628,7 +3337,7 @@ class V1ReplicaSetStatus:
     fullyLabeledReplicas: Optional[int] = field(
         default=None,
         metadata={
-            "description": "The number of pods that have labels matching the labels of the pod template of the replicaset."
+            "description": "The number of non-terminating pods that have labels matching the labels of the pod template of the replicaset."
         },
     )
     observedGeneration: Optional[int] = field(
@@ -3640,7 +3349,17 @@ class V1ReplicaSetStatus:
     readyReplicas: Optional[int] = field(
         default=None,
         metadata={
-            "description": "readyReplicas is the number of pods targeted by this ReplicaSet with a Ready Condition."
+            "description": "The number of non-terminating pods targeted by this ReplicaSet with a Ready Condition."
+        },
+    )
+    terminatingReplicas: Optional[int] = field(
+        default=None,
+        metadata={
+            "description": """\
+The number of terminating pods for this replica set. Terminating pods have a non-null .metadata.deletionTimestamp and have not yet reached the Failed or Succeeded .status.phase.
+
+This is an alpha field. Enable DeploymentReplicaSetTerminatingReplicas to be able to use this field.
+"""
         },
     )
 
@@ -3735,7 +3454,7 @@ class V1StatefulSetPersistentVolumeClaimRetentionPolicy:
 
 @define(kw_only=True)
 class V1RollingUpdateStatefulSetStrategy:
-    maxUnavailable: Optional[str] = field(
+    maxUnavailable: Optional[IntstrIntOrString] = field(
         default=None,
         metadata={
             "description": "The maximum number of pods that can be unavailable during the update. Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%). Absolute number is calculated from percentage by rounding up. This can not be 0. Defaults to 1. This field is alpha-level and is only honored by servers that enable the MaxUnavailableStatefulSet feature. The field applies to all pods in the range 0 to Replicas-1. That means if there is any unavailable pod in the range 0 to Replicas-1, it will be counted towards MaxUnavailable."
@@ -3766,14 +3485,141 @@ class V1StatefulSetUpdateStrategy:
 
 
 @define(kw_only=True)
+class V1TypedLocalObjectReference:
+    apiGroup: str = field(
+        metadata={
+            "description": "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required."
+        }
+    )
+    kind: str = field(
+        metadata={"description": "Kind is the type of resource being referenced"}
+    )
+    name: str = field(
+        metadata={"description": "Name is the name of resource being referenced"}
+    )
+
+
+@define(kw_only=True)
+class V1TypedObjectReference:
+    apiGroup: str = field(
+        metadata={
+            "description": "APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required."
+        }
+    )
+    kind: str = field(
+        metadata={"description": "Kind is the type of resource being referenced"}
+    )
+    name: str = field(
+        metadata={"description": "Name is the name of resource being referenced"}
+    )
+    namespace: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "Namespace is the namespace of resource being referenced Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details. (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled."
+        },
+    )
+
+
+@define(kw_only=True)
+class V1VolumeResourceRequirements:
+    limits: Optional[Dict] = field(
+        default=None,
+        metadata={
+            "description": "Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+        },
+    )
+    requests: Optional[Dict] = field(
+        default=None,
+        metadata={
+            "description": "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+        },
+    )
+
+
+@define(kw_only=True)
+class V1PersistentVolumeClaimSpec:
+    accessModes: Optional[List[str]] = field(
+        default=None,
+        metadata={
+            "description": "accessModes contains the desired access modes the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1"
+        },
+    )
+    dataSource: Optional[V1TypedLocalObjectReference] = field(
+        default=None,
+        metadata={
+            "description": "dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified. If the namespace is specified, then dataSourceRef will not be copied to dataSource."
+        },
+    )
+    dataSourceRef: Optional[V1TypedObjectReference] = field(
+        default=None,
+        metadata={
+            "description": """\
+dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the dataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, when namespace isn't specified in dataSourceRef, both fields (dataSource and dataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. When namespace is specified in dataSourceRef, dataSource isn't set to the same value and must be empty. There are three important differences between dataSource and dataSourceRef: * While dataSource only allows two specific types of objects, dataSourceRef
+  allows any non-core object, as well as PersistentVolumeClaim objects.
+* While dataSource ignores disallowed values (dropping them), dataSourceRef
+  preserves all values, and generates an error if a disallowed value is
+  specified.
+* While dataSource only allows local objects, dataSourceRef allows objects
+  in any namespaces.
+(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled. (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+"""
+        },
+    )
+    resources: Optional[V1VolumeResourceRequirements] = field(
+        default=None,
+        metadata={
+            "description": "resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources"
+        },
+    )
+    selector: Optional[V1LabelSelector] = field(
+        default=None,
+        metadata={
+            "description": "selector is a label query over volumes to consider for binding."
+        },
+    )
+    storageClassName: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "storageClassName is the name of the StorageClass required by the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1"
+        },
+    )
+    volumeAttributesClassName: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim. If specified, the CSI driver will create or update the volume with the attributes defined in the corresponding VolumeAttributesClass. This has a different purpose than storageClassName, it can be changed after the claim is created. An empty string or nil value indicates that no VolumeAttributesClass will be applied to the claim. If the claim enters an Infeasible error state, this field can be reset to its previous value (including nil) to cancel the modification. If the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be set to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource exists. More info: https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/"
+        },
+    )
+    volumeMode: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "volumeMode defines what type of volume is required by the claim. Value of Filesystem is implied when not included in claim spec."
+        },
+    )
+    volumeName: Optional[str] = field(
+        default=None,
+        metadata={
+            "description": "volumeName is the binding reference to the PersistentVolume backing this claim."
+        },
+    )
+
+
+@define(kw_only=True)
 class V1PersistentVolumeClaimCondition:
-    status: str = field()
-    type: str = field()
-    lastProbeTime: Optional[str] = field(
+    status: str = field(
+        metadata={
+            "description": "Status is the status of the condition. Can be True, False, Unknown. More info: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#:~:text=state%20of%20pvc-,conditions.status,-(string)%2C%20required"
+        }
+    )
+    type: str = field(
+        metadata={
+            "description": "Type is the type of the condition. More info: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#:~:text=set%20to%20%27ResizeStarted%27.-,PersistentVolumeClaimCondition,-contains%20details%20about"
+        }
+    )
+    lastProbeTime: Optional[V1Time] = field(
         default=None,
         metadata={"description": "lastProbeTime is the time we probed the condition."},
     )
-    lastTransitionTime: Optional[str] = field(
+    lastTransitionTime: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "lastTransitionTime is the time the condition transitioned from one status to another."
@@ -3788,7 +3634,7 @@ class V1PersistentVolumeClaimCondition:
     reason: Optional[str] = field(
         default=None,
         metadata={
-            "description": 'reason is a unique, this should be a short, machine understandable string that gives the reason for condition\'s last transition. If it reports "ResizeStarted" that means the underlying persistent volume is being resized.'
+            "description": 'reason is a unique, this should be a short, machine understandable string that gives the reason for condition\'s last transition. If it reports "Resizing" that means the underlying persistent volume is being resized.'
         },
     )
 
@@ -3891,19 +3737,19 @@ This is an alpha field and requires enabling RecoverVolumeExpansionFailure featu
     conditions: Optional[List[V1PersistentVolumeClaimCondition]] = field(
         default=None,
         metadata={
-            "description": "conditions is the current Condition of persistent volume claim. If underlying persistent volume is being resized then the Condition will be set to 'ResizeStarted'."
+            "description": "conditions is the current Condition of persistent volume claim. If underlying persistent volume is being resized then the Condition will be set to 'Resizing'."
         },
     )
     currentVolumeAttributesClassName: Optional[str] = field(
         default=None,
         metadata={
-            "description": "currentVolumeAttributesClassName is the current name of the VolumeAttributesClass the PVC is using. When unset, there is no VolumeAttributeClass applied to this PersistentVolumeClaim This is an alpha field and requires enabling VolumeAttributesClass feature."
+            "description": "currentVolumeAttributesClassName is the current name of the VolumeAttributesClass the PVC is using. When unset, there is no VolumeAttributeClass applied to this PersistentVolumeClaim"
         },
     )
     modifyVolumeStatus: Optional[V1ModifyVolumeStatus] = field(
         default=None,
         metadata={
-            "description": "ModifyVolumeStatus represents the status object of ControllerModifyVolume operation. When this is unset, there is no ModifyVolume operation being attempted. This is an alpha field and requires enabling VolumeAttributesClass feature."
+            "description": "ModifyVolumeStatus represents the status object of ControllerModifyVolume operation. When this is unset, there is no ModifyVolume operation being attempted."
         },
     )
     phase: Optional[str] = field(
@@ -3974,7 +3820,7 @@ class V1StatefulSetSpec:
     ordinals: Optional[V1StatefulSetOrdinals] = field(
         default=None,
         metadata={
-            "description": 'ordinals controls the numbering of replica indices in a StatefulSet. The default ordinals behavior assigns a "0" index to the first replica and increments the index by one for each additional replica requested. Using the ordinals field requires the StatefulSetStartOrdinal feature gate to be enabled, which is beta.'
+            "description": 'ordinals controls the numbering of replica indices in a StatefulSet. The default ordinals behavior assigns a "0" index to the first replica and increments the index by one for each additional replica requested.'
         },
     )
     persistentVolumeClaimRetentionPolicy: Optional[
@@ -3982,7 +3828,7 @@ class V1StatefulSetSpec:
     ] = field(
         default=None,
         metadata={
-            "description": "persistentVolumeClaimRetentionPolicy describes the lifecycle of persistent volume claims created from volumeClaimTemplates. By default, all persistent volume claims are created as needed and retained until manually deleted. This policy allows the lifecycle to be altered, for example by deleting persistent volume claims when their stateful set is deleted, or when their pod is scaled down. This requires the StatefulSetAutoDeletePVC feature gate to be enabled, which is alpha.  +optional"
+            "description": "persistentVolumeClaimRetentionPolicy describes the lifecycle of persistent volume claims created from volumeClaimTemplates. By default, all persistent volume claims are created as needed and retained until manually deleted. This policy allows the lifecycle to be altered, for example by deleting persistent volume claims when their stateful set is deleted, or when their pod is scaled down."
         },
     )
     podManagementPolicy: Optional[str] = field(
@@ -4025,7 +3871,7 @@ class V1StatefulSetCondition:
         }
     )
     type: str = field(metadata={"description": "Type of statefulset condition."})
-    lastTransitionTime: Optional[str] = field(
+    lastTransitionTime: Optional[V1Time] = field(
         default=None,
         metadata={
             "description": "Last time the condition transitioned from one status to another."
@@ -4186,7 +4032,7 @@ class V1Config:
 class V1History:
     author: Optional[str] = field(default=None)
     comment: Optional[str] = field(default=None)
-    created: Optional[str] = field(default=None)
+    created: Optional[V1Time] = field(default=None)
     created_by: Optional[str] = field(default=None)
     empty_layer: Optional[bool] = field(default=None)
 
@@ -4211,7 +4057,7 @@ class V1ConfigFile:
     rootfs: V1RootFS = field()
     author: Optional[str] = field(default=None)
     container: Optional[str] = field(default=None)
-    created: Optional[str] = field(default=None)
+    created: Optional[V1Time] = field(default=None)
     docker_version: Optional[str] = field(default=None)
     history: Optional[List[V1History]] = field(default=None)
     os_features: Optional[List[str]] = field(
@@ -4226,6 +4072,12 @@ class V1ConfigFile:
 @define(kw_only=True)
 class V2ImageConfig:
     ConfigFile: V1ConfigFile = field()
+
+
+@define(kw_only=True)
+class ImagesearchResults:
+    entries: List[str] = field()
+    total: int = field()
 
 
 @define(kw_only=True)
@@ -4301,3 +4153,4 @@ class V2RepositoryTags:
     registry: str = field()
     repository: str = field()
     tags: List[str] = field()
+    total: int = field()
