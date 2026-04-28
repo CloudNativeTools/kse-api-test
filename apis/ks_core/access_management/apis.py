@@ -4,8 +4,8 @@ from .models import (
     ApiListResult,
     V1beta1Member,
     ErrorsError,
-    V1beta1SubjectAccessReview,
     V1beta1SubjectAccessReviewSpec,
+    V1beta1SubjectAccessReview,
     V1beta1SubjectAccessReviewStatus,
     V1beta1User,
 )
@@ -21,6 +21,7 @@ __ALL__ = [
     "CreateNamespaceMembersAPI",
     "RemoveNamespaceMemberAPI",
     "UpdateNamespaceMemberAPI",
+    "CreateSelfSubjectAccessReviewAPI",
     "CreateSubjectAccessReviewAPI",
     "ListRoleTemplateOfUserAPI",
     "ListWorkspaceMembersAPI",
@@ -41,6 +42,25 @@ class ListClusterMembersAPI(BaseAPI[ApiListResult]):
         clusterrole: Optional[str] = field(
             default=None, metadata={"description": "specific the cluster role name"}
         )
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="ascending=false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+        fieldSelector: Optional[str] = field(
+            default=None, metadata={"description": "field selector used for filtering"}
+        )
 
     query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ApiListResult] = field(default=ApiListResult)
@@ -49,11 +69,12 @@ class ListClusterMembersAPI(BaseAPI[ApiListResult]):
 
 @define(kw_only=True)
 @router.post("/kapis/iam.kubesphere.io/v1beta1/clustermembers")
-class CreateClusterMembersAPI(BaseAPI):
+class CreateClusterMembersAPI(BaseAPI[V1beta1Member]):
     """None"""
 
     request_body: List[V1beta1Member] = field()
 
+    response: Optional[V1beta1Member] = field(default=V1beta1Member)
     endpoint_id: Optional[str] = field(default="CreateClusterMembers")
 
 
@@ -92,6 +113,7 @@ class UpdateClusterMemberAPI(BaseAPI[ErrorsError]):
     request_body: RequestBodyModel
 
     path_params: PathParams
+    response: Optional[ErrorsError] = field(default=ErrorsError)
     endpoint_id: Optional[str] = field(default="UpdateClusterMember")
 
 
@@ -108,6 +130,25 @@ class ListNamespaceMembersAPI(BaseAPI[ApiListResult]):
     class QueryParams:
         role: Optional[str] = field(
             default=None, metadata={"description": "specific the role name"}
+        )
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="ascending=false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+        fieldSelector: Optional[str] = field(
+            default=None, metadata={"description": "field selector used for filtering"}
         )
 
     path_params: PathParams
@@ -176,6 +217,36 @@ class UpdateNamespaceMemberAPI(BaseAPI[ErrorsError]):
 
 
 @define(kw_only=True)
+@router.post("/kapis/iam.kubesphere.io/v1beta1/selfsubjectaccessreviews")
+class CreateSelfSubjectAccessReviewAPI(BaseAPI[V1beta1SubjectAccessReview]):
+    """Evaluates all current user's request attributes against all policies and allows or denies the request."""
+
+    @define
+    class RequestBodyModel:
+        spec: V1beta1SubjectAccessReviewSpec = field()
+        apiVersion: Optional[str] = field(
+            default=None,
+            metadata={
+                "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+            },
+        )
+        kind: Optional[str] = field(
+            default=None,
+            metadata={
+                "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+            },
+        )
+        status: Optional[V1beta1SubjectAccessReviewStatus] = field(default=None)
+
+    request_body: RequestBodyModel
+
+    response: Optional[V1beta1SubjectAccessReview] = field(
+        default=V1beta1SubjectAccessReview
+    )
+    endpoint_id: Optional[str] = field(default="CreateSelfSubjectAccessReview")
+
+
+@define(kw_only=True)
 @router.post("/kapis/iam.kubesphere.io/v1beta1/subjectaccessreviews")
 class CreateSubjectAccessReviewAPI(BaseAPI[V1beta1SubjectAccessReview]):
     """Evaluates all of the request attributes against all policies and allows or denies the request."""
@@ -221,6 +292,12 @@ class ListRoleTemplateOfUserAPI(BaseAPI[ApiListResult]):
         scope: Optional[str] = field(
             default=None, metadata={"description": "the scope of role templates"}
         )
+        namespace: Optional[str] = field(
+            default=None, metadata={"description": "the namespace of role templates"}
+        )
+        workspace: Optional[str] = field(
+            default=None, metadata={"description": "the workspace of role templates"}
+        )
 
     path_params: PathParams
     query_params: QueryParams = field(factory=QueryParams)
@@ -241,6 +318,25 @@ class ListWorkspaceMembersAPI(BaseAPI[ApiListResult]):
     class QueryParams:
         workspacerole: Optional[str] = field(
             default=None, metadata={"description": "specific the workspace role name"}
+        )
+        name: Optional[str] = field(
+            default=None, metadata={"description": "name used to do filtering"}
+        )
+        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="ascending=false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        sortBy: Optional[str] = field(
+            default=None,
+            metadata={"description": "sort parameters, e.g. orderBy=createTime"},
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector"}
+        )
+        fieldSelector: Optional[str] = field(
+            default=None, metadata={"description": "field selector used for filtering"}
         )
 
     path_params: PathParams

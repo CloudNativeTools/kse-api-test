@@ -1,6 +1,4 @@
 from typing import Optional
-
-from aomaker.core.base_model import ContentType
 from attrs import define, field
 from .models import (
     OauthProviderMetadata,
@@ -11,7 +9,7 @@ from .models import (
     OauthStatus,
     OauthToken,
     JoseJSONWebKeySet,
-    TokenClaims, GenerateTOTPAuthKey,
+    TokenClaims,
 )
 from aomaker.core.api_object import BaseAPIObject as BaseAPI
 from aomaker.core.router import router
@@ -50,14 +48,21 @@ class UnbindTOTPAuthKeyAPI(BaseAPI[ErrorsError]):
     class PathParams:
         user: str = field(metadata={"description": "Username"})
 
+    @define
+    class QueryParams:
+        otp: Optional[str] = field(
+            default=None, metadata={"description": "one-time password"}
+        )
+
     path_params: PathParams
+    query_params: QueryParams = field(factory=QueryParams)
     response: Optional[ErrorsError] = field(default=ErrorsError)
     endpoint_id: Optional[str] = field(default="UnbindTOTPAuthKey")
 
 
 @define(kw_only=True)
 @router.get("/kapis/iam.kubesphere.io/v1beta1/users/{user}/authkey")
-class GenerateTOTPAuthKeyAPI(BaseAPI[GenerateTOTPAuthKey]):
+class GenerateTOTPAuthKeyAPI(BaseAPI[V1beta1User]):
     """None"""
 
     @define
@@ -65,7 +70,7 @@ class GenerateTOTPAuthKeyAPI(BaseAPI[GenerateTOTPAuthKey]):
         user: str = field(metadata={"description": "Username"})
 
     path_params: PathParams
-    response: Optional[GenerateTOTPAuthKey] = field(default=GenerateTOTPAuthKey)
+    response: Optional[V1beta1User] = field(default=V1beta1User)
     endpoint_id: Optional[str] = field(default="GenerateTOTPAuthKey")
 
 
@@ -261,7 +266,7 @@ class OpenidTokenAPI(BaseAPI[OauthToken]):
         code: Optional[str] = field(default=None)
 
     request_body: RequestBodyModel
-    content_type: ContentType = field(default=ContentType.FORM)
+
     response: Optional[OauthToken] = field(default=OauthToken)
     endpoint_id: Optional[str] = field(default="openid-token")
 

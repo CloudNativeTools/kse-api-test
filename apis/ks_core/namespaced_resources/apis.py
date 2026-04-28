@@ -8,6 +8,7 @@ from .models import (
     V1StatefulSet,
     ApiListResult,
     V2ImageConfig,
+    ImagesearchResults,
     OverviewMetricResults,
     V1Secret,
     V1ObjectMeta,
@@ -25,6 +26,7 @@ __ALL__ = [
     "ListNamespacedResourcesAPI",
     "GetNamespacedResourceAPI",
     "GetImageConfigAPI",
+    "SearchImagesAPI",
     "GetNamespaceOverviewAPI",
     "VerifyImageRepositorySecretAPI",
     "GetRepositoryTagsAPI",
@@ -219,6 +221,35 @@ class GetImageConfigAPI(BaseAPI[V2ImageConfig]):
 
 
 @define(kw_only=True)
+@router.get("/kapis/resources.kubesphere.io/v1alpha3/namespaces/{namespace}/images")
+class SearchImagesAPI(BaseAPI[ImagesearchResults]):
+    """None"""
+
+    @define
+    class PathParams:
+        namespace: str = field(metadata={"description": "The specified namespace."})
+
+    @define
+    class QueryParams:
+        q: str = field(
+            metadata={
+                "description": "Search parameter for project and repository name."
+            }
+        )
+        secret: Optional[str] = field(
+            default=None,
+            metadata={
+                "description": "Secret name of the image repository credential, left empty means anonymous fetch."
+            },
+        )
+
+    path_params: PathParams
+    query_params: QueryParams = field(factory=QueryParams)
+    response: Optional[ImagesearchResults] = field(default=ImagesearchResults)
+    endpoint_id: Optional[str] = field(default="SearchImages")
+
+
+@define(kw_only=True)
 @router.get("/kapis/resources.kubesphere.io/v1alpha3/namespaces/{namespace}/metrics")
 class GetNamespaceOverviewAPI(BaseAPI[OverviewMetricResults]):
     """None"""
@@ -317,6 +348,12 @@ class GetRepositoryTagsAPI(BaseAPI[V2RepositoryTags]):
             metadata={
                 "description": "Secret name of the image repository credential, left empty means anonymous fetch."
             },
+        )
+        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        ascending: Optional[str] = field(
+            default="ascending=false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
         )
 
     path_params: PathParams
