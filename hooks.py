@@ -11,9 +11,9 @@ from loguru import logger
 from aomaker.aomaker import hook
 from utils.cluster_helpers import (
     setup_test_environment,
+    setup_test_users,
     get_clusters,
 )
-from testcases.test_api.whizard_alerting.base import prewarm_all_rule_groups
 
 
 @hook
@@ -58,6 +58,9 @@ def before_all():
 
         if success:
             logger.info("测试数据准备完成")
+            logger.info("  → 准备测试用户...")
+            setup_test_users()
+            logger.info("  ✓ 测试用户准备完成")
             workspaces = config.get('workspaces', {})
             projects = config.get('projects', {})
 
@@ -76,14 +79,7 @@ def before_all():
                 logger.info(f"  - Member企业空间: {workspaces.get('member', {}).get('name')}")
                 logger.info(f"  - Member项目: {member_proj.get('name')}")
 
-            logger.info("【并发预热】开始创建标准规则组并等待告警触发...")
-            prewarm_all_rule_groups(
-                host_cluster=host_cluster,
-                test_namespace=test_namespace,
-                member_cluster=member_cluster,
-                test_namespace_member=test_namespace_member
-            )
-            logger.info("告警预热完成")
+            logger.info("测试数据准备完毕")
         else:
             logger.warning("测试数据准备失败，测试用例可能需要自行准备数据")
 
