@@ -115,10 +115,10 @@ class ListNamespacesAPI(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -144,10 +144,10 @@ class ListWorkspacesAPI(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -205,10 +205,10 @@ class ListNamespacesAPI_1(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -252,10 +252,10 @@ class ListWorkspaceTemplatesAPI(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -297,10 +297,10 @@ class UserRelatedClustersAPI(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -326,10 +326,10 @@ class GetPlatformMetricsAPI(BaseAPI[OverviewMetricResults]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -355,10 +355,10 @@ class ListNamespacesAPI_2(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -384,10 +384,10 @@ class ListWorkspacesAPI_1(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -561,10 +561,10 @@ class GetWorkspaceMetricsAPI(BaseAPI[OverviewMetricResults]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -595,10 +595,10 @@ class ListNamespacesWorkspaceAPI(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -928,10 +928,10 @@ class ListNamespacesWorkspaceMemberAPI(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
@@ -958,10 +958,10 @@ class ListWorkspaceTemplatesAPI_1(BaseAPI[ApiListResult]):
         name: Optional[str] = field(
             default=None, metadata={"description": "name used to do filtering"}
         )
-        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+        page: Optional[str] = field(default="1", metadata={"description": "page"})
         limit: Optional[str] = field(default=None, metadata={"description": "limit"})
         ascending: Optional[str] = field(
-            default="ascending=false",
+            default="false",
             metadata={"description": "sort parameters, e.g. reverse=true"},
         )
         sortBy: Optional[str] = field(
