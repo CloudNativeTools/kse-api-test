@@ -30,6 +30,7 @@ __ALL__ = [
     "GetNamespaceOverviewAPI",
     "VerifyImageRepositorySecretAPI",
     "GetRepositoryTagsAPI",
+    "CreateNamespacedDeploymentAPI",
 ]
 
 
@@ -360,3 +361,17 @@ class GetRepositoryTagsAPI(BaseAPI[V2RepositoryTags]):
     query_params: QueryParams = field(factory=QueryParams)
     response: Optional[V2RepositoryTags] = field(default=V2RepositoryTags)
     endpoint_id: Optional[str] = field(default="GetRepositoryTags")
+
+
+@define(kw_only=True)
+@router.post("/apis/apps/v1/namespaces/{namespace}/deployments")
+class CreateNamespacedDeploymentAPI(BaseAPI):
+    """在指定命名空间创建 Deployment"""
+
+    @define
+    class PathParams:
+        namespace: str = field(metadata={"description": "The specified namespace."})
+
+    path_params: PathParams
+    request_body: Dict = field()
+    endpoint_id: Optional[str] = field(default="create-namespaced-deployment")

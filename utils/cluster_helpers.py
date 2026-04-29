@@ -4,12 +4,18 @@
 """
 from loguru import logger
 import time
+import copy
 from apis.ks_core.user_related_resources.apis import (
     ListClustersAPI,
     ListWorkspaceTemplatesAPI_1,
     CreateWorkspaceTemplateAPI,
     CreateNamespaceAPI,
     ListNamespacesWorkspaceAPI,
+)
+from apis.ks_core.cluster_resources.apis import ListClusterNodesAPI
+from apis.ks_core.namespaced_resources.apis import (
+    ListNamespacedResourcesAPI,
+    CreateNamespacedDeploymentAPI,
 )
 from apis.ks_core.user_related_resources.models import (
     V1beta1WorkspaceTemplateSpec,
@@ -717,5 +723,173 @@ def setup_test_users():
     return True
 
 
+def get_cluster_nodes(cluster: str) -> list:
+    """
+    获取指定集群的节点名称列表（排除边缘节点）
 
+    Args:
+        cluster: 集群名称
+
+    Returns:
+        list: 节点名称列表
+    """
+    node_names = []
+    set_current_cluster(cluster)
+    try:
+        api = ListClusterNodesAPI(
+            query_params=ListClusterNodesAPI.QueryParams(
+                sortBy="name",
+                labelSelector="!node-role.kubernetes.io/edge",
+                ascending="true",
+                limit="10",
+                page="1",
+            ),
+            enable_schema_validation=False,
+        )
+        res = api.send()
+        if res.cached_response.raw_response.status_code == 200:
+            data = res.cached_response.raw_response.json()
+            items = data.get("items", [])
+            node_names = [item.get("metadata", {}).get("name", "") for item in items]
+            logger.info(f"集群 {cluster} 获取到 {len(node_names)} 个节点: {node_names}")
+        else:
+            logger.warning(f"获取集群 {cluster} 节点列表失败: {res.cached_response.raw_response.status_code}")
+    except Exception as e:
+        logger.warning(f"获取集群 {cluster} 节点列表异常: {e}")
+    finally:
+        clear_current_cluster()
+    return node_names
+
+
+def ensure_test_deployment(cluster: str, namespace: str, deployment_name: str, deployment_body: dict) -> bool:
+    """
+    在指定集群和命名空间中确保测试 Deployment 存在
+
+    先查询，如不存在则创建
+
+    Args:
+        cluster: 集群名称
+        namespace: 命名空间
+        deployment_name: Deployment 名称
+        deployment_body: Deployment 请求体
+
+    Returns:
+        bool: 是否成功
+    """
+    set_current_cluster(cluster)
+    try:
+        # 先查询 deployment 是否存在
+        list_api = ListNamespacedResourcesAPI(
+            path_params=ListNamespacedResourcesAPI.PathParams(
+                namespace=namespace,
+                resources="deployments",
+            ),
+            query_params=ListNamespacedResourcesAPI.QueryParams(
+                name=deployment_name,
+                limit="10",
+                page="1",
+                sortBy="updateTime",
+            ),
+            enable_schema_validation=False,
+        )
+        res = list_api.send()
+        exists = False
+        if res.cached_response.raw_response.status_code == 200:
+            data = res.cached_response.raw_response.json()
+            items = data.get("items", [])
+            exists = any(item.get("metadata", {}).get("name") == deployment_name for item in items)
+
+        if exists:
+            logger.info(f"集群 {cluster} 命名空间 {namespace} 中 Deployment {deployment_name} 已存在，跳过创建")
+            return True
+
+        logger.info(f"集群 {cluster} 命名空间 {namespace} 中 Deployment {deployment_name} 不存在，将创建...")
+        create_api = CreateNamespacedDeploymentAPI(
+            path_params=CreateNamespacedDeploymentAPI.PathParams(namespace=namespace),
+            request_body=deployment_body,
+            enable_schema_validation=False,
+        )
+        create_res = create_api.send()
+        if create_res.cached_response.raw_response.status_code in (200, 201):
+            logger.info(f"集群 {cluster} 命名空间 {namespace} 中 Deployment {deployment_name} 创建成功")
+            return True
+        else:
+            logger.warning(
+                f"集群 {cluster} 命名空间 {namespace} 中 Deployment {deployment_name} 创建失败: "
+                f"{create_res.cached_response.raw_response.status_code}"
+            )
+            return False
+    except Exception as e:
+        if "already exists" in str(e).lower() or "409" in str(e):
+            logger.info(f"Deployment {deployment_name} 已存在")
+            return True
+        logger.warning(f"创建 Deployment {deployment_name} 异常: {e}")
+        return False
+    finally:
+        clear_current_cluster()
+
+
+def setup_cluster_nodes_and_deployments(host_cluster: str, member_cluster: str = None):
+    """
+    全局数据初始化：获取各集群节点并创建测试 Deployment
+
+    Args:
+        host_cluster: host 集群名称
+        member_cluster: member 集群名称（可选）
+    """
+    # 加载配置
+    config_raw = load_test_data('ks_core', 'test_environment', default={}, replace_vars=False)
+    projects = config_raw.get('projects', {})
+    host_proj = projects.get('host', {})
+    member_proj = projects.get('member', {})
+
+    host_namespace = host_proj.get('name', 'host-pro1-test')
+    member_namespace = member_proj.get('name', 'mem-pro1-test')
+
+    # 获取 host 集群节点
+    if host_cluster:
+        logger.info("获取 Host 集群节点...")
+        host_nodes = get_cluster_nodes(host_cluster)
+        if host_nodes:
+            logger.info(f"Host 集群节点: {host_nodes}")
+
+    # 获取 member 集群节点
+    if member_cluster:
+        logger.info("获取 Member 集群节点...")
+        member_nodes = get_cluster_nodes(member_cluster)
+        if member_nodes:
+            logger.info(f"Member 集群节点: {member_nodes}")
+
+    # 加载全局初始化 deployment 模板
+    init_config = load_test_data(
+        'ks_core', 'namespaced_resources/deployments', 'global_init_deployments', default={}, replace_vars=True
+    )
+    template = init_config.get('template')
+    if not template:
+        logger.warning("未找到全局初始化 Deployment 模板配置")
+        return
+
+    def _build_deployment_body(tpl: dict, namespace: str, app_name: str) -> dict:
+        """基于模板构建具体 Deployment 请求体"""
+        body = copy.deepcopy(tpl)
+        body['metadata']['name'] = app_name
+        body['metadata']['namespace'] = namespace
+        body['metadata']['labels']['app'] = app_name
+        body['spec']['selector']['matchLabels']['app'] = app_name
+        body['spec']['template']['metadata']['labels']['app'] = app_name
+        return body
+
+    # 创建 host 集群测试 deployment
+    if host_cluster:
+        logger.info("创建 Host 集群测试 Deployment...")
+        host_body = _build_deployment_body(template, host_namespace, "host-nginx")
+        ensure_test_deployment(host_cluster, host_namespace, "host-nginx", host_body)
+
+    # 创建 member 集群测试 deployment
+    if member_cluster:
+        logger.info("创建 Member 集群测试 Deployment...")
+        member_body = _build_deployment_body(template, member_namespace, "mem-nginx")
+        ensure_test_deployment(member_cluster, member_namespace, "mem-nginx", member_body)
+
+    logger.info("集群节点和测试 Deployment 初始化完成")
 

@@ -229,6 +229,8 @@ class TestTenantPermissionPlatformRole:
         with UserContext(account["user"], account["pwd"]):
             request_body = global_rule_group_template.copy()
             request_body["metadata"]["name"] = group_name
+            request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
+            request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
             api = HandleCreateGlobalRuleGroupAPI(
                 request_body=request_body,
                 enable_schema_validation=False
@@ -332,6 +334,7 @@ class TestTenantPermissionClusterRole:
             try:
                 request_body = cluster_rule_group_template.copy()
                 request_body["metadata"]["name"] = group_name
+                request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
 
                 api = HandleCreateClusterRuleGroupAPI(
                     path_params=HandleCreateClusterRuleGroupAPI.PathParams(cluster=host_cluster),
@@ -439,6 +442,7 @@ class TestTenantPermissionWorkspaceRole:
                 request_body = namespace_rule_group_template.copy()
                 request_body["metadata"]["name"] = group_name
                 request_body["metadata"]["namespace"] = test_namespace
+                request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
                 request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
 
                 api = HandleCreateRuleGroupAPI(
@@ -561,6 +565,7 @@ class TestTenantPermissionProjectRole:
                 request_body = namespace_rule_group_template.copy()
                 request_body["metadata"]["name"] = group_name
                 request_body["metadata"]["namespace"] = test_namespace
+                request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
                 request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
 
                 api = HandleCreateRuleGroupAPI(
@@ -628,6 +633,7 @@ class TestTenantPermissionProjectRole:
                 request_body = namespace_rule_group_template.copy()
                 request_body["metadata"]["name"] = group_name
                 request_body["metadata"]["namespace"] = test_namespace
+                request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
                 request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
 
                 api = HandleCreateRuleGroupAPI(

@@ -10,6 +10,7 @@ __ALL__ = [
     "ListClusterResourcesAPI",
     "GetClusterResourceAPI",
     "GetClusterOverviewAPI",
+    "ListClusterNodesAPI",
 ]
 
 
@@ -93,3 +94,28 @@ class GetClusterOverviewAPI(BaseAPI[OverviewMetricResults]):
 
     response: Optional[OverviewMetricResults] = field(default=OverviewMetricResults)
     endpoint_id: Optional[str] = field(default="GetClusterOverview")
+
+
+@define(kw_only=True)
+@router.get("/kapis/resources.kubesphere.io/v1alpha3/nodes")
+class ListClusterNodesAPI(BaseAPI[ApiListResult]):
+    """列出集群节点"""
+
+    @define
+    class QueryParams:
+        sortBy: Optional[str] = field(
+            default=None, metadata={"description": "sort parameters, e.g. orderBy=name"}
+        )
+        labelSelector: Optional[str] = field(
+            default=None, metadata={"description": "label selector used for filtering"}
+        )
+        ascending: Optional[str] = field(
+            default="ascending=false",
+            metadata={"description": "sort parameters, e.g. reverse=true"},
+        )
+        limit: Optional[str] = field(default=None, metadata={"description": "limit"})
+        page: Optional[str] = field(default="page=1", metadata={"description": "page"})
+
+    query_params: QueryParams = field(factory=QueryParams)
+    response: Optional[ApiListResult] = field(default=ApiListResult)
+    endpoint_id: Optional[str] = field(default="list-cluster-nodes")

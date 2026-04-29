@@ -44,10 +44,26 @@ def get_variable_value(var_name: str) -> str:
             'date': time.strftime('%Y%m%d'),
         }
         
-        # 尝试从 cache 获取集群信息（如果失败，使用默认值）
+        # 尝试从 cache 获取集群信息（无缓存时实时获取并缓存）
         try:
-            var_mapping['host_cluster'] = cache.get('host_cluster') or 'host'
-            var_mapping['member_cluster'] = cache.get('member_cluster') or ''
+            host_cached = cache.get('host_cluster')
+            if host_cached:
+                var_mapping['host_cluster'] = host_cached
+                var_mapping['member_cluster'] = cache.get('member_cluster') or ''
+            else:
+                # 缓存未命中，实时查询并写入缓存
+                from utils.cluster_helpers import get_clusters
+                host, member = get_clusters()
+                if host:
+                    cache.set('host_cluster', host)
+                    var_mapping['host_cluster'] = host
+                else:
+                    var_mapping['host_cluster'] = 'host'
+                if member:
+                    cache.set('member_cluster', member)
+                    var_mapping['member_cluster'] = member
+                else:
+                    var_mapping['member_cluster'] = ''
         except Exception as e:
             print(f"⚠️ 警告: 获取集群缓存失败，使用默认值: {e}")
             var_mapping['host_cluster'] = 'host'

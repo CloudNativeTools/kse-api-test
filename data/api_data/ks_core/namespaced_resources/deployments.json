@@ -23,5 +23,66 @@
       "desc": "不存在的命名空间",
       "expected_error": "namespace not found"
     }
-  ]
+  ],
+  "global_init_deployments": {
+    "template": {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "labels": {
+          "app": "PLACEHOLDER_APP"
+        },
+        "annotations": {
+          "kubesphere.io/creator": "{{admin_user}}"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "PLACEHOLDER_APP"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "PLACEHOLDER_APP"
+            },
+            "annotations": {
+              "kubesphere.io/imagepullsecrets": "{}",
+              "kubesphere.io/creator": "{{admin_user}}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "container-nginx",
+                "imagePullPolicy": "IfNotPresent",
+                "ports": [
+                  {
+                    "name": "http-0",
+                    "protocol": "TCP",
+                    "containerPort": 80
+                  }
+                ],
+                "image": "nginx:alpine"
+              }
+            ],
+            "serviceAccount": "default",
+            "terminationGracePeriodSeconds": 30,
+            "initContainers": [],
+            "volumes": [],
+            "imagePullSecrets": []
+          }
+        },
+        "strategy": {
+          "type": "RollingUpdate",
+          "rollingUpdate": {
+            "maxUnavailable": "25%",
+            "maxSurge": "25%"
+          }
+        }
+      }
+    }
+  }
 }

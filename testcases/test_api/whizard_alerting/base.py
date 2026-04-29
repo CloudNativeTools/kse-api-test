@@ -545,6 +545,77 @@ def cleanup_namespace_rule_group(cluster: str, namespace: str, group_name: str) 
         return False
 
 
+# ==================== 告警数据动态解析 ====================
+
+def resolve_alerting_data(data: dict, host_cluster: str = None, member_cluster: str = None) -> dict:
+    """
+    解析告警测试数据中的动态占位符
+
+    支持的占位符（字符串形式）：
+    - __DYNAMIC_HOST_NODES__: 替换为 Host 集群节点名称列表
+    - __DYNAMIC_MEMBER_NODES__: 替换为 Member 集群节点名称列表
+
+    Args:
+        data: 从 load_test_data 加载的数据（已变量替换）
+        host_cluster: Host 集群名称
+        member_cluster: Member 集群名称
+
+    Returns:
+        处理后的 dict
+    """
+    import copy
+    from utils.cluster_helpers import get_cluster_nodes
+
+    result = copy.deepcopy(data)
+    _node_cache = {}
+
+    def _get_nodes(cluster):
+        if cluster not in _node_cache:
+            _node_cache[cluster] = get_cluster_nodes(cluster) if cluster else []
+        return _node_cache[cluster]
+
+    def _resolve(obj):
+        if isinstance(obj, dict):
+            for k, v in list(obj.items()):
+                if isinstance(v, str):
+                    if v == "__DYNAMIC_HOST_NODES__":
+                        obj[k] = _get_nodes(host_cluster)
+                    elif v == "__DYNAMIC_MEMBER_NODES__":
+                        obj[k] = _get_nodes(member_cluster)
+                else:
+                    _resolve(v)
+        elif isinstance(obj, list):
+            for i, item in enumerate(list(obj)):
+                if isinstance(item, str):
+                    if item == "__DYNAMIC_HOST_NODES__":
+                        obj[i] = _get_nodes(host_cluster)
+                    elif item == "__DYNAMIC_MEMBER_NODES__":
+                        obj[i] = _get_nodes(member_cluster)
+                else:
+                    _resolve(item)
+
+    _resolve(result)
+    return result
+
+
+def load_alerting_test_data(module_path: str, data_key: str) -> dict:
+    """
+    加载 whizard_alerting 测试数据，自动解析动态占位符
+
+    Args:
+        module_path: 模块路径，如 "alerting_management/global_rule_groups"
+        data_key: 数据键名，如 "global_rule_group_template_node_single"
+
+    Returns:
+        已处理变量替换和动态占位符的数据 dict
+    """
+    from utils.cluster_helpers import get_clusters
+
+    data = load_test_data("whizard_alerting", module_path, data_key, replace_vars=True)
+    host_cluster, member_cluster = get_clusters()
+    return resolve_alerting_data(data, host_cluster=host_cluster, member_cluster=member_cluster)
+
+
 # ==================== 公共工具函数 ====================
 
 def generate_test_name(prefix: str = "test") -> str:
