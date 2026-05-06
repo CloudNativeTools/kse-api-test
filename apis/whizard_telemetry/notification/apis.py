@@ -17,6 +17,8 @@ __ALL__ = [
     "UpdateResourceAPI_1",
     "DeleteResourceAPI_1",
     "PatchResourceAPI_1",
+    "VerifyAPI",
+    "VerifyAPI_1",
 ]
 
 
@@ -336,3 +338,20 @@ class PatchResourceAPI_1(BaseAPI):
 
     path_params: PathParams
     endpoint_id: Optional[str] = field(default="PatchResource")
+
+
+@define(kw_only=True)
+@router.post("/kapis/notification.kubesphere.io/v2beta2/users/{user}/verification")
+class VerifyAPI(BaseAPI):
+    @define
+    class PathParams:
+        user: str = field(metadata={"description": "user name"})
+
+    path_params: PathParams
+    endpoint_id: Optional[str] = field(default="Verify")
+
+
+@define(kw_only=True)
+@router.post("/kapis/notification.kubesphere.io/v2beta2/verification")
+class VerifyAPI_1(BaseAPI):
+    endpoint_id: Optional[str] = field(default="Verify")

@@ -4,16 +4,7 @@ from .models import EventsAPIResponse
 from aomaker.core.api_object import BaseAPIObject as BaseAPI
 from aomaker.core.router import router
 
-__ALL__ = [
-    "QueryEventsAPI",
-    "FieldsAPI",
-    "LabelvaluesAPI",
-    "NamespacesAPI",
-    "PlacementAPI",
-    "QueryAPI",
-    "ResourcesAPI",
-    "StatisticsAPI",
-]
+__ALL__ = ["QueryEventsAPI"]
 
 
 @define(kw_only=True)
@@ -139,75 +130,3 @@ class QueryEventsAPI(BaseAPI[EventsAPIResponse]):
     query_params: QueryParams = field(factory=QueryParams)
     response: Optional[EventsAPIResponse] = field(default=EventsAPIResponse)
     endpoint_id: Optional[str] = field(default="queryEvents")
-
-
-@define(kw_only=True)
-@router.get("/kapis/logging.wiztelemetry.io/v2alpha1/events/fields")
-class FieldsAPI(BaseAPI):
-    """None"""
-
-    endpoint_id: Optional[str] = field(default="fields")
-
-
-@define(kw_only=True)
-@router.get("/kapis/logging.wiztelemetry.io/v2alpha1/events/labelvalues")
-class LabelvaluesAPI(BaseAPI):
-    """None"""
-
-    @define
-    class QueryParams:
-        cluster: Optional[str] = field(default=None)
-
-    query_params: QueryParams = field(factory=QueryParams)
-    endpoint_id: Optional[str] = field(default="labelvalues")
-
-
-@define(kw_only=True)
-@router.get("/kapis/logging.wiztelemetry.io/v2alpha1/events/namespaces")
-class NamespacesAPI(BaseAPI):
-    """None"""
-
-    @define
-    class QueryParams:
-        cluster: str = field()
-
-    query_params: QueryParams = field(factory=QueryParams)
-    endpoint_id: Optional[str] = field(default="namespaces")
-
-
-@define(kw_only=True)
-@router.get("/kapis/logging.wiztelemetry.io/v2alpha1/events/placement")
-class PlacementAPI(BaseAPI):
-    """None"""
-
-    endpoint_id: Optional[str] = field(default="placement")
-
-
-@define(kw_only=True)
-@router.post("/kapis/logging.wiztelemetry.io/v2alpha1/events/query")
-class QueryAPI(BaseAPI):
-    """None"""
-
-    endpoint_id: Optional[str] = field(default="query")
-
-
-@define(kw_only=True)
-@router.get("/kapis/logging.wiztelemetry.io/v2alpha1/events/resources")
-class ResourcesAPI(BaseAPI):
-    """None"""
-
-    @define
-    class QueryParams:
-        cluster: str = field()
-        namespace: str = field()
-
-    query_params: QueryParams = field(factory=QueryParams)
-    endpoint_id: Optional[str] = field(default="resources")
-
-
-@define(kw_only=True)
-@router.post("/kapis/logging.wiztelemetry.io/v2alpha1/events/statistics")
-class StatisticsAPI(BaseAPI):
-    """None"""
-
-    endpoint_id: Optional[str] = field(default="statistics")

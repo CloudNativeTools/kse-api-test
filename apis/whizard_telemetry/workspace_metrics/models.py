@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, List, Dict
+from typing import Optional, Dict, List
 from attrs import define, field
 
 __ALL__ = [
