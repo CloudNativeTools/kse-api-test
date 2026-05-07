@@ -53,6 +53,16 @@ def clusters():
 
 
 @pytest.fixture(scope="session")
+def test_workspace():
+    """
+    获取 Host 集群测试企业空间
+    使用 hooks.py 创建的企业空间 ws-host-test
+    """
+    test_env = load_test_data("ks_core", "test_environment")
+    return test_env.get("workspaces", {}).get("host", {}).get("name", "ws-host-test")
+
+
+@pytest.fixture(scope="session")
 def test_namespace():
     """
     获取 Host 集群测试命名空间
@@ -60,6 +70,20 @@ def test_namespace():
     """
     test_env = load_test_data("ks_core", "test_environment")
     return test_env.get("projects", {}).get("host", {}).get("name", "host-pro1-test")
+
+
+@pytest.fixture(scope="session")
+def test_workspace_member():
+    """
+    获取 Member 集群测试企业空间
+    使用 hooks.py 创建的企业空间 ws-member-test
+    单集群环境返回 None
+    """
+    host, member = get_clusters()
+    if not member:
+        return None
+    test_env = load_test_data("ks_core", "test_environment")
+    return test_env.get("workspaces", {}).get("member", {}).get("name", "ws-member-test")
 
 
 @pytest.fixture(scope="session")
