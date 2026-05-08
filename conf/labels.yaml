@@ -23,6 +23,9 @@ modules:
   whizard_logs:
     description: "whizard-logs 日志管理模块"
 
+  whizard_auditing:
+    description: "whizard-auditing 审计管理模块"
+
   notification:
     description: "通知管理模块"
 
@@ -60,3 +63,4 @@ markers:
   alerting_scene: "告警场景测试"
   whizard_events_scene: "事件场景测试"
   whizard_logs_scene: "日志场景测试"
+  whizard_auditing_scene: "审计场景测试"

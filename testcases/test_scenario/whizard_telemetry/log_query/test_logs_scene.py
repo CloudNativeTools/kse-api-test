@@ -162,8 +162,6 @@ class TestLogsMultiClusterComparison:
         res = query_logs_statistics(cluster=member_cluster)
         status, text = get_http_info(res)
         assert status == 200, f"Member 集群统计查询失败: {status}, {text}"
-        member_data = res.cached_response.raw_response.json()
-        self.member_logs = member_data["statistics"].get("logs", 0)
 
     def test_02_member_histogram(self, member_cluster):
         """Member 集群 - 日志直方图"""
