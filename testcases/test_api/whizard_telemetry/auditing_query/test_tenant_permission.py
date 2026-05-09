@@ -1,0 +1,251 @@
+# -*- coding:utf-8 -*-
+"""
+whizard-auditing 租户侧权限测试
+验证不同角色对审计查询 API 的访问权限
+
+测试策略：
+1. 平台级角色 - pl-admin 有权访问，pl-regular 无企业空间无权访问
+2. 集群级角色 - cluster-admin/cluster-viewer 均可读取
+3. 企业空间级角色 - ws-admin/ws-viewer 均可读取
+4. 项目级角色 - pro-admin/pro-operator/pro-viewer 均可读取
+"""
+import pytest
+
+from utils.test_data_helper import load_test_data
+from utils.user_switch_helper import UserContext
+
+from testcases.test_api.whizard_telemetry.auditing_query.base import (
+    query_auditing_statistics,
+    query_auditing_histogram,
+    query_auditing,
+)
+
+ACCOUNTS = load_test_data("_common", "permission_accounts")
+
+
+# ==================== 平台级角色 ====================
+
+@pytest.mark.whizard_auditing
+@pytest.mark.tenant_permission
+class TestTenantPermissionPlatformRole:
+    """平台级角色权限验证"""
+
+    def test_pl_admin_query_auditing_statistics(self):
+        """pl-admin 可查询审计统计"""
+        account = ACCOUNTS["pl_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pl_admin_query_auditing_histogram(self):
+        """pl-admin 可查询审计直方图"""
+        account = ACCOUNTS["pl_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pl_admin_query_auditing(self):
+        """pl-admin 可查询审计列表"""
+        account = ACCOUNTS["pl_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pl_regular_no_access_statistics(self):
+        """pl-regular 无企业空间，不可见审计数据"""
+        account = ACCOUNTS["pl_regular"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+            data = res.cached_response.raw_response.json()
+            assert data["statistics"]["events"] == 0
+            assert data["statistics"]["resources"] == 0
+
+    def test_pl_regular_no_access_histogram(self):
+        """pl-regular 无企业空间，不可见审计直方图数据"""
+        account = ACCOUNTS["pl_regular"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+            data = res.cached_response.raw_response.json()
+            assert data["histogram"]["total"] == 0
+
+    def test_pl_regular_no_access_query(self):
+        """pl-regular 无企业空间，不可见审计列表数据"""
+        account = ACCOUNTS["pl_regular"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+            data = res.cached_response.raw_response.json()
+            assert data["query"]["total"] == 0
+
+
+# ==================== 集群级角色 ====================
+
+@pytest.mark.whizard_auditing
+@pytest.mark.tenant_permission
+class TestTenantPermissionClusterRole:
+    """集群级角色权限验证"""
+
+    def test_cluster_admin_query_statistics(self):
+        """cluster-admin 可查询审计统计"""
+        account = ACCOUNTS["cluster_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_cluster_admin_query_histogram(self):
+        """cluster-admin 可查询审计直方图"""
+        account = ACCOUNTS["cluster_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_cluster_admin_query_auditing(self):
+        """cluster-admin 可查询审计列表"""
+        account = ACCOUNTS["cluster_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_cluster_viewer_query_statistics(self):
+        """cluster-viewer 可查询审计统计"""
+        account = ACCOUNTS["cluster_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_cluster_viewer_query_histogram(self):
+        """cluster-viewer 可查询审计直方图"""
+        account = ACCOUNTS["cluster_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_cluster_viewer_query_auditing(self):
+        """cluster-viewer 可查询审计列表"""
+        account = ACCOUNTS["cluster_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+
+
+# ==================== 企业空间级角色 ====================
+
+@pytest.mark.whizard_auditing
+@pytest.mark.tenant_permission
+class TestTenantPermissionWorkspaceRole:
+    """企业空间级角色权限验证"""
+
+    def test_ws_admin_query_statistics(self):
+        """ws-admin 可查询审计统计"""
+        account = ACCOUNTS["ws_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_ws_admin_query_histogram(self):
+        """ws-admin 可查询审计直方图"""
+        account = ACCOUNTS["ws_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_ws_admin_query_auditing(self):
+        """ws-admin 可查询审计列表"""
+        account = ACCOUNTS["ws_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_ws_viewer_query_statistics(self):
+        """ws-viewer 可查询审计统计"""
+        account = ACCOUNTS["ws_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_ws_viewer_query_histogram(self):
+        """ws-viewer 可查询审计直方图"""
+        account = ACCOUNTS["ws_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_ws_viewer_query_auditing(self):
+        """ws-viewer 可查询审计列表"""
+        account = ACCOUNTS["ws_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+
+
+# ==================== 项目级角色 ====================
+
+@pytest.mark.whizard_auditing
+@pytest.mark.tenant_permission
+class TestTenantPermissionProjectRole:
+    """项目级角色权限验证"""
+
+    def test_pro_admin_query_statistics(self):
+        """pro-admin 可查询审计统计"""
+        account = ACCOUNTS["pro_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_admin_query_histogram(self):
+        """pro-admin 可查询审计直方图"""
+        account = ACCOUNTS["pro_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_admin_query_auditing(self):
+        """pro-admin 可查询审计列表"""
+        account = ACCOUNTS["pro_admin"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_operator_query_statistics(self):
+        """pro-operator 可查询审计统计"""
+        account = ACCOUNTS["pro_operator"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_operator_query_histogram(self):
+        """pro-operator 可查询审计直方图"""
+        account = ACCOUNTS["pro_operator"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_operator_query_auditing(self):
+        """pro-operator 可查询审计列表"""
+        account = ACCOUNTS["pro_operator"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_viewer_query_statistics(self):
+        """pro-viewer 可查询审计统计"""
+        account = ACCOUNTS["pro_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_statistics()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_viewer_query_histogram(self):
+        """pro-viewer 可查询审计直方图"""
+        account = ACCOUNTS["pro_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing_histogram()
+            assert res.cached_response.raw_response.status_code == 200
+
+    def test_pro_viewer_query_auditing(self):
+        """pro-viewer 可查询审计列表"""
+        account = ACCOUNTS["pro_viewer"]
+        with UserContext(account["user"], account["pwd"]):
+            res = query_auditing()
+            assert res.cached_response.raw_response.status_code == 200

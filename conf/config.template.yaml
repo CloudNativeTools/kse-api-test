@@ -1,4 +1,15 @@
 env: test
+notification:
+  email:
+    auth_password_base64: "<base64-of-your-email-password>"
+    smart_host: "<your-smtp-host>"
+    auth_username: "<your-email-username>"
+    from: "<your-sender-email>"
+  feishu:
+    app_id: "<your-feishu-app-id>"
+    app_secret: "<your-feishu-app-secret>"
+    app_key_base64: "<base64-of-your-feishu-app-id>"
+    app_secret_base64: "<base64-of-your-feishu-app-secret>"
 mock:
   base_url: http://127.0.0.1:9999
   account:

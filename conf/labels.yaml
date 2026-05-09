@@ -17,8 +17,14 @@ modules:
   whizard_monitoring:
     description: "whizard-monitoring 监控管理模块"
 
-  whizard_logging:
-    description: "whizard-logging 日志管理模块"
+  whizard_events:
+    description: "whizard-events 事件管理模块"
+
+  whizard_logs:
+    description: "whizard-logs 日志管理模块"
+
+  whizard_auditing:
+    description: "whizard-auditing 审计管理模块"
 
   notification:
     description: "通知管理模块"
@@ -55,3 +61,6 @@ modules:
 markers:
   multi_cluster: "多集群用例 - Member 集群验证"
   alerting_scene: "告警场景测试"
+  whizard_events_scene: "事件场景测试"
+  whizard_logs_scene: "日志场景测试"
+  whizard_auditing_scene: "审计场景测试"

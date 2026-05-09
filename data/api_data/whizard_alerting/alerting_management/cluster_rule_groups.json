@@ -21,7 +21,7 @@
           },
           "exprBuilder": {
             "node": {
-              "names": ["node3", "node2", "node1"],
+              "names": "__DYNAMIC_HOST_NODES__",
               "metricThreshold": {
                 "memory": {
                   "utilization": 0.15

@@ -28,6 +28,7 @@ from testcases.test_api.whizard_alerting.base import (
     build_patch_body_for_alias_desc,
     build_update_body_for_rules_annotations,
     build_rule_group_body,
+    load_alerting_test_data,
 )
 from utils.test_data_helper import load_test_data
 from utils.cluster_helpers import get_clusters
@@ -75,8 +76,8 @@ class TestCreateGlobalRuleGroup:
         """
         group_name = generate_test_name("global-node-single")
 
-        request_body = load_test_data(
-            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_node_single"
+        request_body = load_alerting_test_data(
+            "alerting_management/global_rule_groups", "global_rule_group_template_node_single"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name
@@ -109,8 +110,8 @@ class TestCreateGlobalRuleGroup:
 
         group_name = generate_test_name("global-node-multi")
 
-        request_body = load_test_data(
-            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_node_multi"
+        request_body = load_alerting_test_data(
+            "alerting_management/global_rule_groups", "global_rule_group_template_node_multi"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name
@@ -139,8 +140,8 @@ class TestCreateGlobalRuleGroup:
         """
         group_name = generate_test_name("global-workload-single")
 
-        request_body = load_test_data(
-            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_workload_single"
+        request_body = load_alerting_test_data(
+            "alerting_management/global_rule_groups", "global_rule_group_template_workload_single"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name
@@ -173,8 +174,8 @@ class TestCreateGlobalRuleGroup:
 
         group_name = generate_test_name("global-workload-multi")
 
-        request_body = load_test_data(
-            "whizard_alerting", "alerting_management/global_rule_groups", "global_rule_group_template_workload_multi"
+        request_body = load_alerting_test_data(
+            "alerting_management/global_rule_groups", "global_rule_group_template_workload_multi"
         )
         request_body["metadata"]["name"] = group_name
         request_body["spec"]["rules"][0]["alert"] = group_name

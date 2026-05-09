@@ -1,0 +1,102 @@
+{
+  "create_feishu_config": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Config",
+    "metadata": {
+      "name": "default-feishu-config",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "feishu": {
+        "appID": {
+          "valueFrom": {
+            "secretKeyRef": {
+              "key": "appkey",
+              "name": "global-feishu-config-secret"
+            }
+          }
+        },
+        "appSecret": {
+          "valueFrom": {
+            "secretKeyRef": {
+              "key": "appsecret",
+              "name": "global-feishu-config-secret"
+            }
+          }
+        }
+      }
+    }
+  },
+  "create_feishu_receiver": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Receiver",
+    "metadata": {
+      "name": "global-feishu-receiver",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "feishu": {
+        "user": ["43gacfe8"],
+        "enabled": true
+      }
+    }
+  },
+  "verify_feishu_body": {
+    "config": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Config",
+      "metadata": {
+        "name": "test-user-config",
+        "labels": {
+          "app": "notification-manager",
+          "type": "default"
+        }
+      },
+      "spec": {
+        "feishu": {
+          "appID": {
+            "value": "{{feishu_app_id}}"
+          },
+          "appSecret": {
+            "value": "{{feishu_app_secret}}"
+          }
+        }
+      }
+    },
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "test-user-receiver",
+        "labels": {
+          "app": "notification-manager",
+          "type": "global"
+        }
+      },
+      "spec": {
+        "feishu": {
+          "user": ["43gacfe8"]
+        }
+      }
+    }
+  },
+  "create_feishu_secret": {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": "global-feishu-config-secret",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "type": "Opaque",
+    "data": {
+      "appkey": "{{feishu_app_key_base64}}",
+      "appsecret": "{{feishu_app_secret_base64}}"
+    }
+  }
+}

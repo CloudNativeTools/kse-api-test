@@ -1,0 +1,44 @@
+{
+  "create_email_config": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Config",
+    "metadata": {
+      "name": "default-email-config",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "email": {
+        "smartHost": {
+          "port": 465,
+          "host": "smtp.yunify.com"
+        },
+        "authUsername": "qiaoshilu@yunify.com",
+        "from": "514060057@qq.com",
+        "authPassword": {
+          "valueFrom": {
+            "secretKeyRef": {
+              "key": "authPassword",
+              "name": "global-email-config-secret"
+            }
+          }
+        }
+      }
+    }
+  },
+  "create_email_secret": {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": "global-email-config-secret",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "type": "Opaque",
+    "data": {
+      "authPassword": "{{email_auth_password_base64}}"
+    }
+  }
+}

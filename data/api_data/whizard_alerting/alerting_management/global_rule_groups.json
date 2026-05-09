@@ -29,8 +29,8 @@
             "node": {
               "names": [
                 {
-                  "cluster": "host",
-                  "names": ["node3", "node2", "node1"]
+                  "cluster": "{{host_cluster}}",
+                  "names": "__DYNAMIC_HOST_NODES__"
                 }
               ],
               "metricThreshold": {
@@ -78,12 +78,12 @@
             "node": {
               "names": [
                 {
-                  "cluster": "host",
-                  "names": ["node3", "node2", "node1"]
+                  "cluster": "{{host_cluster}}",
+                  "names": "__DYNAMIC_HOST_NODES__"
                 },
                 {
-                  "cluster": "member-cluster",
-                  "names": ["node1"]
+                  "cluster": "{{member_cluster}}",
+                  "names": "__DYNAMIC_MEMBER_NODES__"
                 }
               ],
               "metricThreshold": {
@@ -128,15 +128,15 @@
             "message": ""
           },
           "namespaceSelector": {
-            "inValues": ["host-pro1-test"]
+            "inValues": ["{{projects.host.name}}"]
           },
           "expr": "",
           "exprBuilder": {
             "workload": {
               "names": [
                 {
-                  "cluster": "host",
-                  "namespace": "host-pro1-test",
+                  "cluster": "{{host_cluster}}",
+                  "namespace": "{{projects.host.name}}",
                   "names": ["host-nginx"]
                 }
               ],
@@ -183,20 +183,20 @@
             "message": ""
           },
           "namespaceSelector": {
-            "inValues": ["mem-pro1-test", "host-pro1-test"]
+            "inValues": ["{{projects.member.name}}", "{{projects.host.name}}"]
           },
           "expr": "",
           "exprBuilder": {
             "workload": {
               "names": [
                 {
-                  "cluster": "member-cluster",
-                  "namespace": "mem-pro1-test",
+                  "cluster": "{{member_cluster}}",
+                  "namespace": "{{projects.member.name}}",
                   "names": ["mem-nginx"]
                 },
                 {
-                  "cluster": "host",
-                  "namespace": "host-pro1-test",
+                  "cluster": "{{host_cluster}}",
+                  "namespace": "{{projects.host.name}}",
                   "names": ["host-nginx"]
                 }
               ],

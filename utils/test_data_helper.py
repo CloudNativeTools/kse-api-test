@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, List, Dict, Union
 
 from aomaker.storage import cache
+from aomaker.config_handlers import ReadConfig
 
 
 def generate_random_string(length: int = 8) -> str:
@@ -44,10 +45,26 @@ def get_variable_value(var_name: str) -> str:
             'date': time.strftime('%Y%m%d'),
         }
         
-        # 尝试从 cache 获取集群信息（如果失败，使用默认值）
+        # 尝试从 cache 获取集群信息（无缓存时实时获取并缓存）
         try:
-            var_mapping['host_cluster'] = cache.get('host_cluster') or 'host'
-            var_mapping['member_cluster'] = cache.get('member_cluster') or ''
+            host_cached = cache.get('host_cluster')
+            if host_cached:
+                var_mapping['host_cluster'] = host_cached
+                var_mapping['member_cluster'] = cache.get('member_cluster') or ''
+            else:
+                # 缓存未命中，实时查询并写入缓存
+                from utils.cluster_helpers import get_clusters
+                host, member = get_clusters()
+                if host:
+                    cache.set('host_cluster', host)
+                    var_mapping['host_cluster'] = host
+                else:
+                    var_mapping['host_cluster'] = 'host'
+                if member:
+                    cache.set('member_cluster', member)
+                    var_mapping['member_cluster'] = member
+                else:
+                    var_mapping['member_cluster'] = ''
         except Exception as e:
             print(f"⚠️ 警告: 获取集群缓存失败，使用默认值: {e}")
             var_mapping['host_cluster'] = 'host'
@@ -64,6 +81,21 @@ def get_variable_value(var_name: str) -> str:
             var_mapping['admin_password'] = 'admin'
             var_mapping['test_user'] = 'test_user'
         
+        # 从 config.yaml 读取 notification 敏感配置
+        try:
+            yaml_config = ReadConfig().conf
+            notification = yaml_config.get('notification') if yaml_config else None
+            if notification:
+                email = notification.get('email') or {}
+                feishu = notification.get('feishu') or {}
+                var_mapping['email_auth_password_base64'] = email.get('auth_password_base64', '')
+                var_mapping['feishu_app_key_base64'] = feishu.get('app_key_base64', '')
+                var_mapping['feishu_app_secret_base64'] = feishu.get('app_secret_base64', '')
+                var_mapping['feishu_app_id'] = feishu.get('app_id', '')
+                var_mapping['feishu_app_secret'] = feishu.get('app_secret', '')
+        except Exception as e:
+            print(f"⚠️ 警告: 获取 notification 配置失败: {e}")
+
         # 处理嵌套变量，如 workspaces.host.name
         if '.' in var_name:
             parts = var_name.split('.')

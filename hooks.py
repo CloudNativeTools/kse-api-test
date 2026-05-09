@@ -13,6 +13,7 @@ from utils.cluster_helpers import (
     setup_test_environment,
     setup_test_users,
     get_clusters,
+    setup_cluster_nodes_and_deployments,
 )
 
 
@@ -48,6 +49,12 @@ def before_all():
             logger.warning("无法获取Host集群信息，跳过数据初始化")
             return
 
+        # 缓存集群名称供变量替换使用
+        from aomaker.storage import cache
+        cache.set('host_cluster', host_cluster)
+        if member_cluster:
+            cache.set('member_cluster', member_cluster)
+
         logger.info(f"集群信息获取成功")
         logger.info(f"  - Host集群: {host_cluster}")
         logger.info(f"  - Member集群: {member_cluster or '无'}")
@@ -78,6 +85,13 @@ def before_all():
                 test_namespace_member = member_proj.get('name', 'mem-pro1-test')
                 logger.info(f"  - Member企业空间: {workspaces.get('member', {}).get('name')}")
                 logger.info(f"  - Member项目: {member_proj.get('name')}")
+
+            logger.info("  → 获取集群节点并创建测试 Deployment...")
+            setup_cluster_nodes_and_deployments(
+                host_cluster=host_cluster,
+                member_cluster=member_cluster,
+            )
+            logger.info("  ✓ 集群节点和测试 Deployment 准备完成")
 
             logger.info("测试数据准备完毕")
         else:

@@ -1,0 +1,75 @@
+{
+  "time_ranges": {
+    "last_1h": {
+      "start_time": "{{timestamp_last_1h}}",
+      "end_time": "{{timestamp}}"
+    },
+    "last_3h": {
+      "start_time": "{{timestamp_last_3h}}",
+      "end_time": "{{timestamp}}"
+    },
+    "last_6h": {
+      "start_time": "{{timestamp_last_6h}}",
+      "end_time": "{{timestamp}}"
+    }
+  },
+  "filters": {
+    "namespace_filter": {
+      "namespaces": "{{projects.host.name}}"
+    },
+    "namespace_search": {
+      "namespace_query": "kube"
+    },
+    "workload_filter": {
+      "workloads": "host-nginx"
+    },
+    "pod_filter": {
+      "pods": "host-nginx"
+    },
+    "container_filter": {
+      "containers": "nginx"
+    },
+    "log_query": {
+      "log_query": "INFO"
+    },
+    "pod_search": {
+      "pod_query": "nginx"
+    },
+    "container_search": {
+      "container_query": "nginx"
+    }
+  },
+  "pagination": {
+    "page_1": {
+      "from": 0,
+      "size": 5
+    },
+    "page_2": {
+      "from": 5,
+      "size": 5
+    }
+  },
+  "histogram": {
+    "interval_30m": {
+      "interval": "30m"
+    },
+    "interval_1h": {
+      "interval": "1h"
+    }
+  },
+  "invalid_params": {
+    "missing_time_range": {},
+    "invalid_interval": {
+      "operation": "histogram",
+      "interval": "invalid"
+    },
+    "negative_from": {
+      "operation": "query",
+      "from": -1
+    },
+    "zero_size": {
+      "operation": "query",
+      "size": 0
+    }
+  }
+}

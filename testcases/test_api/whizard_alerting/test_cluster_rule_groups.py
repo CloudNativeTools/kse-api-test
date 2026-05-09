@@ -26,6 +26,7 @@ from testcases.test_api.whizard_alerting.base import (
     generate_test_name,
     build_patch_body_for_alias_desc,
     build_update_body_for_rules_annotations,
+    load_alerting_test_data,
 )
 from utils.test_data_helper import load_test_data
 from utils.cluster_helpers import set_current_cluster, clear_current_cluster
@@ -73,8 +74,8 @@ class TestCreateClusterRuleGroup:
 
         set_current_cluster(host_cluster)
         try:
-            request_body = load_test_data(
-                "whizard_alerting", "alerting_management/cluster_rule_groups", "cluster_rule_group_template"
+            request_body = load_alerting_test_data(
+                "alerting_management/cluster_rule_groups", "cluster_rule_group_template"
             )
             request_body["metadata"]["name"] = group_name
 
