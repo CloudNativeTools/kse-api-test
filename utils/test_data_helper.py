@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, List, Dict, Union
 
 from aomaker.storage import cache
+from aomaker.config_handlers import ReadConfig
 
 
 def generate_random_string(length: int = 8) -> str:
@@ -80,6 +81,21 @@ def get_variable_value(var_name: str) -> str:
             var_mapping['admin_password'] = 'admin'
             var_mapping['test_user'] = 'test_user'
         
+        # 从 config.yaml 读取 notification 敏感配置
+        try:
+            yaml_config = ReadConfig().conf
+            notification = yaml_config.get('notification') if yaml_config else None
+            if notification:
+                email = notification.get('email') or {}
+                feishu = notification.get('feishu') or {}
+                var_mapping['email_auth_password_base64'] = email.get('auth_password_base64', '')
+                var_mapping['feishu_app_key_base64'] = feishu.get('app_key_base64', '')
+                var_mapping['feishu_app_secret_base64'] = feishu.get('app_secret_base64', '')
+                var_mapping['feishu_app_id'] = feishu.get('app_id', '')
+                var_mapping['feishu_app_secret'] = feishu.get('app_secret', '')
+        except Exception as e:
+            print(f"⚠️ 警告: 获取 notification 配置失败: {e}")
+
         # 处理嵌套变量，如 workspaces.host.name
         if '.' in var_name:
             parts = var_name.split('.')

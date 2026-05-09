@@ -59,10 +59,10 @@
       "spec": {
         "feishu": {
           "appID": {
-            "value": "cli_a7727d787473900c"
+            "value": "{{feishu_app_id}}"
           },
           "appSecret": {
-            "value": "2HcZZAJA1vDES96C0jc7vdAbrD6tJI83"
+            "value": "{{feishu_app_secret}}"
           }
         }
       }
@@ -95,8 +95,8 @@
     },
     "type": "Opaque",
     "data": {
-      "appkey": "Y2xpX2E3NzI3ZDc4NzQ3MzkwMGM=",
-      "appsecret": "MkhjWlpBSkExdkRFUzk2QzBqYzd2ZEFickQ2dEpJODM="
+      "appkey": "{{feishu_app_key_base64}}",
+      "appsecret": "{{feishu_app_secret_base64}}"
     }
   }
 }
