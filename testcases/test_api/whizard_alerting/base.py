@@ -695,17 +695,10 @@ def build_rule_group_body(
     Returns:
         处理后的请求体
     """
-    import copy
+    from utils.api_helpers import clean_api_response
 
-    body = copy.deepcopy(current_data)
-
+    body = clean_api_response(current_data, remove_resource_version=remove_resource_version)
     metadata = body.get("metadata", {})
-    metadata.pop("uid", None)
-    metadata.pop("generation", None)
-    metadata.pop("managedFields", None)
-    if remove_resource_version:
-        metadata.pop("resourceVersion", None)
-    body.pop("status", None)
 
     if target == "metadata":
         if "annotations" not in metadata:
