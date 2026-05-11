@@ -27,6 +27,8 @@ DINGTALK_SECRET_NAME = "global-dingtalk-config-secret"
 WECHAT_CONFIG_NAME = "default-wechat-config"
 WECHAT_RECEIVER_NAME = "global-wechat-receiver"
 WECHAT_SECRET_NAME = "global-wechat-config-secret"
+WEBHOOK_RECEIVER_NAME = "global-webhook-receiver"
+WEBHOOK_SECRET_NAME = "global-webhook-config-secret"
 
 
 def build_update_body(current_data: dict, remove_resource_version: bool = True) -> dict:
@@ -355,4 +357,47 @@ def get_for_test_wechat_receiver() -> bool:
 
     except Exception as e:
         logger.warning(f"get_for_test_wechat_receiver failed: {e}")
+        return False
+
+
+def get_for_test_webhook_secret() -> bool:
+    """
+    确保 webhook secret 存在
+    """
+    return _ensure_secret_exists(WEBHOOK_SECRET_NAME, "notification/webhook_config", "create_webhook_secret")
+
+
+def get_for_test_webhook_receiver() -> bool:
+    """
+    确保 webhook 接收方存在
+    """
+    try:
+        get_api = GetResourceAPI_1(
+            path_params=GetResourceAPI_1.PathParams(resources="receivers", name=WEBHOOK_RECEIVER_NAME),
+            enable_schema_validation=False,
+            response=None
+        )
+        get_api.query_params.type = "webhook"
+        res = get_api.send()
+        if res.cached_response.raw_response.status_code == 200:
+            return True
+
+        request_body = load_test_data(
+            "whizard_telemetry", "notification/webhook_config", "create_webhook_receiver"
+        )
+        if not isinstance(request_body, dict):
+            return False
+
+        create_api = CreateResourceAPI_1(
+            path_params=CreateResourceAPI_1.PathParams(resources="receivers"),
+            request_body=request_body,
+            enable_schema_validation=False
+        )
+        create_res = create_api.send()
+        if create_res.cached_response.raw_response.status_code in (200, 201):
+            return True
+        return False
+
+    except Exception as e:
+        logger.warning(f"get_for_test_webhook_receiver failed: {e}")
         return False

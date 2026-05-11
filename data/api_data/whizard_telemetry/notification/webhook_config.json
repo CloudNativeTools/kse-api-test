@@ -1,0 +1,209 @@
+{
+  "create_webhook_secret": {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": "global-webhook-config-secret",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "type": "Opaque",
+    "data": {}
+  },
+  "create_webhook_receiver": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Receiver",
+    "metadata": {
+      "name": "global-webhook-receiver",
+      "annotations": {
+        "kubesphere.io/verify-type": "no",
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "webhook": {
+        "enabled": true,
+        "url": "http://webhook-service.default/no-auth"
+      }
+    }
+  },
+  "verify_webhook_body": {
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "test-user-receiver",
+        "labels": {
+          "app": "notification-manager",
+          "type": "global"
+        }
+      },
+      "spec": {
+        "webhook": {
+          "enabled": false,
+          "url": "http://webhook-service.default/no-auth"
+        }
+      }
+    }
+  },
+  "create_webhook_configmap": {
+    "apiVersion": "v1",
+    "kind": "ConfigMap",
+    "metadata": {
+      "namespace": "default",
+      "name": "nginx-config",
+      "labels": {},
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "data": {
+      "nginx.conf": "server {\n        listen 80;\n        location / {\n            proxy_pass http://localhost:8080;\n            proxy_set_header Host $host;\n        }\n    }\n    server {\n        listen 443 ssl;\n        ssl_certificate /etc/nginx/certs/tls.crt;\n        ssl_certificate_key /etc/nginx/certs/tls.key;\n         \n        location / {\n            proxy_pass http://localhost:8080;\n            proxy_set_header Host $host;\n        }\n    }"
+    }
+  },
+  "create_webhook_service": {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "namespace": "default",
+      "labels": {
+        "app": "webhook-service"
+      },
+      "name": "webhook-service",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "sessionAffinity": "None",
+      "selector": {
+        "app": "webhook-service"
+      },
+      "ports": [
+        {
+          "name": "http-80",
+          "protocol": "TCP",
+          "targetPort": 80,
+          "port": 80
+        }
+      ]
+    }
+  },
+  "create_webhook_deployment": {
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+      "namespace": "default",
+      "labels": {
+        "app": "webhook-service"
+      },
+      "name": "webhook-service",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "replicas": 1,
+      "selector": {
+        "matchLabels": {
+          "app": "webhook-service"
+        }
+      },
+      "template": {
+        "metadata": {
+          "labels": {
+            "app": "webhook-service"
+          },
+          "annotations": {
+            "kubesphere.io/imagepullsecrets": "{}",
+            "logging.kubesphere.io/logsidecar-config": "{}",
+            "kubesphere.io/creator": "admin"
+          }
+        },
+        "spec": {
+          "containers": [
+            {
+              "name": "container-isvlz9",
+              "imagePullPolicy": "IfNotPresent",
+              "ports": [
+                {
+                  "name": "http-0",
+                  "protocol": "TCP",
+                  "containerPort": 8080
+                }
+              ],
+              "image": "qiaoshilu/webhook-service:v3"
+            },
+            {
+              "name": "container-lubymj",
+              "imagePullPolicy": "IfNotPresent",
+              "ports": [
+                {
+                  "name": "http-0",
+                  "protocol": "TCP",
+                  "containerPort": 80
+                }
+              ],
+              "image": "nginx:1.21",
+              "volumeMounts": [
+                {
+                  "name": "volume-9jkj9b",
+                  "readOnly": true,
+                  "mountPath": "/etc/nginx/conf.d/default.conf",
+                  "subPath": "nginx.conf"
+                },
+                {
+                  "name": "volume-g80w6m",
+                  "readOnly": true,
+                  "mountPath": "/etc/nginx/certs"
+                }
+              ]
+            }
+          ],
+          "serviceAccount": "default",
+          "terminationGracePeriodSeconds": 30,
+          "initContainers": [],
+          "volumes": [
+            {
+              "name": "volume-9jkj9b",
+              "configMap": {
+                "name": "nginx-config"
+              }
+            },
+            {
+              "name": "volume-g80w6m",
+              "secret": {
+                "secretName": "webhook-tls"
+              }
+            }
+          ],
+          "imagePullSecrets": []
+        }
+      },
+      "strategy": {
+        "type": "RollingUpdate",
+        "rollingUpdate": {
+          "maxUnavailable": "25%",
+          "maxSurge": "25%"
+        }
+      }
+    }
+  },
+  "create_webhook_tls_secret": {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "namespace": "default",
+      "name": "webhook-tls",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "type": "kubernetes.io/tls",
+    "data": {
+      "tls.crt": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURMVENDQWhXZ0F3SUJBZ0lVZDJoaWQ0MG9ReHJhZ3FublgrZnUrbjZYT0tRd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0pqRWtNQ0lHQTFVRUF3d2JkMlZpYUc5dmF5MXpaWEoyYVdObExtUmxabUYxYkhRdWMzWmpNQjRYRFRJMgpNRFV4TVRBNE1qZ3pPRm9YRFRJM01EVXhNVEE0TWpnek9Gb3dKakVrTUNJR0ExVUVBd3diZDJWaWFHOXZheTF6ClpYSjJhV05sTG1SbFptRjFiSFF1YzNaak1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0MKQVFFQW5iMzIyNytnYTVPSVZWZGJKdjFKRGZkMjJycENkR1JsVHFRSG1LQXhNeDUxNnVtbllMTkhYNkVjUHlnRQpQbzRtSG9JZ0piWkt4QVd4aEszRFBnV1NUZ3hLYllSRUh1Vmg2UGJlbTBiUHA0OG9LM1MyL0xaMHFrUjJzMGdZCkFQSWRiRjg2UGg4cUNXU2hMOU1jR3ZFcHdGTXpzMnVMU25JdGwwTW85S0Z4R0xQdVZRRCswcDJTcUk2ZWtCdEYKQ3hLUnVSMkkvUk11elc4VWl1akp3aGRuZWJvbFdoMDlDR1JGM3dRUDlXRUlsYVZiMUtqTWxpTGFIazkwSG1HVQo2M20zRjVBMzRpYTNvcWd5KzJ0SWRweGRQTFlTb1RoeFgxZUVDY2ZCNXJSejY2WS8zakRxaGdnN1lHaGpac0UxCmhuWW5RVGh4c20rVFNKMDJvYlo4Q0V3ZGlRSURBUUFCbzFNd1VUQWRCZ05WSFE0RUZnUVVnMmw0R1ZoUThMMlMKYzI0VnhiR2UxMllJeEhZd0h3WURWUjBqQkJnd0ZvQVVnMmw0R1ZoUThMMlNjMjRWeGJHZTEyWUl4SFl3RHdZRApWUjBUQVFIL0JBVXdBd0VCL3pBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQUFVWGJJdkRkMkpMcWVUNCs1M2FHClZJVjZhclgxS01kWkxGZEdvZkt3SURBckZaL1F4Uk5nMTNyZWNKUjZTaFVhazA5dGVCeDVDRzB2MW1rbmtUdFcKSTBRdm5MNGNtcWNLSEk1VjV3SWlQZCt5Mk9yM3VDd3ZrTElENW9pWG05L3BiMTdzTHRBOUhJKzdIUWllUW9jVwpCOGlyZDM3ckwzczhWVmx6SzE0QXcxZ09TRmw1N1VCVHVpSllkQ1RqUjF1ZFBnbHZYeDFTM3FPSUJ3OGozcHY2CnlWNUdiSlROekZnVWpvUUN0Y1BkVWNMdUc3WCtwZGJGNHc1MHhUR0J4Sk83Tm1BelRycVNFUUMxaHFHWEpxSG0KRXdUbmxxdExIdWpLSTQvd00wdXEyc3AvRG5WaTV6dXhHSmpNdEh3R3RPS0RlbUdEdk1KUU16T0tsaU9LZHBySQpwdz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K",
+      "tls.key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRQ2R2ZmJidjZCcms0aFYKVjFzbS9Va045M2JhdWtKMFpHVk9wQWVZb0RFekhuWHE2YWRnczBkZm9Sdy9LQVEramlZZWdpQWx0a3JFQmJHRQpyY00rQlpKT0RFcHRoRVFlNVdIbzl0NmJScytuanlncmRMYjh0blNxUkhhelNCZ0E4aDFzWHpvK0h5b0paS0V2CjB4d2E4U25BVXpPemE0dEtjaTJYUXlqMG9YRVlzKzVWQVA3U25aS29qcDZRRzBVTEVwRzVIWWo5RXk3TmJ4U0sKNk1uQ0YyZDV1aVZhSFQwSVpFWGZCQS8xWVFpVnBWdlVxTXlXSXRvZVQzUWVZWlRyZWJjWGtEZmlKcmVpcURMNwphMGgybkYwOHRoS2hPSEZmVjRRSng4SG10SFBycGovZU1PcUdDRHRnYUdObXdUV0dkaWRCT0hHeWI1TkluVGFoCnRud0lUQjJKQWdNQkFBRUNnZ0VBQWgxS1ZNb3lBcDVYcTdkaG4rL0xSZDd0NDNNaWRVSGxqZ3NVU0JaaW5uSVMKdE5EN1U2ZzZ2dXE4UTk2TytXZjhva1ZPZ3NJWmowL1pVMG1rZklQRTJxaFNLeTVrZUhkelViVDdvdk56cWwrbApab1hyblJ1aGZ5a1ZVMWVKZWRVclpTWGM3ZXlZRVM2RUFocVVRT1BtT0tXZ0VHblpRUFZ2bVNrOWJTQTc5KytuCmd5SzI4SngySFMrVVhKd0pqQVdtUTA2NDNyR091Tnc1NjlGYnVIeHMzM2w5Rnh3aFljQXJXSUdqVTROWkdZdmwKTFBxRVRvNHBrU2lIK0ViRFB5eFp3d0FEYTFBc2FXMk5qOGIzbmErUXNTWkVPK1JTOVZOeGlGTEJvK3FORzExRwp0NUtYWVdyNmRNeHJxTjJ1NStVUWthWng4WWRjMmRZejliU1N2Qmd2RVFLQmdRRFI5aWY0OVhxTDB1VWVsT2lxCkNqdW83WnNmVjJMY2MvaTlwWnZ2U04vQm9xR1NhSkdoNHdEMXpUWnY3RUVaR0IyNWZNVVY5MWlQZFdnaEk0aHcKcmVwcDl2VVBjZmVaZ0ZCY0VBdHNXRDRZT095eE5uOTJIaVdQaUU1M2hrZlFEbCtVNlR0ZlFoL3lCWWR4R0JxTgpNeU1zaWtFME44bFhJSTVKYVRuQzNqNGdrUUtCZ1FEQVZJMlJnSDcwQms3ci9XSXhCeDdaYTd1MkZueTNCeUdIClhld29oZXlaU2FBcUpzWDhhVGkxaG5CdHZwcGtLTnFIR0xEMTV0Uld3eEs0MlVoTGNuSGxDcFViQXNnMGJ5ZlQKSnNHWVJzcjVPSkxsOFRqdyszbEtjaml6c2NTUGJvT3ozZ0FrclhLYlEzL2Q1NmNjTXJrMThMWnlNajBLV01DaAp5U0t6ZWYrcGVRS0JnQVFiYnBpK0pKR0xwSk8ra2ZhUmtLMHpTSytLUkJMUDZmTzd3NXNncjgvWDRKVSttbXF5ClNCaUcxU1BIV1ZhbVZCNkd4RXd6dEhYSjlDbUJ5bTk1MTNZUE1LZ0dzTE0rQVZScnMrMkFwR1pRNXNCb3NvR2IKQVYwWGE0R0hET3lTKzJlc1VFOEN1aUUvM25CbDZrOE15d2xhQXdDRWZ0bkhkMEVVWDk3aC9oRWhBb0dBRUhPcgpJSFVqWnZCYk0raWF5NkxXU3JiaWViTDJ2QmxLRHZCRDBUdVRmNUZDdUJoVSswQnM3Mm91bDlTa0ZFbENXQ2dPCml4cFJzNUpBT2J1c2FYZkNzbHJ6WWpvY3NnK0lFcEhRSVp4OHBGRG9qKzdRZGh5c3hXZDczak1vb3pSSzQ4bnIKclRlQkJETUQ3eEZ2eEFPNndCaDFJdE9WVVJ0Q2J4UnJlWHJJR2RFQ2dZRUF4d1ArbzRNdWZhb2JqVXZkRDJzcQp2bXFMQS9MdzZwUEJHN1J1dHl4VUpZWVpDaWxRWG5iWmNINHpiM1J1NjJWOEdXVU8zSGo3STdSNjVTQ3NjUUxwCjV5TjhMU1JPVGk1WUYxUlVybkpZaHQ1R3RHdmVZSkp1RStGbDk4QTJYQk9ydzNNTmlubytVeVJZNXpES2lRaEIKTDNrYkVIVTJtUk9nbjh6ZllZblFiSHc9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K"
+    }
+  }
+}
