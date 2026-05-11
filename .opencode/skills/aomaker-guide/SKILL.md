@@ -233,69 +233,102 @@ status_code = res.cached_response.raw_response.status_code
 text = res.cached_response.raw_response.text  # 获取原始文本而非JSON
 ```
 
-### 3. Update接口最佳实践
-Update接口需要先GET获取当前数据，然后修改字段作为request body：
+### 3. 公共工具：clean_api_response 和 deep_merge
+
+`utils/api_helpers.py` 提供两个核心工具方法：
+
 ```python
-# 1. GET获取当前数据
-get_api = HandleGetXXXAPI(
-    path_params=HandleGetXXXAPI.PathParams(name=resource_name),
-    enable_schema_validation=False
-)
-get_res = get_api.send()
-current_data = get_res.cached_response.raw_response.json()
-
-# 2. 修改需要的字段
-current_data["spec"]["rules"][0]["annotations"]["summary"] = "updated summary"
-
-# 3. 发送Update请求
-update_api = HandleUpdateXXXAPI(
-    path_params=HandleUpdateXXXAPI.PathParams(name=resource_name),
-    request_body=current_data,  # 使用GET返回的数据作为body
-    enable_schema_validation=False
-)
-update_res = update_api.send()
-assert update_res.cached_response.raw_response.status_code == 200
+from utils.api_helpers import clean_api_response, deep_merge
 ```
 
-### 4. Patch接口最佳实践
-Patch接口需要先从LIST接口获取数据，移除不必要的参数，作为request body：
+**clean_api_response** — 清理 K8s 资源响应中的只读系统字段：
+- 始终移除：`uid`, `generation`, `managedFields`, `creationTimestamp`, `status`
+- 可选移除：`resourceVersion`（PATCH 时移除，PUT 时保留用于乐观锁）
+
 ```python
-# 1. LIST获取数据（或GET单个资源）
-list_api = HandleListXXXAPI(
-    path_params=HandleListXXXAPI.PathParams(cluster=cluster)
-)
-list_res = list_api.send()
-data = list_res.cached_response.raw_response.json()
-items = data.get("items", [])
-if not items:
-    pytest.skip("无数据")
+# PUT 时保留 resourceVersion（乐观锁）
+body = clean_api_response(get_data, remove_resource_version=False)
 
-# 2. 获取第一个item并移除不必要的字段
-import copy
-patch_body = copy.deepcopy(items[0])
+# PATCH 时移除 resourceVersion
+body = clean_api_response(get_data, remove_resource_version=True)
+```
 
-# 移除metadata中不需要的字段
-metadata = patch_body.get("metadata", {})
-metadata.pop("uid", None)
-metadata.pop("resourceVersion", None)
-metadata.pop("generation", None)
-metadata.pop("managedFields", None)
+**deep_merge** — 递归合并增量字段到基础 body：
 
-# 移除status字段
-patch_body.pop("status", None)
+```python
+body = clean_api_response(get_data, remove_resource_version=False)
+patch = {"spec": {"feishu": {"enabled": False, "chatbot": {...}}}}
+body = deep_merge(body, patch)
+```
 
-# 3. 修改需要更新的字段
-metadata.setdefault("annotations", {})
-metadata["annotations"]["kubesphere.io/alias-name"] = "new-alias"
-metadata["annotations"]["kubesphere.io/description"] = "new description"
+### 4. Update/Patch 接口最佳实践（数据驱动 + 增量模式）
 
-# 4. 发送Patch请求
-patch_api = HandlePatchXXXAPI(
-    path_params=HandlePatchXXXAPI.PathParams(name=metadata["name"]),
-    request_body=patch_body,
+**原则：**
+1. GET 当前资源 → `clean_api_response` 清理只读字段 → 得到完整 base body
+2. JSON 数据文件只保留**需要修改的增量字段**
+3. `deep_merge` 将增量合并到 base body
+4. PUT/PATCH 提交
+
+#### PUT 示例（保留 resourceVersion）：
+
+**JSON 数据文件** (只放要改的字段):
+```json
+{
+  "spec": {
+    "feishu": {
+      "enabled": false,
+      "chatbot": {
+        "keywords": ["kse"],
+        "webhook": {
+          "valueFrom": {
+            "secretKeyRef": {"key": "webhook", "name": "global-feishu-config-secret"}
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**测试用例：**
+```python
+from utils.api_helpers import clean_api_response, deep_merge
+
+def test_update():
+    # 1. GET 当前数据
+    get_res = GetAPI(path_params=..., enable_schema_validation=False, response=None).send()
+    assert get_res.cached_response.raw_response.status_code == 200
+
+    # 2. clean_api_response 清理只读字段（PUT 保留 resourceVersion）
+    body = clean_api_response(get_res.cached_response.raw_response.json(), remove_resource_version=False)
+
+    # 3. 加载增量数据（JSON 中只包含要改的字段）
+    patch = load_test_data("component", "module", "update_key")
+
+    # 4. 递归合并
+    body = deep_merge(body, patch)
+
+    # 5. PUT 提交
+    update_res = UpdateAPI(
+        path_params=UpdateAPI.PathParams(resources="xxx", name=resource_name),
+        request_body=body,
+        enable_schema_validation=False
+    ).send()
+    assert update_res.cached_response.raw_response.status_code == 200
+```
+
+#### PATCH 示例（移除 resourceVersion）：
+
+```python
+body = clean_api_response(get_res.cached_response.raw_response.json(), remove_resource_version=True)
+patch = load_test_data("component", "module", "patch_key")
+body = deep_merge(body, patch)
+
+patch_res = PatchAPI(
+    path_params=...,
+    request_body=body,
     enable_schema_validation=False
-)
-patch_res = patch_api.send()
+).send()
 assert patch_res.cached_response.raw_response.status_code == 200
 ```
 
@@ -311,7 +344,7 @@ labels = load_test_data("ks_core", "multi_cluster", "test_labels")
 TEST_LABEL_KEY = labels[0].get("key", "default_key") if labels else "default_key"
 ```
 
-### 4. 使用cache缓存
+### 6. 使用cache缓存
 ```python
 from aomaker.storage import cache
 
@@ -319,7 +352,7 @@ cache.set("key", value)
 value = cache.get("key")
 ```
 
-### 5. 配置管理 (config)
+### 7. 配置管理 (config)
 ```python
 from aomaker.storage import config
 

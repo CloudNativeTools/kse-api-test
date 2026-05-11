@@ -10,6 +10,10 @@ notification:
     app_secret: "<your-feishu-app-secret>"
     app_key_base64: "<base64-of-your-feishu-app-id>"
     app_secret_base64: "<base64-of-your-feishu-app-secret>"
+    webhook_url: "<your-feishu-webhook-url>"
+    chatbot_secret: "<your-feishu-chatbot-secret>"
+    webhook_base64: "<base64-of-your-feishu-webhook-url>"
+    chatbot_secret_base64: "<base64-of-your-feishu-chatbot-secret>"
 mock:
   base_url: http://127.0.0.1:9999
   account:

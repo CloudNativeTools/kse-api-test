@@ -84,6 +84,86 @@
       }
     }
   },
+  "verify_feishu_webhook_body": {
+    "config": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Config",
+      "metadata": {
+        "name": "test-user-config",
+        "labels": {
+          "app": "notification-manager",
+          "type": "default"
+        }
+      },
+      "spec": {
+        "feishu": {
+          "appID": {
+            "value": "{{feishu_app_id}}"
+          },
+          "appSecret": {
+            "value": "{{feishu_app_secret}}"
+          }
+        }
+      }
+    },
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "test-user-receiver",
+        "labels": {
+          "app": "notification-manager",
+          "type": "global"
+        }
+      },
+      "spec": {
+        "feishu": {
+          "chatbot": {
+            "webhook": {
+              "value": "{{feishu_webhook_url}}"
+            },
+            "secret": {
+              "value": "{{feishu_chatbot_secret}}"
+            },
+            "keywords": ["kse"]
+          },
+          "user": ["43gacfe8"]
+        }
+      }
+    }
+  },
+  "update_secret_webhook": {
+    "data": {
+      "webhook": "{{feishu_webhook_base64}}",
+      "chatbotsecret": "{{feishu_chatbot_secret_base64}}"
+    }
+  },
+  "update_receiver_webhook": {
+    "spec": {
+      "feishu": {
+        "enabled": false,
+        "chatbot": {
+          "keywords": ["kse"],
+          "webhook": {
+            "valueFrom": {
+              "secretKeyRef": {
+                "key": "webhook",
+                "name": "global-feishu-config-secret"
+              }
+            }
+          },
+          "secret": {
+            "valueFrom": {
+              "secretKeyRef": {
+                "key": "chatbotsecret",
+                "name": "global-feishu-config-secret"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "create_feishu_secret": {
     "apiVersion": "v1",
     "kind": "Secret",
