@@ -301,6 +301,9 @@ class TestUpdateFeishuSecretWebhook:
         updated = update_res.cached_response.raw_response.json().get("data", {})
         assert "webhook" in updated
         assert "chatbotsecret" in updated
+        assert "appkey" in updated
+        assert "appsecret" in updated
+        logger.info(f"飞书secret更新成功: {FEISHU_SECRET_NAME}")
 
 
 @pytest.mark.notification

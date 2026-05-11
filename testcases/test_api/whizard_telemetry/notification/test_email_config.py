@@ -22,6 +22,7 @@ from testcases.test_api.whizard_telemetry.notification.base import (
     build_update_body,
     delete_resource_if_exists,
 )
+from utils.api_helpers import deep_merge
 from utils.test_data_helper import load_test_data
 
 EMAIL_CONFIG_NAME = "default-email-config"
@@ -128,3 +129,34 @@ class TestUpdateEmailConfig:
         updated_data = update_res.cached_response.raw_response.json()
         assert updated_data.get("spec", {}).get("email", {}).get("from") == "updated-test@qq.com", \
             "from 字段应已更新"
+
+
+@pytest.mark.notification
+class TestUpdateEmailSecret:
+    """更新邮箱secret"""
+
+    def test_update_email_secret(self):
+        if not get_for_test_email_config():
+            pytest.skip("无法创建标准邮箱配置")
+
+        get_res = GetResourceAPI_1(
+            path_params=GetResourceAPI_1.PathParams(resources="secrets", name=EMAIL_SECRET_NAME),
+            enable_schema_validation=False,
+            response=None
+        ).send()
+        assert get_res.cached_response.raw_response.status_code == 200
+
+        body = build_update_body(get_res.cached_response.raw_response.json(), remove_resource_version=False)
+        patch = load_test_data("whizard_telemetry", "notification/email_config", "update_email_secret")
+        body = deep_merge(body, patch)
+
+        update_res = UpdateResourceAPI_1(
+            path_params=UpdateResourceAPI_1.PathParams(resources="secrets", name=EMAIL_SECRET_NAME),
+            request_body=body,
+            enable_schema_validation=False
+        ).send()
+        assert update_res.cached_response.raw_response.status_code == 200
+
+        updated = update_res.cached_response.raw_response.json().get("data", {})
+        assert "authPassword" in updated
+        logger.info(f"邮箱secret更新成功: {EMAIL_SECRET_NAME}")
