@@ -24,6 +24,9 @@ FEISHU_SECRET_NAME = "global-feishu-config-secret"
 DINGTALK_CONFIG_NAME = "default-dingtalk-config"
 DINGTALK_RECEIVER_NAME = "global-dingtalk-receiver"
 DINGTALK_SECRET_NAME = "global-dingtalk-config-secret"
+WECHAT_CONFIG_NAME = "default-wechat-config"
+WECHAT_RECEIVER_NAME = "global-wechat-receiver"
+WECHAT_SECRET_NAME = "global-wechat-config-secret"
 
 
 def build_update_body(current_data: dict, remove_resource_version: bool = True) -> dict:
@@ -278,4 +281,78 @@ def get_for_test_dingtalk_receiver() -> bool:
 
     except Exception as e:
         logger.warning(f"get_for_test_dingtalk_receiver failed: {e}")
+        return False
+
+
+def get_for_test_wechat_config() -> bool:
+    """
+    确保 wechat 配置存在
+    """
+    try:
+        if not _ensure_secret_exists(WECHAT_SECRET_NAME, "notification/wechat_config", "create_wechat_secret"):
+            return False
+
+        get_api = GetResourceAPI_1(
+            path_params=GetResourceAPI_1.PathParams(resources="configs", name=WECHAT_CONFIG_NAME),
+            enable_schema_validation=False,
+            response=None
+        )
+        res = get_api.send()
+        if res.cached_response.raw_response.status_code == 200:
+            return True
+
+        request_body = load_test_data(
+            "whizard_telemetry", "notification/wechat_config", "create_wechat_config"
+        )
+        if not isinstance(request_body, dict):
+            return False
+
+        create_api = CreateResourceAPI_1(
+            path_params=CreateResourceAPI_1.PathParams(resources="configs"),
+            request_body=request_body,
+            enable_schema_validation=False
+        )
+        create_res = create_api.send()
+        if create_res.cached_response.raw_response.status_code in (200, 201):
+            return True
+        return False
+
+    except Exception as e:
+        logger.warning(f"get_for_test_wechat_config failed: {e}")
+        return False
+
+
+def get_for_test_wechat_receiver() -> bool:
+    """
+    确保 wechat 接收方存在
+    """
+    try:
+        get_api = GetResourceAPI_1(
+            path_params=GetResourceAPI_1.PathParams(resources="receivers", name=WECHAT_RECEIVER_NAME),
+            enable_schema_validation=False,
+            response=None
+        )
+        get_api.query_params.type = "wechat"
+        res = get_api.send()
+        if res.cached_response.raw_response.status_code == 200:
+            return True
+
+        request_body = load_test_data(
+            "whizard_telemetry", "notification/wechat_config", "create_wechat_receiver"
+        )
+        if not isinstance(request_body, dict):
+            return False
+
+        create_api = CreateResourceAPI_1(
+            path_params=CreateResourceAPI_1.PathParams(resources="receivers"),
+            request_body=request_body,
+            enable_schema_validation=False
+        )
+        create_res = create_api.send()
+        if create_res.cached_response.raw_response.status_code in (200, 201):
+            return True
+        return False
+
+    except Exception as e:
+        logger.warning(f"get_for_test_wechat_receiver failed: {e}")
         return False

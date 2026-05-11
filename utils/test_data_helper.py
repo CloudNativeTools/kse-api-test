@@ -106,6 +106,13 @@ def get_variable_value(var_name: str) -> str:
                 var_mapping['dingtalk_chatbot_secret'] = dingtalk.get('chatbot_secret', '')
                 var_mapping['dingtalk_webhook_base64'] = dingtalk.get('webhook_base64', '')
                 var_mapping['dingtalk_chatbot_secret_base64'] = dingtalk.get('chatbot_secret_base64', '')
+                wechat = notification.get('wechat') or {}
+                var_mapping['wechat_app_secret_base64'] = wechat.get('app_secret_base64', '')
+                var_mapping['wechat_appsecret'] = wechat.get('appsecret', '')
+                var_mapping['wechat_corp_id'] = wechat.get('wechat_api_corp_id', '')
+                var_mapping['wechat_agent_id'] = wechat.get('wechat_api_agent_id', '')
+                var_mapping['wechat_webhook_url'] = wechat.get('webhook_url', '')
+                var_mapping['wechat_webhook_base64'] = wechat.get('webhook_base64', '')
         except Exception as e:
             print(f"⚠️ 警告: 获取 notification 配置失败: {e}")
 

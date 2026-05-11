@@ -23,6 +23,13 @@ notification:
     chatbot_secret: "<your-dingtalk-chatbot-secret>"
     webhook_base64: "<base64-of-your-dingtalk-webhook-url>"
     chatbot_secret_base64: "<base64-of-your-dingtalk-chatbot-secret>"
+  wechat:
+    wechat_api_corp_id: "<your-wechat-corp-id>"
+    wechat_api_agent_id: "<your-wechat-agent-id>"
+    appsecret: "<your-wechat-appsecret>"
+    app_secret_base64: "<base64-of-your-wechat-appsecret>"
+    webhook_url: "<your-wechat-webhook-url>"
+    webhook_base64: "<base64-of-your-wechat-webhook-url>"
 mock:
   base_url: http://127.0.0.1:9999
   account:

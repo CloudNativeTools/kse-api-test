@@ -1,0 +1,111 @@
+{
+  "create_wechat_config": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Config",
+    "metadata": {
+      "name": "default-wechat-config",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "wechat": {
+        "wechatApiCorpId": "{{wechat_corp_id}}",
+        "wechatApiAgentId": "{{wechat_agent_id}}",
+        "wechatApiSecret": {
+          "valueFrom": {
+            "secretKeyRef": {
+              "key": "appsecret",
+              "name": "global-wechat-config-secret"
+            }
+          }
+        }
+      }
+    }
+  },
+  "create_wechat_receiver": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Receiver",
+    "metadata": {
+      "name": "global-wechat-receiver",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "wechat": {
+        "enabled": true,
+        "toUser": ["LuQiaoShi"]
+      }
+    }
+  },
+  "verify_wechat_body": {
+    "config": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Config",
+      "metadata": {
+        "name": "test-user-config",
+        "labels": {
+          "app": "notification-manager",
+          "type": "default"
+        }
+      },
+      "spec": {
+        "wechat": {}
+      }
+    },
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "test-user-receiver",
+        "labels": {
+          "app": "notification-manager",
+          "type": "global"
+        }
+      },
+      "spec": {
+        "wechat": {
+          "enabled": true,
+          "chatbot": {
+            "webhook": {
+              "value": "{{wechat_webhook_url}}"
+            }
+          }
+        }
+      }
+    }
+  },
+  "update_secret_webhook": {
+    "data": {
+      "webhook": "{{wechat_webhook_base64}}"
+    }
+  },
+  "update_receiver_webhook": {
+    "spec": {
+      "wechat": {
+        "enabled": true,
+        "toUser": ["LuQiaoShi"],
+        "chatbot": {
+          "webhook": {
+            "value": "{{wechat_webhook_url}}"
+          }
+        }
+      }
+    }
+  },
+  "create_wechat_secret": {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": "global-wechat-config-secret",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "type": "Opaque",
+    "data": {
+      "appsecret": "{{wechat_app_secret_base64}}"
+    }
+  }
+}
