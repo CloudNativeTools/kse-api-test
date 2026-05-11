@@ -14,6 +14,15 @@ notification:
     chatbot_secret: "<your-feishu-chatbot-secret>"
     webhook_base64: "<base64-of-your-feishu-webhook-url>"
     chatbot_secret_base64: "<base64-of-your-feishu-chatbot-secret>"
+  dingtalk:
+    appkey: "<your-dingtalk-appkey>"
+    appsecret: "<your-dingtalk-appsecret>"
+    app_key_base64: "<base64-of-your-dingtalk-appkey>"
+    app_secret_base64: "<base64-of-your-dingtalk-appsecret>"
+    webhook_url: "<your-dingtalk-webhook-url>"
+    chatbot_secret: "<your-dingtalk-chatbot-secret>"
+    webhook_base64: "<base64-of-your-dingtalk-webhook-url>"
+    chatbot_secret_base64: "<base64-of-your-dingtalk-chatbot-secret>"
 mock:
   base_url: http://127.0.0.1:9999
   account:

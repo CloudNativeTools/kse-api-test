@@ -1,0 +1,194 @@
+{
+  "create_dingtalk_config": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Config",
+    "metadata": {
+      "name": "default-dingtalk-config",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "dingtalk": {
+        "conversation": {
+          "appkey": {
+            "valueFrom": {
+              "secretKeyRef": {
+                "key": "appkey",
+                "name": "global-dingtalk-config-secret"
+              }
+            }
+          },
+          "appsecret": {
+            "valueFrom": {
+              "secretKeyRef": {
+                "key": "appsecret",
+                "name": "global-dingtalk-config-secret"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "create_dingtalk_receiver": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Receiver",
+    "metadata": {
+      "name": "global-dingtalk-receiver",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "dingtalk": {
+        "conversation": {
+          "chatids": ["chat878fc263152210bd46dc04dd94f78d5d"]
+        },
+        "enabled": true
+      }
+    }
+  },
+  "verify_dingtalk_body": {
+    "config": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Config",
+      "metadata": {
+        "name": "test-user-config",
+        "labels": {
+          "app": "notification-manager",
+          "type": "default"
+        }
+      },
+      "spec": {
+        "dingtalk": {
+          "conversation": {
+            "appkey": {
+              "value": "{{dingtalk_appkey}}"
+            },
+            "appsecret": {
+              "value": "{{dingtalk_appsecret}}"
+            }
+          }
+        }
+      }
+    },
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "test-user-receiver",
+        "labels": {
+          "app": "notification-manager",
+          "type": "global"
+        }
+      },
+      "spec": {
+        "dingtalk": {
+          "conversation": {
+            "chatids": ["chat878fc263152210bd46dc04dd94f78d5d"]
+          }
+        }
+      }
+    }
+  },
+  "verify_dingtalk_webhook_body": {
+    "config": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Config",
+      "metadata": {
+        "name": "test-user-config",
+        "labels": {
+          "app": "notification-manager",
+          "type": "default"
+        }
+      },
+      "spec": {
+        "dingtalk": {
+          "conversation": {
+            "appkey": {
+              "value": "{{dingtalk_appkey}}"
+            },
+            "appsecret": {
+              "value": "{{dingtalk_appsecret}}"
+            }
+          }
+        }
+      }
+    },
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "test-user-receiver",
+        "labels": {
+          "app": "notification-manager",
+          "type": "global"
+        }
+      },
+      "spec": {
+        "dingtalk": {
+          "conversation": {
+            "chatids": ["chat878fc263152210bd46dc04dd94f78d5d"]
+          },
+          "chatbot": {
+            "webhook": {
+              "value": "{{dingtalk_webhook_url}}"
+            },
+            "secret": {
+              "value": "{{dingtalk_chatbot_secret}}"
+            },
+            "keywords": ["kse"]
+          }
+        }
+      }
+    }
+  },
+  "update_secret_webhook": {
+    "data": {
+      "webhook": "{{dingtalk_webhook_base64}}",
+      "chatbotsecret": "{{dingtalk_chatbot_secret_base64}}"
+    }
+  },
+  "update_receiver_webhook": {
+    "spec": {
+      "dingtalk": {
+        "enabled": true,
+        "chatbot": {
+          "keywords": ["kse"],
+          "webhook": {
+            "valueFrom": {
+              "secretKeyRef": {
+                "key": "webhook",
+                "name": "global-dingtalk-config-secret"
+              }
+            }
+          },
+          "secret": {
+            "valueFrom": {
+              "secretKeyRef": {
+                "key": "chatbotsecret",
+                "name": "global-dingtalk-config-secret"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "create_dingtalk_secret": {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": "global-dingtalk-config-secret",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "type": "Opaque",
+    "data": {
+      "appkey": "{{dingtalk_app_key_base64}}",
+      "appsecret": "{{dingtalk_app_secret_base64}}"
+    }
+  }
+}
