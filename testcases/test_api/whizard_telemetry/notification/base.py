@@ -30,6 +30,7 @@ WECHAT_SECRET_NAME = "global-wechat-config-secret"
 WEBHOOK_RECEIVER_NAME = "global-webhook-receiver"
 WEBHOOK_SECRET_NAME = "global-webhook-config-secret"
 EMAIL_RECEIVER_NAME = "email-test"
+SILENCE_NAME = "silent-autotest-all"
 
 
 def build_update_body(current_data: dict, remove_resource_version: bool = True) -> dict:
@@ -437,4 +438,35 @@ def get_for_test_webhook_receiver() -> bool:
 
     except Exception as e:
         logger.warning(f"get_for_test_webhook_receiver failed: {e}")
+        return False
+
+
+def get_for_test_silence() -> bool:
+    """确保静默策略存在"""
+    try:
+        get_api = GetResourceAPI_1(
+            path_params=GetResourceAPI_1.PathParams(resources="silences", name=SILENCE_NAME),
+            enable_schema_validation=False,
+            response=None
+        )
+        res = get_api.send()
+        if res.cached_response.raw_response.status_code == 200:
+            return True
+
+        request_body = load_test_data(
+            "whizard_telemetry", "notification/silence_config", "create_silence"
+        )
+        if not isinstance(request_body, dict):
+            return False
+
+        create_api = CreateResourceAPI_1(
+            path_params=CreateResourceAPI_1.PathParams(resources="silences"),
+            request_body=request_body,
+            enable_schema_validation=False
+        )
+        create_res = create_api.send()
+        return create_res.cached_response.raw_response.status_code in (200, 201)
+
+    except Exception as e:
+        logger.warning(f"get_for_test_silence failed: {e}")
         return False

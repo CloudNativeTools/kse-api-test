@@ -43,7 +43,7 @@
   },
   "update_email_secret": {
     "data": {
-      "authPassword": "MlliMlY5REo5cHN0c2dKNQ=="
+      "authPassword": "{{email_auth_password_base64}}"
     }
   },
   "create_email_receiver": {
