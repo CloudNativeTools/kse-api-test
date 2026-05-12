@@ -89,6 +89,7 @@ def get_variable_value(var_name: str) -> str:
                 email = notification.get('email') or {}
                 feishu = notification.get('feishu') or {}
                 var_mapping['email_auth_password_base64'] = email.get('auth_password_base64', '')
+                var_mapping['email_auth_password'] = email.get('auth_password', '')
                 var_mapping['feishu_app_key_base64'] = feishu.get('app_key_base64', '')
                 var_mapping['feishu_app_secret_base64'] = feishu.get('app_secret_base64', '')
                 var_mapping['feishu_app_id'] = feishu.get('app_id', '')

@@ -2,6 +2,7 @@ env: test
 notification:
   email:
     auth_password_base64: "<base64-of-your-email-password>"
+    auth_password: "<your-email-password>"
     smart_host: "<your-smtp-host>"
     auth_username: "<your-email-username>"
     from: "<your-sender-email>"
