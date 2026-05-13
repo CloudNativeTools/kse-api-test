@@ -20,8 +20,7 @@ from utils.api_helpers import deep_merge
 from utils.test_data_helper import load_test_data
 
 
-@pytest.mark.notification
-@pytest.mark.scenario
+@pytest.mark.notification_scene
 class TestSilenceScenario:
     """静默策略场景测试 - 完整工作流"""
 

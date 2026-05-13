@@ -444,6 +444,8 @@ class TestTenantPermissionWorkspaceRole:
                 request_body["metadata"]["namespace"] = test_namespace
                 request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
                 request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
+                request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
+                request_body["spec"]["rules"][0]["annotations"]["message"] = f"{group_name}-message"
 
                 api = HandleCreateRuleGroupAPI(
                     path_params=HandleCreateRuleGroupAPI.PathParams(
@@ -567,6 +569,8 @@ class TestTenantPermissionProjectRole:
                 request_body["metadata"]["namespace"] = test_namespace
                 request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
                 request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
+                request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
+                request_body["spec"]["rules"][0]["annotations"]["message"] = f"{group_name}-message"
 
                 api = HandleCreateRuleGroupAPI(
                     path_params=HandleCreateRuleGroupAPI.PathParams(
@@ -635,7 +639,8 @@ class TestTenantPermissionProjectRole:
                 request_body["metadata"]["namespace"] = test_namespace
                 request_body["metadata"]["annotations"]["kubesphere.io/creator"] = account["user"]
                 request_body["spec"]["rules"][0]["alert"] = f"{group_name}-alert"
-
+                request_body["spec"]["rules"][0]["annotations"]["summary"] = f"{group_name}-summary"
+                request_body["spec"]["rules"][0]["annotations"]["message"] = f"{group_name}-message"
                 api = HandleCreateRuleGroupAPI(
                     path_params=HandleCreateRuleGroupAPI.PathParams(
                         cluster=host_cluster,

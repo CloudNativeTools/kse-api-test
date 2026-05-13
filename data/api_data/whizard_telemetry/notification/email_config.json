@@ -58,7 +58,7 @@
     "spec": {
       "email": {
         "enabled": true,
-        "to": ["514060057@qq.com"]
+        "to": ["luqiaoshi010@126.com"]
       }
     }
   },
@@ -100,7 +100,7 @@
       "spec": {
         "email": {
           "enabled": true,
-          "to": ["514060057@qq.com"]
+          "to": ["luqiaoshi010@126.com"]
         }
       }
     }
