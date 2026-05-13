@@ -84,7 +84,7 @@
   "update_receiver_webhook": {
     "spec": {
       "wechat": {
-        "enabled": true,
+        "enabled": false,
         "toUser": ["LuQiaoShi"],
         "chatbot": {
           "webhook": {

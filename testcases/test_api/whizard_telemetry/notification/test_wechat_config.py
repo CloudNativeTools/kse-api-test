@@ -334,6 +334,6 @@ class TestUpdateWechatReceiverWebhook:
         assert update_res.cached_response.raw_response.status_code == 200
 
         updated_wechat = update_res.cached_response.raw_response.json().get("spec", {}).get("wechat", {})
-        assert updated_wechat.get("enabled") is True
+        assert updated_wechat.get("enabled") is False, "enabled 应已禁用"
         assert "chatbot" in updated_wechat
         assert "webhook" in updated_wechat.get("chatbot", {})

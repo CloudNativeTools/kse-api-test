@@ -332,7 +332,7 @@ class TestUpdateDingtalkReceiverWebhook:
         assert update_res.cached_response.raw_response.status_code == 200
 
         updated_dingtalk = update_res.cached_response.raw_response.json().get("spec", {}).get("dingtalk", {})
-        assert updated_dingtalk.get("enabled") is True
+        assert updated_dingtalk.get("enabled") is False, "enabled 应已禁用"
         assert "chatbot" in updated_dingtalk
         assert "webhook" in updated_dingtalk.get("chatbot", {})
         assert "secret" in updated_dingtalk.get("chatbot", {})
