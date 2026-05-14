@@ -28,6 +28,26 @@
     "host_namespace": "kubesphere-system",
     "server_namespace": "kubesphere-system"
   },
+  "service_traffic": {
+    "server_namespace": "kubesphere-system",
+    "server_name": "ks-apiserver",
+    "metrics_filter": "http_node_server_request_rate|http_node_server_request_error_ratio|http_node_server_request_duration_avg|http_node_server_request_duration_p95|http_node_server_request_duration_p99|http_node_server_response_body_bytes_rate"
+  },
+  "service_rank": {
+    "server_namespace": "kubesphere-system",
+    "server_name": "ks-apiserver",
+    "metrics_filter": "http_node_server_request_rate_by_path|http_node_server_request_error_ratio_by_path|http_node_server_request_duration_avg_by_path|http_node_server_request_duration_p95_by_path|http_node_server_request_duration_p99_by_path"
+  },
+  "pod_traffic": {
+    "server_namespace": "kubesphere-system",
+    "server_name": "",
+    "metrics_filter": "http_node_server_request_rate|http_node_server_request_error_ratio|http_node_server_request_duration_avg|http_node_server_request_duration_p95|http_node_server_request_duration_p99|http_node_server_response_body_bytes_rate"
+  },
+  "pod_rank": {
+    "server_namespace": "kubesphere-system",
+    "server_name": "",
+    "metrics_filter": "http_node_server_request_rate_by_path|http_node_server_request_error_ratio_by_path|http_node_server_request_duration_avg_by_path|http_node_server_request_duration_p95_by_path|http_node_server_request_duration_p99_by_path"
+  },
   "traffic_filters": {
     "by_name": {
       "client_name": "ks-apiserver",

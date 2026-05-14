@@ -108,6 +108,34 @@ def query_traffic(
     return api.send()
 
 
+def query_server_metrics_rank(
+    cluster: str = "host",
+    server_namespace: str = "",
+    server_type: str = "Service",
+    server_name: str = "",
+    sort_type: str = "desc",
+    sort_metric: str = "http_node_server_request_rate_by_path",
+    page: int = 1,
+    limit: int = 10,
+    metrics_filter: str = "http_node_server_request_rate_by_path|http_node_server_request_error_ratio_by_path|http_node_server_request_duration_avg_by_path|http_node_server_request_duration_p95_by_path|http_node_server_request_duration_p99_by_path",
+    **extra_params,
+):
+    api = QueryServerMetricsAPI(enable_schema_validation=False, response=None)
+    api.query_params.cluster = cluster
+    api.query_params.server_namespace = server_namespace
+    api.query_params.server_type = server_type
+    api.query_params.server_name = server_name
+    api.query_params.type = "rank"
+    api.query_params.sort_type = sort_type
+    api.query_params.sort_metric = sort_metric
+    api.query_params.page = page
+    api.query_params.limit = limit
+    api.query_params.metrics_filter = metrics_filter
+    for k, v in extra_params.items():
+        setattr(api.query_params, k, v)
+    return api.send()
+
+
 def get_for_test_http_traffic():
     cache_key = "http_traffic_env_ready"
     if cache.get(cache_key):

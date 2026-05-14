@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from utils.api_helpers import get_http_info
@@ -7,6 +9,7 @@ from testcases.test_api.whizard_telemetry.http_traffic_query.base import (
     query_topology_metrics,
     query_node_pair_metrics,
     query_server_metrics,
+    query_server_metrics_rank,
     query_server_list,
     query_traffic,
     get_for_test_http_traffic,
@@ -21,6 +24,10 @@ SERVER_METRICS = FILTERS.get("server_metrics", {})
 NAMESPACES = FILTERS.get("namespaces", {})
 TRAFFIC_FILTERS = FILTERS.get("traffic_filters", {})
 CLUSTERS = FILTERS.get("clusters", {})
+SERVICE_TRAFFIC = FILTERS.get("service_traffic", {})
+SERVICE_RANK = FILTERS.get("service_rank", {})
+POD_TRAFFIC = FILTERS.get("pod_traffic", {})
+POD_RANK = FILTERS.get("pod_rank", {})
 
 
 @pytest.mark.whizard_http_traffic
@@ -331,6 +338,244 @@ class TestHttpTrafficLogs:
 
 
 @pytest.mark.whizard_http_traffic
+class TestServiceTrafficMetrics:
+    """服务流量监控"""
+
+    def test_service_metrics_full(self):
+        """服务流量监控 - 查询全指标"""
+        ns = SERVICE_TRAFFIC.get("server_namespace", "kubesphere-system")
+        name = SERVICE_TRAFFIC.get("server_name", "ks-apiserver")
+        mf = SERVICE_TRAFFIC.get(
+            "metrics_filter",
+            "http_node_server_request_rate|http_node_server_request_error_ratio|http_node_server_request_duration_avg|http_node_server_request_duration_p95|http_node_server_request_duration_p99|http_node_server_response_body_bytes_rate",
+        )
+        res = query_server_metrics(
+            server_namespace=ns,
+            server_type="Service",
+            server_name=name,
+            metrics_filter=mf,
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        assert "results" in data
+
+    def test_service_metrics_single(self):
+        """服务流量监控 - 仅查询请求率"""
+        ns = SERVICE_TRAFFIC.get("server_namespace", "kubesphere-system")
+        name = SERVICE_TRAFFIC.get("server_name", "ks-apiserver")
+        res = query_server_metrics(
+            server_namespace=ns,
+            server_type="Service",
+            server_name=name,
+            metrics_filter="http_node_server_request_rate",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        assert "results" in data
+
+    def test_service_metrics_custom_time(self):
+        """服务流量监控 - 自定义时间区间（前10分钟）"""
+        ns = SERVICE_TRAFFIC.get("server_namespace", "kubesphere-system")
+        name = SERVICE_TRAFFIC.get("server_name", "ks-apiserver")
+        now = int(time.time())
+        ten_min_ago = now - 600
+        res = query_server_metrics(
+            server_namespace=ns,
+            server_type="Service",
+            server_name=name,
+            step="60s",
+            times=10,
+            start=str(ten_min_ago),
+            end=str(now),
+            metrics_filter="http_node_server_request_rate|http_node_server_request_error_ratio",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    def test_service_rank_success(self):
+        """服务流量监控 - 路由TOP 10"""
+        ns = SERVICE_RANK.get("server_namespace", "kubesphere-system")
+        name = SERVICE_RANK.get("server_name", "ks-apiserver")
+        mf = SERVICE_RANK.get(
+            "metrics_filter",
+            "http_node_server_request_rate_by_path|http_node_server_request_error_ratio_by_path|http_node_server_request_duration_avg_by_path|http_node_server_request_duration_p95_by_path|http_node_server_request_duration_p99_by_path",
+        )
+        res = query_server_metrics_rank(
+            server_namespace=ns,
+            server_type="Service",
+            server_name=name,
+            sort_type="desc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=10,
+            page=1,
+            metrics_filter=mf,
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        assert "results" in data
+
+    def test_service_rank_ascending(self):
+        """服务流量监控 - 路由TOP 10 升序"""
+        res = query_server_metrics_rank(
+            server_type="Service",
+            sort_type="asc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=5,
+            page=1,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_duration_p95_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    def test_service_rank_by_error_ratio(self):
+        """服务流量监控 - 路由TOP 10 按错误率排序"""
+        res = query_server_metrics_rank(
+            server_type="Service",
+            sort_type="desc",
+            sort_metric="http_node_server_request_error_ratio_by_path",
+            limit=10,
+            page=1,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_error_ratio_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    def test_service_rank_second_page(self):
+        """服务流量监控 - 路由TOP 10 第二页"""
+        res = query_server_metrics_rank(
+            server_type="Service",
+            sort_type="desc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=5,
+            page=2,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_duration_p95_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+
+@pytest.mark.whizard_http_traffic
+class TestPodTrafficMetrics:
+    """容器组流量监控"""
+
+    def test_pod_metrics_full(self):
+        """容器组流量监控 - 查询全指标"""
+        ns = POD_TRAFFIC.get("server_namespace", "kubesphere-system")
+        name = POD_TRAFFIC.get("server_name", "")
+        mf = POD_TRAFFIC.get(
+            "metrics_filter",
+            "http_node_server_request_rate|http_node_server_request_error_ratio|http_node_server_request_duration_avg|http_node_server_request_duration_p95|http_node_server_request_duration_p99|http_node_server_response_body_bytes_rate",
+        )
+        res = query_server_metrics(
+            server_namespace=ns,
+            server_type="Pod",
+            server_name=name,
+            metrics_filter=mf,
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        assert "results" in data
+
+    def test_pod_metrics_single(self):
+        """容器组流量监控 - 仅查询请求率"""
+        ns = POD_TRAFFIC.get("server_namespace", "kubesphere-system")
+        name = POD_TRAFFIC.get("server_name", "")
+        res = query_server_metrics(
+            server_namespace=ns,
+            server_type="Pod",
+            server_name=name,
+            metrics_filter="http_node_server_request_rate",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    def test_pod_metrics_custom_time(self):
+        """容器组流量监控 - 自定义时间区间（前10分钟）"""
+        ns = POD_TRAFFIC.get("server_namespace", "kubesphere-system")
+        name = POD_TRAFFIC.get("server_name", "")
+        now = int(time.time())
+        ten_min_ago = now - 600
+        res = query_server_metrics(
+            server_namespace=ns,
+            server_type="Pod",
+            server_name=name,
+            step="120s",
+            times=5,
+            start=str(ten_min_ago),
+            end=str(now),
+            metrics_filter="http_node_server_request_rate|http_node_server_request_duration_avg",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    def test_pod_rank_success(self):
+        """容器组流量监控 - 路由TOP 10"""
+        ns = POD_RANK.get("server_namespace", "kubesphere-system")
+        name = POD_RANK.get("server_name", "")
+        mf = POD_RANK.get(
+            "metrics_filter",
+            "http_node_server_request_rate_by_path|http_node_server_request_error_ratio_by_path|http_node_server_request_duration_avg_by_path|http_node_server_request_duration_p95_by_path|http_node_server_request_duration_p99_by_path",
+        )
+        res = query_server_metrics_rank(
+            server_namespace=ns,
+            server_type="Pod",
+            server_name=name,
+            sort_type="desc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=10,
+            page=1,
+            metrics_filter=mf,
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        assert "results" in data
+
+    def test_pod_rank_ascending(self):
+        """容器组流量监控 - 路由TOP 10 升序"""
+        res = query_server_metrics_rank(
+            server_type="Pod",
+            sort_type="asc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=5,
+            page=1,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_duration_p95_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    def test_pod_rank_by_error_ratio(self):
+        """容器组流量监控 - 路由TOP 10 按错误率排序"""
+        res = query_server_metrics_rank(
+            server_type="Pod",
+            sort_type="desc",
+            sort_metric="http_node_server_request_error_ratio_by_path",
+            limit=10,
+            page=1,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_error_ratio_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+    def test_pod_rank_second_page(self):
+        """容器组流量监控 - 路由TOP 10 第二页"""
+        res = query_server_metrics_rank(
+            server_type="Pod",
+            sort_type="desc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=5,
+            page=2,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_duration_p95_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+
+
+@pytest.mark.whizard_http_traffic
 @pytest.mark.multi_cluster
 class TestHttpTrafficMemberCluster:
     """Member集群 - HTTP流量查询"""
@@ -419,6 +664,70 @@ class TestHttpTrafficMemberCluster:
             page=1,
             limit=10,
             metrics_filter="http_node_pair_request_rate_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        self._verify_member_cluster(data, member_cluster)
+
+    def test_member_service_metrics(self, member_cluster):
+        """Member集群 - 查询服务流量监控指标"""
+        member_cfg = CLUSTERS.get("member", {})
+        res = query_server_metrics(
+            cluster=member_cluster,
+            server_namespace=member_cfg.get("namespace", ""),
+            server_type="Service",
+            metrics_filter="http_node_server_request_rate|http_node_server_request_duration_avg",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        self._verify_member_cluster(data, member_cluster)
+
+    def test_member_service_rank(self, member_cluster):
+        """Member集群 - 查询服务流量监控路由TOP 10"""
+        member_cfg = CLUSTERS.get("member", {})
+        res = query_server_metrics_rank(
+            cluster=member_cluster,
+            server_namespace=member_cfg.get("namespace", ""),
+            server_type="Service",
+            sort_type="desc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=10,
+            page=1,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_duration_p95_by_path",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        self._verify_member_cluster(data, member_cluster)
+
+    def test_member_pod_metrics(self, member_cluster):
+        """Member集群 - 查询容器组流量监控指标"""
+        member_cfg = CLUSTERS.get("member", {})
+        res = query_server_metrics(
+            cluster=member_cluster,
+            server_namespace=member_cfg.get("namespace", ""),
+            server_type="Pod",
+            metrics_filter="http_node_server_request_rate|http_node_server_request_duration_avg",
+        )
+        status, text = get_http_info(res)
+        assert status == 200, f"expected 200, got {status}, body: {text}"
+        data = res.cached_response.raw_response.json()
+        self._verify_member_cluster(data, member_cluster)
+
+    def test_member_pod_rank(self, member_cluster):
+        """Member集群 - 查询容器组流量监控路由TOP 10"""
+        member_cfg = CLUSTERS.get("member", {})
+        res = query_server_metrics_rank(
+            cluster=member_cluster,
+            server_namespace=member_cfg.get("namespace", ""),
+            server_type="Pod",
+            sort_type="desc",
+            sort_metric="http_node_server_request_rate_by_path",
+            limit=10,
+            page=1,
+            metrics_filter="http_node_server_request_rate_by_path|http_node_server_request_duration_p95_by_path",
         )
         status, text = get_http_info(res)
         assert status == 200, f"expected 200, got {status}, body: {text}"

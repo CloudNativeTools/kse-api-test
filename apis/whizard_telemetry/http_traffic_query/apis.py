@@ -173,6 +173,12 @@ class QueryServerMetricsAPI(BaseAPI[MonitoringMetrics]):
                 "description": "The metric name filter consists of a regexp pattern. It specifies which metric data to return. For example, the following filter matches both request rate and duration average: `http_node_server_request_rate|http_node_server_request_duration_avg`. View available metrics at [kubesphere.io](https://docs.kubesphere.io/advanced-v2.0/zh-CN/api-reference/monitoring-metrics/)."
             },
         )
+        type: Optional[str] = field(
+            default=None,
+            metadata={
+                "description": "Query type. Set to `rank` for ranked results of server metrics."
+            },
+        )
         start: Optional[str] = field(
             default=None,
             metadata={
