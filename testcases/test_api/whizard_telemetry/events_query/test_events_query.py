@@ -9,7 +9,6 @@ from testcases.test_api.whizard_telemetry.events_query.base import (
     query_events_histogram,
     query_events,
     get_for_test_events,
-    resolve_event_time_range,
 )
 
 FILTERS = load_test_data("whizard_telemetry", "events_query/events", "filters", default={})

@@ -1,0 +1,62 @@
+{
+  "topology": {
+    "metrics_filter": "http_topology_nodes",
+    "rate_interval": "30m"
+  },
+  "node_pair": {
+    "metrics_filter": "http_node_pair_request_rate|http_node_pair_request_duration_avg",
+    "rate_interval": "30m"
+  },
+  "rank": {
+    "type": "rank",
+    "sort_type": "desc",
+    "sort_metric": "http_node_pair_request_rate_by_path",
+    "page": 1,
+    "limit": 10,
+    "metrics_filter": "http_node_pair_request_rate_by_path|http_node_pair_request_error_ratio_by_path|http_node_pair_request_duration_p95_by_path|http_node_pair_request_duration_p99_by_path|http_node_pair_request_body_bytes_rate_by_path|http_node_pair_response_body_bytes_rate_by_path"
+  },
+  "server_metrics": {
+    "metrics_filter": "http_node_server_request_rate|http_node_server_request_error_ratio|http_node_server_request_duration_p95|http_node_server_request_duration_p99|http_node_server_request_body_bytes_rate|http_node_server_response_body_bytes_rate"
+  },
+  "clusters": {
+    "member": {
+      "cluster": "{{member_cluster}}",
+      "namespace": "kubesphere-monitoring-system"
+    }
+  },
+  "namespaces": {
+    "host_namespace": "kubesphere-system",
+    "server_namespace": "kubesphere-system"
+  },
+  "traffic_filters": {
+    "by_name": {
+      "client_name": "ks-apiserver",
+      "server_name": "ks-apiserver"
+    },
+    "by_workload": {
+      "client_owner_name_filter": "ks-console",
+      "server_owner_name_filter": "ks-console"
+    },
+    "by_service": {
+      "client_service_name": "ks-console",
+      "server_service_name": "ks-console"
+    },
+    "by_pod": {
+      "client_pod_name_filter": "ks-console",
+      "server_pod_name_filter": "ks-console"
+    },
+    "by_node": {
+      "client_node_name": "node3",
+      "server_node_name": "node3"
+    },
+    "by_method": {
+      "req_method": "POST"
+    },
+    "by_path": {
+      "req_path": "/proxy/posthog/e/"
+    },
+    "by_status_code": {
+      "resp_status_code": "200"
+    }
+  }
+}

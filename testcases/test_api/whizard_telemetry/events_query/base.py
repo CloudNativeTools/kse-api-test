@@ -1,48 +1,6 @@
-import time
-
 from apis.whizard_telemetry.events_query.apis import QueryEventsAPI
 from aomaker.storage import cache
-
-
-def make_timestamp(hours_ago: int = 0) -> str:
-    """生成 Unix 时间戳（秒），支持相对偏移"""
-    return str(int(time.time()) - hours_ago * 3600)
-
-
-def resolve_event_time_range(data_key: str = "last_1h") -> dict:
-    """
-    从测试数据中解析时间范围，替换动态时间戳
-
-    Args:
-        data_key: 时间范围键名，如 "last_1h", "last_3h", "last_6h"
-
-    Returns:
-        {"start_time": str, "end_time": str}
-    """
-    from utils.test_data_helper import load_test_data
-    raw = load_test_data("whizard_telemetry", "events_query/events", "time_ranges", default={}, replace_vars=False)
-    tr = raw.get(data_key, {})
-    if not tr:
-        return {"start_time": make_timestamp(1), "end_time": make_timestamp(0)}
-
-    start_raw = tr.get("start_time", "")
-    end_raw = tr.get("end_time", "")
-
-    if "{{timestamp_last_1h}}" in start_raw:
-        start = make_timestamp(1)
-    elif "{{timestamp_last_3h}}" in start_raw:
-        start = make_timestamp(3)
-    elif "{{timestamp_last_6h}}" in start_raw:
-        start = make_timestamp(6)
-    else:
-        start = start_raw
-
-    if "{{timestamp}}" in end_raw:
-        end = make_timestamp(0)
-    else:
-        end = end_raw
-
-    return {"start_time": start, "end_time": end}
+from utils.time_helpers import resolve_time_range
 
 
 def query_events_statistics(time_range_key: str = "last_1h", cluster: str = "host", **extra_params):
@@ -52,7 +10,7 @@ def query_events_statistics(time_range_key: str = "last_1h", cluster: str = "hos
     Returns:
         AoResponse
     """
-    tr = resolve_event_time_range(time_range_key)
+    tr = resolve_time_range(time_range_key, component="whizard_telemetry", module="events_query/events")
     api = QueryEventsAPI(enable_schema_validation=False, response=None)
     api.query_params.operation = "statistics"
     api.query_params.start_time = tr["start_time"]
@@ -70,7 +28,7 @@ def query_events_histogram(time_range_key: str = "last_1h", interval: str = "30m
     Returns:
         AoResponse
     """
-    tr = resolve_event_time_range(time_range_key)
+    tr = resolve_time_range(time_range_key, component="whizard_telemetry", module="events_query/events")
     api = QueryEventsAPI(enable_schema_validation=False, response=None)
     api.query_params.operation = "histogram"
     api.query_params.start_time = tr["start_time"]
@@ -89,7 +47,7 @@ def query_events(time_range_key: str = "last_1h", cluster: str = "host", **extra
     Returns:
         AoResponse
     """
-    tr = resolve_event_time_range(time_range_key)
+    tr = resolve_time_range(time_range_key, component="whizard_telemetry", module="events_query/events")
     api = QueryEventsAPI(enable_schema_validation=False, response=None)
     api.query_params.operation = "query"
     api.query_params.start_time = tr["start_time"]

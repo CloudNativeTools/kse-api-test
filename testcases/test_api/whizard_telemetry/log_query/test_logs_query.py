@@ -8,7 +8,6 @@ from testcases.test_api.whizard_telemetry.log_query.base import (
     query_logs_histogram,
     query_logs,
     get_for_test_logs,
-    resolve_log_time_range,
 )
 
 FILTERS = load_test_data("whizard_telemetry", "log_query/logs", "filters", default={})
