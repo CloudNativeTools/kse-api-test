@@ -27,6 +27,7 @@ from testcases.test_api.whizard_telemetry.notification.base import (
     delete_resource_if_exists,
     FEISHU_SECRET_NAME,
 )
+from utils.api_helpers import deep_merge
 from utils.test_data_helper import load_test_data
 
 @pytest.mark.notification
@@ -242,3 +243,97 @@ class TestUpdateFeishuReceiver:
         updated_feishu = updated_data.get("spec", {}).get("feishu", {})
         assert updated_feishu.get("enabled") is False, "enabled 应已禁用"
         assert "43gacfe8" in updated_feishu.get("user", []), "user 列表中应包含 43gacfe8"
+
+
+@pytest.mark.notification
+class TestVerifyFeishuWebhook:
+    """验证飞书通知配置 - webhook接收者"""
+
+    def test_verify_feishu_webhook(self):
+        """验证飞书通知配置（含chatbot webhook）"""
+        if not get_for_test_feishu_config():
+            pytest.skip("无法创建飞书配置")
+
+        request_body = load_test_data(
+            "whizard_telemetry", "notification/feishu_config", "verify_feishu_webhook_body"
+        )
+
+        api = VerifyAPI_1(
+            request_body=request_body,
+            enable_schema_validation=False
+        )
+        res = api.send()
+
+        assert res.cached_response.raw_response.status_code in (200, 202), \
+            f"验证飞书webhook配置失败，状态码: {res.cached_response.raw_response.status_code}"
+
+        data = res.cached_response.raw_response.json()
+        assert data.get("Status") == 200
+        assert "successfully" in data.get("Message", "").lower()
+
+
+@pytest.mark.notification
+class TestUpdateFeishuSecretWebhook:
+    """更新飞书secret - 补充webhook和chatbotsecret"""
+
+    def test_update_feishu_secret_webhook(self):
+        if not get_for_test_feishu_config():
+            pytest.skip("无法创建飞书配置")
+
+        get_res = GetResourceAPI_1(
+            path_params=GetResourceAPI_1.PathParams(resources="secrets", name=FEISHU_SECRET_NAME),
+            enable_schema_validation=False,
+            response=None
+        ).send()
+        assert get_res.cached_response.raw_response.status_code == 200
+
+        body = build_update_body(get_res.cached_response.raw_response.json(), remove_resource_version=False)
+        patch = load_test_data("whizard_telemetry", "notification/feishu_config", "update_secret_webhook")
+        body = deep_merge(body, patch)
+
+        update_res = UpdateResourceAPI_1(
+            path_params=UpdateResourceAPI_1.PathParams(resources="secrets", name=FEISHU_SECRET_NAME),
+            request_body=body,
+            enable_schema_validation=False
+        ).send()
+        assert update_res.cached_response.raw_response.status_code == 200
+
+        updated = update_res.cached_response.raw_response.json().get("data", {})
+        assert "webhook" in updated
+        assert "chatbotsecret" in updated
+        assert "appkey" in updated
+        assert "appsecret" in updated
+        logger.info(f"飞书secret更新成功: {FEISHU_SECRET_NAME}")
+
+
+@pytest.mark.notification
+class TestUpdateFeishuReceiverWebhook:
+    """更新飞书接收方 - 配置webhook接收者"""
+
+    def test_update_feishu_receiver_webhook(self):
+        if not get_for_test_feishu_receiver():
+            pytest.skip("无法创建标准飞书接收方")
+
+        get_res = GetResourceAPI_1(
+            path_params=GetResourceAPI_1.PathParams(resources="receivers", name=FEISHU_RECEIVER_NAME),
+            enable_schema_validation=False,
+            response=None
+        ).send()
+        assert get_res.cached_response.raw_response.status_code == 200
+
+        body = build_update_body(get_res.cached_response.raw_response.json(), remove_resource_version=False)
+        patch = load_test_data("whizard_telemetry", "notification/feishu_config", "update_receiver_webhook")
+        body = deep_merge(body, patch)
+
+        update_res = UpdateResourceAPI_1(
+            path_params=UpdateResourceAPI_1.PathParams(resources="receivers", name=FEISHU_RECEIVER_NAME),
+            request_body=body,
+            enable_schema_validation=False
+        ).send()
+        assert update_res.cached_response.raw_response.status_code == 200
+
+        updated_feishu = update_res.cached_response.raw_response.json().get("spec", {}).get("feishu", {})
+        assert updated_feishu.get("enabled") is False
+        assert "chatbot" in updated_feishu
+        assert "webhook" in updated_feishu.get("chatbot", {})
+        assert "secret" in updated_feishu.get("chatbot", {})

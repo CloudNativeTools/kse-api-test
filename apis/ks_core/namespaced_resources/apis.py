@@ -31,6 +31,10 @@ __ALL__ = [
     "VerifyImageRepositorySecretAPI",
     "GetRepositoryTagsAPI",
     "CreateNamespacedDeploymentAPI",
+    "GetNamespacedDeploymentAPI",
+    "CreateNamespacedSecretAPI",
+    "CreateNamespacedConfigMapAPI",
+    "CreateNamespacedServiceAPI",
 ]
 
 
@@ -375,3 +379,59 @@ class CreateNamespacedDeploymentAPI(BaseAPI):
     path_params: PathParams
     request_body: Dict = field()
     endpoint_id: Optional[str] = field(default="create-namespaced-deployment")
+
+
+@define(kw_only=True)
+@router.get("/apis/apps/v1/namespaces/{namespace}/deployments/{name}")
+class GetNamespacedDeploymentAPI(BaseAPI):
+    """查询指定命名空间的 Deployment 详情"""
+
+    @define
+    class PathParams:
+        namespace: str = field(metadata={"description": "The specified namespace."})
+        name: str = field(metadata={"description": "Deployment name."})
+
+    path_params: PathParams
+    endpoint_id: Optional[str] = field(default="get-namespaced-deployment")
+
+
+@define(kw_only=True)
+@router.post("/api/v1/namespaces/{namespace}/secrets")
+class CreateNamespacedSecretAPI(BaseAPI):
+    """在指定命名空间创建 Secret"""
+
+    @define
+    class PathParams:
+        namespace: str = field(metadata={"description": "The specified namespace."})
+
+    path_params: PathParams
+    request_body: Dict = field()
+    endpoint_id: Optional[str] = field(default="create-namespaced-secret")
+
+
+@define(kw_only=True)
+@router.post("/api/v1/namespaces/{namespace}/configmaps")
+class CreateNamespacedConfigMapAPI(BaseAPI):
+    """在指定命名空间创建 ConfigMap"""
+
+    @define
+    class PathParams:
+        namespace: str = field(metadata={"description": "The specified namespace."})
+
+    path_params: PathParams
+    request_body: Dict = field()
+    endpoint_id: Optional[str] = field(default="create-namespaced-configmap")
+
+
+@define(kw_only=True)
+@router.post("/api/v1/namespaces/{namespace}/services")
+class CreateNamespacedServiceAPI(BaseAPI):
+    """在指定命名空间创建 Service"""
+
+    @define
+    class PathParams:
+        namespace: str = field(metadata={"description": "The specified namespace."})
+
+    path_params: PathParams
+    request_body: Dict = field()
+    endpoint_id: Optional[str] = field(default="create-namespaced-service")

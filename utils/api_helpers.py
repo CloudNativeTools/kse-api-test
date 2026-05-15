@@ -14,6 +14,16 @@ def get_http_info(res):
     return raw.status_code, raw.text
 
 
+def deep_merge(base: dict, override: dict) -> dict:
+    """递归合并 override 到 base，支持嵌套 dict"""
+    for key, value in override.items():
+        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
 def clean_api_response(current_data: dict, remove_resource_version: bool = True) -> dict:
     """
     清理 API 响应数据，移除只读的系统字段，用于构造 PUT/PATCH 请求体。

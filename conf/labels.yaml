@@ -58,9 +58,22 @@ modules:
   network:
     description: "网络管理（NetworkPolicy 等）"
 
+  whizard_network_traffic:
+    description: "whizard-network-traffic 网络流量拓扑模块"
+
+  whizard_http_traffic:
+    description: "whizard-http-traffic HTTP服务拓扑模块"
+
+  whizard_tracing:
+    description: "whizard-tracing 链路追踪模块"
+
 markers:
   multi_cluster: "多集群用例 - Member 集群验证"
   alerting_scene: "告警场景测试"
   whizard_events_scene: "事件场景测试"
   whizard_logs_scene: "日志场景测试"
   whizard_auditing_scene: "审计场景测试"
+  notification_scene: "通知场景测试"
+  whizard_http_traffic_scene: "HTTP 流量场景测试"
+  whizard_network_traffic_scene: "网络流量场景测试"
+  whizard_tracing_scene: "链路追踪场景测试"

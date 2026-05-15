@@ -128,6 +128,9 @@ class GetValuesByTagAPI(BaseAPI):
 
     @define
     class QueryParams:
+        name: Optional[str] = field(
+            default=None, metadata={"description": "The tag name to query values for."}
+        )
         tags: Optional[str] = field(
             default=None, metadata={"description": "A comma-separated list of tag."}
         )

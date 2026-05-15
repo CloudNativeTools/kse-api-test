@@ -1,0 +1,37 @@
+{
+  "topology": {
+    "metrics_filter": "network_topology_nodes",
+    "rate_interval": "30m"
+  },
+  "node_metrics": {
+    "metrics_filter": "network_node_transmit_bytes_rate|network_node_receive_bytes_rate|network_node_total_bytes_rate",
+    "rate_interval": "30m"
+  },
+  "node_pair_metrics": {
+    "metrics_filter": "network_node_pair_transmit_bytes_rate|network_node_pair_receive_bytes_rate",
+    "rate_interval": "30m"
+  },
+  "rank": {
+    "type": "rank",
+    "sort_type": "desc",
+    "sort_metric": "network_node_pair_transmit_bytes_rate",
+    "page": 1,
+    "limit": 10,
+    "metrics_filter": "network_node_pair_transmit_bytes_rate|network_node_pair_receive_bytes_rate|network_node_pair_total_bytes_rate|network_node_pair_tcp_retrans_packets_rate|network_node_pair_tcp_drops_packets_rate"
+  },
+  "clusters": {
+    "member": {
+      "cluster": "{{member_cluster}}",
+      "src_namespace": "kubesphere-monitoring-system",
+      "dst_namespace": "kubesphere-system"
+    }
+  },
+  "namespaces": {
+    "src": "kubesphere-monitoring-system",
+    "dst": "kubesphere-system"
+  },
+  "invalid_params": {
+    "invalid_metric": "nonexistent_metric",
+    "invalid_rate_interval": "invalid"
+  }
+}

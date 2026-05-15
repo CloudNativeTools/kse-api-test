@@ -233,73 +233,255 @@ status_code = res.cached_response.raw_response.status_code
 text = res.cached_response.raw_response.text  # 获取原始文本而非JSON
 ```
 
-### 3. Update接口最佳实践
-Update接口需要先GET获取当前数据，然后修改字段作为request body：
+### 3. 公共工具：clean_api_response 和 deep_merge
+
+`utils/api_helpers.py` 提供两个核心工具方法：
+
 ```python
-# 1. GET获取当前数据
-get_api = HandleGetXXXAPI(
-    path_params=HandleGetXXXAPI.PathParams(name=resource_name),
-    enable_schema_validation=False
-)
-get_res = get_api.send()
-current_data = get_res.cached_response.raw_response.json()
-
-# 2. 修改需要的字段
-current_data["spec"]["rules"][0]["annotations"]["summary"] = "updated summary"
-
-# 3. 发送Update请求
-update_api = HandleUpdateXXXAPI(
-    path_params=HandleUpdateXXXAPI.PathParams(name=resource_name),
-    request_body=current_data,  # 使用GET返回的数据作为body
-    enable_schema_validation=False
-)
-update_res = update_api.send()
-assert update_res.cached_response.raw_response.status_code == 200
+from utils.api_helpers import clean_api_response, deep_merge
 ```
 
-### 4. Patch接口最佳实践
-Patch接口需要先从LIST接口获取数据，移除不必要的参数，作为request body：
+**clean_api_response** — 清理 K8s 资源响应中的只读系统字段：
+- 始终移除：`uid`, `generation`, `managedFields`, `creationTimestamp`, `status`
+- 可选移除：`resourceVersion`（PATCH 时移除，PUT 时保留用于乐观锁）
+
 ```python
-# 1. LIST获取数据（或GET单个资源）
-list_api = HandleListXXXAPI(
-    path_params=HandleListXXXAPI.PathParams(cluster=cluster)
-)
-list_res = list_api.send()
-data = list_res.cached_response.raw_response.json()
-items = data.get("items", [])
-if not items:
-    pytest.skip("无数据")
+# PUT 时保留 resourceVersion（乐观锁）
+body = clean_api_response(get_data, remove_resource_version=False)
 
-# 2. 获取第一个item并移除不必要的字段
-import copy
-patch_body = copy.deepcopy(items[0])
+# PATCH 时移除 resourceVersion
+body = clean_api_response(get_data, remove_resource_version=True)
+```
 
-# 移除metadata中不需要的字段
-metadata = patch_body.get("metadata", {})
-metadata.pop("uid", None)
-metadata.pop("resourceVersion", None)
-metadata.pop("generation", None)
-metadata.pop("managedFields", None)
+**deep_merge** — 递归合并增量字段到基础 body：
 
-# 移除status字段
-patch_body.pop("status", None)
+```python
+body = clean_api_response(get_data, remove_resource_version=False)
+patch = {"spec": {"feishu": {"enabled": False, "chatbot": {...}}}}
+body = deep_merge(body, patch)
+```
 
-# 3. 修改需要更新的字段
-metadata.setdefault("annotations", {})
-metadata["annotations"]["kubesphere.io/alias-name"] = "new-alias"
-metadata["annotations"]["kubesphere.io/description"] = "new description"
+### 4. Update/Patch 接口最佳实践（数据驱动 + 增量模式）
 
-# 4. 发送Patch请求
-patch_api = HandlePatchXXXAPI(
-    path_params=HandlePatchXXXAPI.PathParams(name=metadata["name"]),
-    request_body=patch_body,
+**原则：**
+1. GET 当前资源 → `clean_api_response` 清理只读字段 → 得到完整 base body
+2. JSON 数据文件只保留**需要修改的增量字段**
+3. `deep_merge` 将增量合并到 base body
+4. PUT/PATCH 提交
+
+#### PUT 示例（保留 resourceVersion）：
+
+**JSON 数据文件** (只放要改的字段):
+```json
+{
+  "spec": {
+    "feishu": {
+      "enabled": false,
+      "chatbot": {
+        "keywords": ["kse"],
+        "webhook": {
+          "valueFrom": {
+            "secretKeyRef": {"key": "webhook", "name": "global-feishu-config-secret"}
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**测试用例：**
+```python
+from utils.api_helpers import clean_api_response, deep_merge
+
+def test_update():
+    # 1. GET 当前数据
+    get_res = GetAPI(path_params=..., enable_schema_validation=False, response=None).send()
+    assert get_res.cached_response.raw_response.status_code == 200
+
+    # 2. clean_api_response 清理只读字段（PUT 保留 resourceVersion）
+    body = clean_api_response(get_res.cached_response.raw_response.json(), remove_resource_version=False)
+
+    # 3. 加载增量数据（JSON 中只包含要改的字段）
+    patch = load_test_data("component", "module", "update_key")
+
+    # 4. 递归合并
+    body = deep_merge(body, patch)
+
+    # 5. PUT 提交
+    update_res = UpdateAPI(
+        path_params=UpdateAPI.PathParams(resources="xxx", name=resource_name),
+        request_body=body,
+        enable_schema_validation=False
+    ).send()
+    assert update_res.cached_response.raw_response.status_code == 200
+```
+
+#### PATCH 示例（移除 resourceVersion）：
+
+```python
+body = clean_api_response(get_res.cached_response.raw_response.json(), remove_resource_version=True)
+patch = load_test_data("component", "module", "patch_key")
+body = deep_merge(body, patch)
+
+patch_res = PatchAPI(
+    path_params=...,
+    request_body=body,
     enable_schema_validation=False
-)
-patch_res = patch_api.send()
+).send()
 assert patch_res.cached_response.raw_response.status_code == 200
 ```
 
-### 5. 加载测试数据
+### 5. 动态数据解析
+
+当测试数据中包含环境相关的动态值（如节点名称、集群名称等），不能硬编码在 JSON 中。框架支持两种动态数据解析模式：
+
+#### 5.1 `{{variable}}` 变量替换（适用于简单字符串替换）
+
+`test_data_helper.py` 的 `load_test_data()` 默认开启变量替换（`replace_vars=True`），自动将 `{{variable}}` 替换为运行时的实际值。
+
+**支持的变量：**
+- `{{member_cluster}}` — 替换为实际 member 集群名称
+- `{{host_cluster}}` — 替换为实际 host 集群名称
+- `{{timestamp}}` — 当前时间戳
+- 等（详见 `test_data_helper.get_variable_value()`）
+
+**JSON 数据文件：**
+```json
+{
+  "clusters": {
+    "member": {
+      "cluster": "{{member_cluster}}",
+      "namespace": "kubesphere-monitoring-system"
+    }
+  }
+}
+```
+
+**使用时无需额外处理，`load_test_data` 自动完成替换：**
+```python
+FILTERS = load_test_data("whizard_telemetry", "http_traffic_query/data", default={})
+# FILTERS["clusters"]["member"]["cluster"] 已自动替换为实际 member 集群名
+```
+
+#### 5.2 `__DYNAMIC_*__` 占位符解析（适用于复杂嵌套结构）
+
+当占位符出现在嵌套 dict/list 深处，且需要替换为数组（如节点名称列表）时，使用 `__DYNAMIC_HOST_NODES__` / `__DYNAMIC_MEMBER_NODES__` 占位符。
+
+**JSON 数据文件：**
+```json
+{
+  "spec": {
+    "rules": [{
+      "exprBuilder": {
+        "node": {
+          "names": "__DYNAMIC_HOST_NODES__",
+          "metricThreshold": {"memory": {"memory": 0.15}},
+          "comparator": ">"
+        }
+      }
+    }]
+  }
+}
+```
+
+**base.py 中实现递归解析函数：**
+```python
+from utils.cluster_helpers import get_cluster_nodes
+
+def resolve_alerting_data(data: dict, host_cluster: str = None, member_cluster: str = None) -> dict:
+    """解析测试数据中的动态占位符"""
+    import copy
+    result = copy.deepcopy(data)
+    _node_cache = {}
+
+    def _get_nodes(cluster):
+        if cluster not in _node_cache:
+            _node_cache[cluster] = get_cluster_nodes(cluster) if cluster else []
+        return _node_cache[cluster]
+
+    def _resolve(obj):
+        if isinstance(obj, dict):
+            for k, v in list(obj.items()):
+                if isinstance(v, str):
+                    if v == "__DYNAMIC_HOST_NODES__":
+                        obj[k] = _get_nodes(host_cluster)
+                    elif v == "__DYNAMIC_MEMBER_NODES__":
+                        obj[k] = _get_nodes(member_cluster)
+                else:
+                    _resolve(v)
+        elif isinstance(obj, list):
+            for i, item in enumerate(list(obj)):
+                if isinstance(item, str):
+                    if item == "__DYNAMIC_HOST_NODES__":
+                        obj[i] = _get_nodes(host_cluster)
+                    elif item == "__DYNAMIC_MEMBER_NODES__":
+                        obj[i] = _get_nodes(member_cluster)
+                else:
+                    _resolve(item)
+
+    _resolve(result)
+    return result
+```
+
+#### 5.3 `get_cluster_nodes()` / `get_first_node_name()`（运行时动态获取）
+
+当需要单个节点名称作为过滤参数时，使用 `utils.cluster_helpers.get_cluster_nodes()` 获取节点列表后取第一个。
+
+**base.py 中定义：**
+```python
+def get_first_node_name(cluster: str = "host") -> str:
+    from utils.cluster_helpers import get_cluster_nodes
+    nodes = get_cluster_nodes(cluster)
+    return nodes[0] if nodes else ""
+```
+
+**测试用例中使用：**
+```python
+def test_traffic_filter_by_node(self):
+    """查询HTTP流量日志 - 按节点过滤"""
+    node_name = get_first_node_name()
+    if not node_name:
+        node_name = "node3"  # fallback
+    res = query_traffic(client_node_name=node_name, server_node_name=node_name)
+    status, text = get_http_info(res)
+    assert status == 200, f"expected 200, got {status}, body: {text}"
+```
+
+### 6. 公共时间工具
+
+`utils/time_helpers.py` 提供时间处理公共方法，避免各模块重复定义 `make_timestamp`：
+
+```python
+from utils.time_helpers import make_timestamp, resolve_time_range, resolve_traffic_time_range
+```
+
+| 方法 | 返回值 | 适用场景 |
+|------|--------|---------|
+| `make_timestamp(hours_ago)` | `"1735000000"` | 生成相对偏移时间戳 |
+| `resolve_time_range(data_key, component, module)` | `{"start_time", "end_time"}` | 审计/事件/日志等需要从 JSON 解析时间范围的场景 |
+| `resolve_traffic_time_range(hours_ago)` | `{"start_time", "end_time"}` | HTTP 流量日志等直接传小时偏移的简单时间范围 |
+
+**使用示例：**
+```python
+# 简单时间戳
+api.query_params.time = make_timestamp(0)  # 当前时间
+api.query_params.rate_interval = "30m"     # 直接在函数参数中设默认值
+
+# 从 JSON 解析时间范围（审计/事件/日志风格）
+tr = resolve_time_range("last_1h", component="whizard_telemetry", module="auditing_query/auditing")
+api.query_params.start_time = tr["start_time"]
+api.query_params.end_time = tr["end_time"]
+
+# 简单时间范围（HTTP 流量日志风格）
+tr = resolve_traffic_time_range(hours_ago=1)
+api.query_params.start_time = tr["start_time"]
+api.query_params.end_time = tr["end_time"]
+```
+
+**注意：** 新增模块需要类似时间处理时，优先使用 `utils.time_helpers`，不要在各自 base.py 中重新定义。对于 `time` + `rate_interval` 风格的接口（网络流量/HTTP拓扑），直接在 base.py 函数参数中设默认值即可，无需额外方法。
+
+### 7. 加载测试数据
 ```python
 from utils.test_data_helper import load_test_data, get_test_data_list
 
@@ -311,7 +493,7 @@ labels = load_test_data("ks_core", "multi_cluster", "test_labels")
 TEST_LABEL_KEY = labels[0].get("key", "default_key") if labels else "default_key"
 ```
 
-### 4. 使用cache缓存
+### 8. 使用cache缓存
 ```python
 from aomaker.storage import cache
 
@@ -319,7 +501,7 @@ cache.set("key", value)
 value = cache.get("key")
 ```
 
-### 5. 配置管理 (config)
+### 9. 配置管理 (config)
 ```python
 from aomaker.storage import config
 

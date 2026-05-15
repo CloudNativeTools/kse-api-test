@@ -1,0 +1,72 @@
+{
+  "create_silence": {
+    "metadata": {
+      "labels": {"type": "global"},
+      "name": "silent-autotest-all",
+      "annotations": {"kubesphere.io/creator": "admin"}
+    },
+    "spec": {
+      "matcher": {"matchExpressions": []},
+      "startsAt": "2026-05-12T06:07:39.530Z",
+      "duration": null,
+      "schedule": null
+    }
+  },
+  "patch_info": {
+    "metadata": {
+      "name": "silent-autotest-all",
+      "annotations": {
+        "kubesphere.io/alias-name": "alias-test",
+        "kubesphere.io/description": "desc-test"
+      }
+    },
+    "spec": {
+      "matcher": {"matchExpressions": []},
+      "startsAt": "2026-05-12T06:07:39Z",
+      "duration": null,
+      "schedule": null
+    }
+  },
+  "patch_duration": {
+    "metadata": {
+      "name": "silent-autotest-all",
+      "annotations": {
+        "kubesphere.io/alias-name": "alias-test",
+        "kubesphere.io/description": "desc-test"
+      }
+    },
+    "spec": {
+      "matcher": {"matchExpressions": []},
+      "startsAt": "2026-05-12T06:07:39Z",
+      "duration": "21h52m21s",
+      "schedule": null
+    }
+  },
+  "update_silence_yaml": {
+    "metadata": {
+      "annotations": {
+        "kubesphere.io/alias-name": "alias-test1",
+        "kubesphere.io/description": "desc-test1"
+      }
+    }
+  },
+  "patch_matcher": {
+    "metadata": {
+      "name": "silent-autotest-all",
+      "annotations": {
+        "kubesphere.io/alias-name": "alias-test",
+        "kubesphere.io/description": "desc-test"
+      }
+    },
+    "spec": {
+      "matcher": {
+        "matchExpressions": [
+          {"key": "cluster", "operator": "In", "values": ["host"]}
+        ]
+      },
+      "startsAt": "2026-05-12T06:07:39Z",
+      "duration": "21h52m21s",
+      "schedule": null
+    }
+  }
+}

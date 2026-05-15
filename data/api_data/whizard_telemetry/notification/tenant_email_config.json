@@ -1,0 +1,46 @@
+{
+  "receiver_template": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Receiver",
+    "metadata": {
+      "name": "{{username}}-email-receiver",
+      "annotations": {
+        "kubesphere.io/creator": "{{username}}"
+      }
+    },
+    "spec": {
+      "email": {
+        "enabled": true,
+        "to": ["luqiaoshi010@126.com"]
+      }
+    }
+  },
+  "verify_receiver_template": {
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "{{username}}-email-receiver",
+        "labels": {
+          "app": "notification-manager",
+          "type": "tenant",
+          "user": "{{username}}"
+        }
+      },
+      "spec": {
+        "email": {
+          "enabled": true,
+          "to": ["luqiaoshi010@126.com"]
+        }
+      }
+    }
+  },
+  "update_tenant_receiver": {
+    "metadata": {
+      "annotations": {
+        "kubesphere.io/alias-name": "tenant-alias-test",
+        "kubesphere.io/description": "tenant-desc-test"
+      }
+    }
+  }
+}

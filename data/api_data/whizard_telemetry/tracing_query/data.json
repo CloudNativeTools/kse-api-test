@@ -1,0 +1,65 @@
+{
+  "query_params": {
+    "trace_query_default": {
+      "order": "desc",
+      "sort": "time",
+      "size": 20,
+      "from": 0,
+      "parameters": []
+    },
+    "trace_query_by_span_name": {
+      "parameters": [
+        {"field": "name", "operator": "?", "values": ["router frontend egress"]}
+      ]
+    },
+    "trace_query_by_tag": {
+      "parameters": [
+        {"field": "k8s.cluster.name", "operator": "?", "values": ["{{member_cluster}}"]}
+      ]
+    },
+    "trace_query_max_duration": {
+      "parameters": [
+        {"field": "duration", "operator": "<=", "value": 1000000}
+      ]
+    },
+    "trace_query_min_duration": {
+      "parameters": [
+        {"field": "duration", "operator": ">=", "value": 8000000000}
+      ]
+    },
+    "trace_query_host": {
+      "parameters": [
+        {"field": "cluster", "operator": "?", "values": ["{{host_cluster}}"]}
+      ]
+    },
+    "trace_query_member": {
+      "parameters": [
+        {"field": "cluster", "operator": "?", "values": ["{{member_cluster}}"]}
+      ]
+    },
+    "trace_query_single_service": {
+      "parameters": [
+        {"field": "cluster", "operator": "?", "values": ["{{member_cluster}}"]},
+        {"field": "service", "operator": "?", "values": ["flagd"]}
+      ]
+    }
+  },
+  "service_graph_params": {
+    "service_graph_host": {
+      "parameters": [
+        {"field": "cluster", "operator": "=", "values": ["{{host_cluster}}"]}
+      ]
+    },
+    "service_graph_member": {
+      "parameters": [
+        {"field": "cluster", "operator": "=", "values": ["{{member_cluster}}"]}
+      ]
+    }
+  },
+  "tag_value_params": {
+    "name": "describe",
+    "tags": "k8s.pod.name",
+    "limit": 100
+  },
+  "workload_keys": "{{member_cluster}}/wiz-telemetry-tracing/adservice"
+}

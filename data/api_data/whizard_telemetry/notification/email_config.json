@@ -11,10 +11,10 @@
     "spec": {
       "email": {
         "smartHost": {
-          "port": 465,
+          "port": 25,
           "host": "smtp.yunify.com"
         },
-        "authUsername": "qiaoshilu@yunify.com",
+        "authUsername": "qiaoshilu",
         "from": "514060057@qq.com",
         "authPassword": {
           "valueFrom": {
@@ -39,6 +39,78 @@
     "type": "Opaque",
     "data": {
       "authPassword": "{{email_auth_password_base64}}"
+    }
+  },
+  "update_email_secret": {
+    "data": {
+      "authPassword": "{{email_auth_password_base64}}"
+    }
+  },
+  "create_email_receiver": {
+    "apiVersion": "notification.kubesphere.io/v2beta2",
+    "kind": "Receiver",
+    "metadata": {
+      "name": "email-test",
+      "annotations": {
+        "kubesphere.io/creator": "admin"
+      }
+    },
+    "spec": {
+      "email": {
+        "enabled": true,
+        "to": ["luqiaoshi010@126.com"]
+      }
+    }
+  },
+  "verify_email_body": {
+    "config": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Config",
+      "metadata": {
+        "name": "test-user-config",
+        "labels": {
+          "app": "notification-manager",
+          "type": "default"
+        }
+      },
+      "spec": {
+        "email": {
+          "from": "qiaoshilu@yunify.com",
+          "smartHost": {
+            "host": "smtp.yunify.com",
+            "port": 25
+          },
+          "authUsername": "qiaoshilu",
+          "authPassword": {
+            "value": "{{email_auth_password}}"
+          }
+        }
+      }
+    },
+    "receiver": {
+      "apiVersion": "notification.kubesphere.io/v2beta2",
+      "kind": "Receiver",
+      "metadata": {
+        "name": "email-test",
+        "labels": {
+          "app": "notification-manager",
+          "type": "global"
+        }
+      },
+      "spec": {
+        "email": {
+          "enabled": true,
+          "to": ["luqiaoshi010@126.com"]
+        }
+      }
+    }
+  },
+  "update_email_receiver": {
+    "metadata": {
+      "annotations": {
+        "kubesphere.io/alias-name": "alias-test",
+        "kubesphere.io/description": "desc-test"
+      }
     }
   }
 }
