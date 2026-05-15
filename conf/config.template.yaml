@@ -1,4 +1,6 @@
 env: test
+wechat:
+  webhook: "<your-wechat-robot-webhook-url>"
 notification:
   email:
     auth_password_base64: "<base64-of-your-email-password>"
@@ -41,6 +43,11 @@ test:
   account:
     user: <your-test-username>
     pwd: '<your-test-password>'
+dev:
+  base_url: <your-dev-base-url>
+  account:
+    user: <your-dev-username>
+    pwd: '<your-dev-password>'
 release:
   base_url: https://release.aomaker.com
   account:
